@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Login</title>
+</head>
+
+<body>
+  <div class="form-login">
+    <div>
+      <p></p>Nombre de usuario</p>
+      <input type="text" name="user" id="user" placeholder="Ingresar el nombre de usuario">
+    </div>
+    <div>
+      <p>Contraseña</p>
+      <input type="text" name="pass" id="pass" placeholder="Ingresar la Contraseña">
+    </div>
+    <div class="buttons">
+      <button class="button-iniciar-sesion">Iniciar sesión</button>
+      <button class="button-invitado" onclick="navigateTo('menu_principal.html')">Ingresar como invitado</button>
+    </div>
+  </div>
+  <script type="module" src="/src/renderer.ts"></script>
+</body>
+
+<script>
+  function navigateTo(url) {
+    window.location.href = url;
+  }
+</script>
+
+</html>
