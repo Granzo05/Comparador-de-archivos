@@ -8,8 +8,8 @@
 
 <body>
   <header>
-    <div class="cerrar">
-      <img
+    <div class="cerrar" onclick="navigateTo('index.html')">
+      <img style="width: 40px; height: 40px; margin-top: 17px;"
         src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAAsTAAALEwEAmpwYAAAEW0lEQVR4nO2ZWaiVVRTHf15vI1paVrfMwtuL1I0keikLwiZKA6WHNAgaFFKT9BYEFUo9JBQWUVAZEUZpBQ0PmQQl2UO9ZBE5IlaIU1HX4TSY5r2xYB34+LP2+YbzefPh/GHD4axhrz2sYa8POuigg7rQC8wBXgbWAVuBnT62+n9Gux+YyAmCM4HFwPfAUMnxncue8X8YfjrwJHCgguE69gNLgdOGy/gbgZ9qMFzHj8DU42n4CN/1YwkDjgKfAY8D04BJwAQf9ns68ATwufNGOv7107C5akU3sDIx6SFgCXBeCX3G+xjwa0LnGz5nLbDdeDOxWy8C5ybkrgW+BTYAUxI8o4Hlrkv1r6zrJJ4OlB8EbsuR25Hh357DO8116jxPtWv8rcBg4GyXFpBVY/JwWRAczN9urmq8He+uIOSZQyrsGs0EegoswO7/HQmfmRSEZkuEo6os4Nngzt8S8N3ljtxcYG+LBRhtIOP8sxOnrj6xrKzx5wB/ipJnAr5HAkP7WyxA+Qcz/FksE74GMK7MApaKgt+BscHODwUGXd9iAVMDnxoEZgWZXq+v5ZBCGCERxMbDwnMR8EeQyKyYy/OBOUEia3jCy2KR8GwvGlavFMG/goJrtfAcBm4qEYUssvwj9LeFZwzwt/BMLrIAvafvC31i4GR6QnkLiOY5ClwsPB8m/Ksl3hOh+UJ/VOibgK4KCzCZzcJji8riQaG/U2QBWttfLfRPC+5K3gIMegprhT4leEPk4jcR0lpHo8MVCT2/ZHj2JXgmB0krix6hW/GXi8MidIrQ1bHM2SLM9khlEebOBM8Y0WW6szg1hx7iiAidJPRm1m0OKzlS6M4pi0eLLtOdxclCt8iVi2aqb46zhL5N6EUKuxT6RNcWoY8Tul3vXGwRIcsLWXwidEs4VdEvuj4W+lVBxMvFRyJ0j9AXCH0jMLKC8SazSXTNE577hP5BEcVLgpdRFhcGpYDF67J4KEhk44XnrSr10HUiNBBEohWBc91QsrOhweKVIALtF55riijv9ridFbTKM4sLgmhki1iYc526fefV+APyGDLcLTx7yzz0nxfhH4Jy4fZEi2Wjd9z6/CU1yn/3B3d+yHXYmzjPP+zxXxiXBPdcayL87qf6REXGMQ8KioXCd6RKP1X7QHZlLg/4pic6CnnDro3uPF6aNIT3dSqgJ3hg/5zoA1nCeaFFx02jzavA+YGes4PH1MEEbyHMDQz4yieKMN5j+RovlRs+NnuSmheEyuwmfB3Mdy9tYlWgdIf3cepCX7DzQ94RbBsWj9cHyg/5x4p22n9d/kbWkGzjC5+7tg8ZXybu9DfAjJLlxEhvhG1I6Fzvc9YK+wDxbgvn3O3N3hnewOoSg3vd6JeAPS30rKpz5yPMD1oqqTEQlOep0QAeYJgwwU+jnSSWTWarvUgcdlgkeq3itzKTWdHmg6hW/7Cs+pxHj+yDvjn2OW25f1s4rve8LowNeqoddMAJhP8A+2fOxfI+WBMAAAAASUVORK5CYII=">
       <p>Cerrar sesión</p>
     </div>
@@ -20,11 +20,17 @@
     </div>
   </header>
   <hr>
-  <div class="buttons">
-    <button class="button-menu">Buscar datos almacenados</button>
-    <button class="button-menu">Cargar datos nuevos</button>
+  <div class="buttons" style="margin-top: 10%;">
+    <button class="button-menu" onclick="navigateTo('buscar.html')">Buscar datos almacenados</button>
+    <button class="button-menu" onclick="navigateTo('cargar.html')">Cargar datos nuevos</button>
   </div>
   <script type="module" src="/src/renderer.ts"></script>
 </body>
+
+<script>
+  function navigateTo(url) {
+    window.location.href = url;
+  }
+</script>
 
 </html>
