@@ -1,5 +1,6 @@
-import { app, BrowserWindow } from 'electron';
-import path from 'path';
+const { app, BrowserWindow, ipcMain } = require('electron');
+const path = require('path');
+const oracledb = require('oracledb');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -20,7 +21,7 @@ const createWindow = () => {
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
   } else {
-    mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
+    mainWindow.loadFile(path.join(__dirname, `./html/index.html`));
   }
 
   // Open the DevTools.
@@ -35,8 +36,15 @@ app.on('ready', createWindow);
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
-app.on('window-all-closed', () => {
+app.on('window-all-closed', async () => {
   if (process.platform !== 'darwin') {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (err) {
+        console.error('Error al cerrar la conexión a la base de datos:', err);
+      }
+    }
     app.quit();
   }
 });
@@ -46,6 +54,44 @@ app.on('activate', () => {
   // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
+  }
+});
+
+let connection: any;
+async function connectToDatabase() {
+  try {
+    connection = await oracledb.getConnection({
+      user: 'tu_usuario',
+      password: 'tu_contraseña',
+      connectString: 'localhost/XE'
+    });
+    console.log('Conexión exitosa a la base de datos');
+  } catch (err) {
+    console.error('Error al conectar a la base de datos:', err);
+  }
+}
+
+// Llamar a la función para conectar a la base de datos
+app.on('ready', connectToDatabase);
+
+// Manejar solicitudes desde el renderer process
+ipcMain.on('query-database', async (event: any, query: string) => {
+  try {
+    const result = await connection.execute(query);
+    event.reply('query-result', { rows: result.rows });
+  } catch (err) {
+    event.reply('query-result', { error: err.message });
+  }
+});
+
+// Cerrar la conexión al salir de la aplicación
+app.on('before-quit', async () => {
+  if (connection) {
+    try {
+      await connection.close();
+    } catch (err) {
+      console.error('Error al cerrar la conexión a la base de datos:', err);
+    }
   }
 });
 
