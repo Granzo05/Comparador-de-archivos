@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Menu</title>
+</head>
+
+<body>
+  <header>
+    <div class="cerrar" onclick="navigateTo('menu_principal.html')">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-left"
+        viewBox="0 0 16 16">
+        <path fill-rule="evenodd"
+          d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0" />
+      </svg>
+      <p>Volver</p>
+    </div>
+    <div class="user">
+      <img
+        src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAAsTAAALEwEAmpwYAAACWUlEQVR4nO2ZP08VQRDAfz7ztOAJhQlWWII2IhbS2dEg+CCBDwFaUom0EP0CWosQQPwCkkCDjR9A+ScFNmDyCtHGZ+SZifOSyQY57ti7Pcj9kkkuuZ3Z2dvZmd09KCgo8EkZGAXmgQ3gp4o8z+k7aZNLhoFtoBEh0maIHFECnp/CcVdmVDc4rvP7wFOgG2hRuQtM6jt3EMHDxjq0AFROaH8NWHR0qgTiihPz4vylU+hJmyWjtxVqYY86YXPSlz9uJg6M/ggBmDcOSMzH5ZnRf0MANo0DdxLoy8Ju6kudyJwfxoE44dNEdJr6YuvcDaDV6H8nAOc+hOaMA1Kk4jJl9GfJQRqV1BgnfL6FTqNlp5Atxihkb/NQyNBdpd0WLEXMRKvj/BHwiMDMOIM40CLVo9mpos9TTtiITJMDSscMIkqO1PkSOaKq8Rzl/FYewuZ/lDWjyN7msxY7kU+aKkfyfKQsKLjIdADLwGGC24e4cqjFrsOn87UMHG84UvM1iOUAzjdUZCbOjA2b+6RPr++Djv0iWdHw2ecfYyyLKlr2PQC7g+wkfbp8D2DFGBsnfZ6Y/l75MDhmDO4BbaRHG/DV9Nfnw2iLY3Q94TVKFBXgg+nnI3DZl/F+ZzHvAA98GeefrR1jvw7cwzOP9SRlT1XvgYcJs5PoDOgas3Z/p3lLUXVulW3BeQdM6GxJJrmuV/BX9blL301oW9Fx7UjGGyRl2vV0Vfe4ZagDr4EbZMhN4AWwewbHd/UXlbedZ1Jua/5+CawBX3Q3+Uulpot0VdvIeroV2umCAi4AfwF1jXX6i4PPbQAAAABJRU5ErkJggg==">
+      <p>User name</p>
+    </div>
+  </header>
+  <hr>
+  <div class="file-input-wrapper">
+    <input type="file" id="fileInput" accept=".docx,.pdf" class="file-input">
+    <label for="fileInput" class="file-label">
+      <span class="file-button">Seleccionar archivos</span>
+      <img
+        src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAACXBIWXMAAAsTAAALEwEAmpwYAAAFQklEQVR4nO2daYgcRRSAv3iLZlVU1MRjPEAIguuCZxRB9IdGiccOq6xHNpNoskZDFPFECSheoIJoxDMaEZz1iAdBIx4RbxRB1B9eaBJF8QIRRdBECt5AMVTP2T3zquZ9UGzN0N3br7+pruqqmSowDMMwDMMwDMMwDMOosTWwDFgLvAPcA8ywy1MsWwBHA9cDDwBV4EngSGAN8AVwBnAYsALYCAx5++8JPCb75ZFWAvsMqohx4BtgcyC9CPwOzKzbbw1wsfd6bsb+3aSvBk3KjsBz3gX4GrgDqABlucgTwOrAvkuAu73X04ATZb9u04pBlLId8K4E/TNwnpSWeuYDj0v+BGCR5J20BwPv54E79lPAB4MkZaVXKg5osJ0rIaskv8CTUPHyC718HtSOvfOgSHGV9ybgT2BWk20npLJuJOSigoQwKFJq9cbyFrad5wnxS0LFyy8uUEjyUlxF/jfwL7B7i0IeDZSEipdfUrAQx07AeyLlW6BEIhwrQb3fYBv30Hea5M+X+qaRkEt6ICTZklKWgNzDV4hZ8gmcDAhZlCFkaY+EJCmlIsGEAt5BnshdE7iGyz8SqCsqXn5ZD4UkJ6WRkJuBh+reOxd4uImQy3ssJCkpWUJcB+KPgWeScU/IZIaQK3IWMj/wwUhWSpaQI4APA9uPexfH1T+vyK3tGeBGef/KnIW4TsxnW9w2eilZQsoZFf05npBtgaeBn6Qbvhb81TkLORz4uI3to5aSJSTrvn0K8EKTY94pKS+2An5pc8wlWintCtkD+EP+hthe+sMuyPk83ZjMDW3uE6WUdoUgzd5X5WnZZ0vgfhmscvVKnuwnvdD7dillbxIU4i72y3LhFwNHSZ3j6pENwEhB57pU6pLpKUvpREhtAMrVJ/fKgJXrcLxQ+saK5C7gkyZDBFFL6VRIP5mU29dtwMFdSKkfhlZBjEIce8nw8nrpa3sTmGrhyxJrveFgf8hZDbEK8W+dBwLHAaNtjtGrjC92IXn33/UdE6IME6IME6IME6IME6IME6IME6IME6IME6IME6IME6IME6KM1IWMyDdlfKxzsY+EPlgmpI+YEGVMyDdhkiwhwzn+7rwaSGMFxDcU+OpQMkJccGfl9FPnciAV8Ssoq9SVYXWIMkyIMkyIMkyIMpIWMtxlk3a44GZzqOmc9HNIN83eUg+azaGmc9LPITEyYp2Luki6DomRignRhQlRRtJC8my2jnVwvFb3GRsUIXk2W0sdHK/VfUqDIiRGKiZEFyZEGSZEGSZEGUkL6WVv7XBOvb1JC+llb+1Qh/+rNEhCYqRiQnRhQpRhQpSRjJAJbzrYmFmQypj6qcDzxM81wE0pCNkf+CFjlZ2YWA2cnYIQx0fAHOJlJvBrYLJO1ULmycnVJtj3cUtUfN6DeRSLmthsyptt22ehxFxft6hgjrccXoj7gJc6mAm0n7jb7O2y4Itb7KyeayXmkKy+c4ic3HfyqQrNKu1mHv1Suia2QS/TZIGadcBrwK4Z21UlZnfrUhnEejlBt4pnFidJoL8Bb8mc71VF6Q3ge+AzudBuUucQ02Vm7k2aZ7q+RYS4W1MzdgNmA2cW3MlYbjMdL7NfN2O5xPo6itlFWiPuRC8lXWYD/0icx6CcUSnGbrW2y0iPk2UNXyfjViLBrR31n5z0OlnLNuteHAuHylKxtbieiC2mubJAS232Z1eJvy0r3FQjSVMy0/UGL46/gKsyWpLqcS2R64BPC1iCe3OP00aZUlxti6pdZshauacraEmVW0yjMvX4QbGWCMMwDMMwDMNAH/8DgWZ07pOSrr0AAAAASUVORK5CYII=">
+    </label>
+  </div>
+  <script type="module" src="/src/renderer.ts"></script>
+  <script type="module" src="/src/ts/cargar.ts"></script>
+</body>
+
+</html>
