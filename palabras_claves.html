@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Menu</title>
+  <link rel="stylesheet" href="./src/css/index.css">
 </head>
 
 <body>
@@ -25,15 +26,21 @@
   <hr>
   <p>Archivos cargados correctamente, ingrese las palabras claves para generar un informe y obtener los datos buscados
   </p>
-  <div class="buttons" style="margin-top: 10%;">
+  <div class="div-claves">
     <label for="palabras-claves">
       <input type="text" id="palabras-claves"
         placeholder="Ingrese las palabras claves separadas por comas (Ej. Escuela, docente, alumno, estudio)">
     </label>
-    <button class="button-menu" onclick="crearResumen()">Filtrar</button>
+    <button class="button-black" onclick="navigateTo('resumen.html')">Filtrar</button>
   </div>
   <script type="module" src="/src/renderer.ts"></script>
   <script type="module" src="/src/ts/cargar.ts"></script>
 </body>
+
+<script>
+  function navigateTo(url) {
+    window.location.href = url;
+  }
+</script>
 
 </html>

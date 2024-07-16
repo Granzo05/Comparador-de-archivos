@@ -182,7 +182,7 @@ header {
   gap: 10px;
 }
 
-.file-label img{
+.file-label img {
   width: 100%;
   height: auto;
   max-width: 50px;
@@ -202,3 +202,36 @@ header {
   margin-right: 10px;
   text-align: center;
 }
+
+
+/* Palabras claves */
+
+.div-claves {
+  width: 600px;
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  padding: 25px;
+  border: 1px solid black;
+  margin-top: 50px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.div-claves input {
+  height: 200px;
+  width: 400px;
+  border: 1px solid #D1D1D1;
+}
+
+.button-black {
+  width: 418px;
+  height: 40px;
+  background-color: black;
+  color: white;
+  margin-top: 5px;
+  cursor: pointer;
+}
+
+
+/* resumen */
