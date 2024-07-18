@@ -52,7 +52,7 @@ async function buscarParametrosEstudio() {
                 selectParametros.innerHTML = ''; // Limpiar las opciones actuales
 
                 result.rows.forEach((parametro: string) => {
-                    let option = document.createElement('option');
+                    const option = document.createElement('option');
                     option.textContent = parametro;
                     option.value = parametro;
                     selectParametros.appendChild(option);

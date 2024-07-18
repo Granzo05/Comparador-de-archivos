@@ -1,4 +1,7 @@
 import { getDocument, PDFDocumentProxy } from 'pdfjs-dist';
+import * as mammoth from 'mammoth';
+
+console.log('El archivo cargar.ts se ha cargado correctamente');
 
 async function extractTextFromPDF(file: File): Promise<string> {
     const arrayBuffer = await file.arrayBuffer();
@@ -29,7 +32,6 @@ export async function leerArchivos(files: FileList) {
                 textContent = await extractTextFromPDF(file);
             } else if (file.name.endsWith('.docx')) {
                 const arrayBuffer = await file.arrayBuffer();
-                const mammoth = await import('mammoth');
                 const result = await mammoth.extractRawText({ arrayBuffer });
                 textContent = result.value;
             } else {
@@ -42,4 +44,36 @@ export async function leerArchivos(files: FileList) {
         sessionStorage.setItem('uploadedFiles', JSON.stringify(allText));
         window.location.href = 'palabras_claves.html';
     }
+}
+
+document.getElementById('comparar-button').addEventListener('click', abrirModal);
+document.getElementById('cerrar-button').addEventListener('click', cerrarModal);
+document.getElementById('volver-button').addEventListener('click', volverModal);
+document.getElementById('siguiente-button').addEventListener('click', siguientePaso);
+
+const primerPaso = document.getElementById('paso-1');
+const select = document.getElementById('tipo-comparativa') as HTMLSelectElement;
+const modalBackground = document.getElementById('modalBackground');
+
+export function volverModal() {
+    const pasoSiguiente = document.getElementById(`paso-${select.value}`);
+    pasoSiguiente.style.display = 'none';
+    primerPaso.style.display = 'flex';
+}
+
+export function abrirModal() {
+    modalBackground.style.display = 'flex';
+}
+
+export function cerrarModal() {
+    modalBackground.style.display = 'none';
+    primerPaso.style.display = 'flex';
+    const pasoSiguiente = document.getElementById(`paso-${select.value}`);
+    pasoSiguiente.style.display = 'none';
+}
+
+export function siguientePaso() {
+    primerPaso.style.display = 'none';
+    const pasoSiguiente = document.getElementById(`paso-${select.value}`);
+    pasoSiguiente.style.display = 'flex';
 }

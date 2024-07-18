@@ -30,14 +30,8 @@ const createWindow = () => {
   mainWindow.webContents.openDevTools();
 };
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
 app.on('ready', createWindow);
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
 app.on('window-all-closed', async () => {
   if (process.platform !== 'darwin') {
     if (connection) {
@@ -52,8 +46,6 @@ app.on('window-all-closed', async () => {
 });
 
 app.on('activate', () => {
-  // On OS X it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }
@@ -73,10 +65,7 @@ async function connectToDatabase() {
   }
 }
 
-// Llamar a la función para conectar a la base de datos
 app.on('ready', connectToDatabase);
-
-// Manejar solicitudes desde el renderer process
 ipcMain.on('query-database', async (event: any, query: string) => {
   try {
     const result = await connection.execute(query);
@@ -86,7 +75,6 @@ ipcMain.on('query-database', async (event: any, query: string) => {
   }
 });
 
-// Cerrar la conexión al salir de la aplicación
 app.on('before-quit', async () => {
   if (connection) {
     try {
@@ -96,6 +84,3 @@ app.on('before-quit', async () => {
     }
   }
 });
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and import them here.

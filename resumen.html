@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <title>Menu</title>
+  <title>Datos</title>
   <link rel="stylesheet" href="./src/css/resumen.css">
 </head>
 
@@ -28,11 +28,11 @@
     <div class="selects">
       <div class="div-escuela">
         <label for="escuelas">Escuela</label>
-        <select name="escuelas" id="escuelas"></select>
+        <select class="select-resumen" name="escuelas" id="escuelas"></select>
       </div>
       <div class="div-escuela">
         <label for="division">Division</label>
-        <select name="divisiones" id="divisiones">
+        <select class="select-resumen" name="divisiones" id="divisiones">
           <option value="">Toda la escuela</option>
           <option value="1ºA">1ºA</option>
           <option value="1ºB">1ºB</option>
@@ -60,108 +60,228 @@
     </div>
 
     <div class="comparar">
-      <button type="button" onclick="alert('Comparar')">Comparar...</button>
+      <button style="cursor: pointer;" id="comparar-button">Comparar...</button>
     </div>
   </div>
 
-  <div class="modal-comparativa">
-    <div class="paso-1">
-      <p>¿Que tipo de comparativa buscas?</p>
-      <select name="tipo-comparativa" id="tipo-comparativa">
-        <option value="1">Entre alumnos de una misma escuela</option>
-        <option value="2">Entre alumnos de distintas escuelas</option>
-        <option value="3">Entre escuelas</option>
-      </select>
-    </div>
-    <div class="form-login-1" hidden>
-      <div>
-        <p>Nombre o número de la escuela (obligatorio)</p>
-        <input type="text" name="escuela" id="escuela" placeholder="Ingresar el dato de la escuela">
-      </div>
-      <div>
-        <p>División del curso del alumno 1</p>
-        <select name="divisiones" id="divisiones">
-          <option value="">Seleccionar la división</option>
-          <option value="1ºA">1ºA</option>
-          <option value="1ºB">1ºB</option>
-          <option value="1ºC">1ºC</option>
-          <option value="2ºA">2ºA</option>
-          <option value="2ºB">2ºB</option>
-          <option value="2ºC">2ºC</option>
-          <option value="3ºA">3ºA</option>
-          <option value="3ºB">3ºB</option>
-          <option value="3ºC">3ºC</option>
-          <option value="4ºA">4ºA</option>
-          <option value="4ºB">4ºB</option>
-          <option value="4ºC">4ºC</option>
-          <option value="5ºA">5ºA</option>
-          <option value="5ºB">5ºB</option>
-          <option value="5ºC">5ºC</option>
-          <option value="6ºA">6ºA</option>
-          <option value="6ºB">6ºB</option>
-          <option value="6ºC">6ºC</option>
-          <option value="7ºA">7ºA</option>
-          <option value="7ºB">7ºB</option>
-          <option value="7ºC">7ºC</option>
+  <div class="modal-background" id="modalBackground">
+    <div class="modal">
+      <span class="volver-button" id="volver-button">&larr;</span>
+      <span class="close-button" id="cerrar-button">&times;</span>
+      <div class="paso-1" id="paso-1">
+        <p>¿Que tipo de comparativa buscas?</p>
+        <select name="tipo-comparativa" class="select-modal" id="tipo-comparativa">
+          <option value="2">Entre alumnos de una misma escuela</option>
+          <option value="3">Entre alumnos de distintas escuelas</option>
+          <option value="4">Entre escuelas</option>
         </select>
+
+        <button class="button-black-modal" id="siguiente-button">Siguiente</button>
       </div>
-      <div>
-        <p>Nombre del alumno 1</p>
-        <input type="text" name="docente" id="docente" placeholder="Ingresar el nombre del primer alumno">
+
+      <div class="form-login-1" id="paso-2" hidden>
+        <p>Opción 2</p>
+        <div>
+          <p>Nombre o número de la escuela 1 (obligatorio)</p>
+          <input type="text" name="escuela" id="escuela" placeholder="Ingresar el dato de la escuela">
+        </div>
+        <div>
+          <p>División del curso del alumno 1</p>
+          <select class="select-modal" name="divisiones" id="divisiones">
+            <option value="">Seleccionar la división</option>
+            <option value="1ºA">1ºA</option>
+            <option value="1ºB">1ºB</option>
+            <option value="1ºC">1ºC</option>
+            <option value="2ºA">2ºA</option>
+            <option value="2ºB">2ºB</option>
+            <option value="2ºC">2ºC</option>
+            <option value="3ºA">3ºA</option>
+            <option value="3ºB">3ºB</option>
+            <option value="3ºC">3ºC</option>
+            <option value="4ºA">4ºA</option>
+            <option value="4ºB">4ºB</option>
+            <option value="4ºC">4ºC</option>
+            <option value="5ºA">5ºA</option>
+            <option value="5ºB">5ºB</option>
+            <option value="5ºC">5ºC</option>
+            <option value="6ºA">6ºA</option>
+            <option value="6ºB">6ºB</option>
+            <option value="6ºC">6ºC</option>
+            <option value="7ºA">7ºA</option>
+            <option value="7ºB">7ºB</option>
+            <option value="7ºC">7ºC</option>
+          </select>
+        </div>
+        <div>
+          <p>Nombre del alumno 1</p>
+          <input type="text" name="docente" id="docente" placeholder="Ingresar el nombre del primer alumno">
+        </div>
+        <hr>
+        <div>
+          <p>División del curso del alumno 2</p>
+          <select class="select-modal" name="divisiones" id="divisiones">
+            <option value="">Seleccionar la división</option>
+            <option value="1ºA">1ºA</option>
+            <option value="1ºB">1ºB</option>
+            <option value="1ºC">1ºC</option>
+            <option value="2ºA">2ºA</option>
+            <option value="2ºB">2ºB</option>
+            <option value="2ºC">2ºC</option>
+            <option value="3ºA">3ºA</option>
+            <option value="3ºB">3ºB</option>
+            <option value="3ºC">3ºC</option>
+            <option value="4ºA">4ºA</option>
+            <option value="4ºB">4ºB</option>
+            <option value="4ºC">4ºC</option>
+            <option value="5ºA">5ºA</option>
+            <option value="5ºB">5ºB</option>
+            <option value="5ºC">5ºC</option>
+            <option value="6ºA">6ºA</option>
+            <option value="6ºB">6ºB</option>
+            <option value="6ºC">6ºC</option>
+            <option value="7ºA">7ºA</option>
+            <option value="7ºB">7ºB</option>
+            <option value="7ºC">7ºC</option>
+          </select>
+        </div>
+        <div>
+          <p>Nombre del alumno 2</p>
+          <input type="text" name="alumno1" id="alumno1" placeholder="Ingresar el nombre del segundo alumno">
+        </div>
+        <div>
+          <p>Parámetro de estudio</p>
+          <select class="select-modal" name="parametro" id="parametro">
+            <option value="">Seleccionar el parámetro</option>
+          </select>
+        </div>
+        <div>
+          <p>Desde</p>
+          <input type="date" name="desde" id="desde">
+        </div>
+        <div>
+          <p>Hasta</p>
+          <input type="date" name="hasta" id="hasta">
+        </div>
+        <button class="button-black" id="datos-button">Siguiente</button>
       </div>
-      <div>
-        <p>División del curso del alumno 2</p>
-        <select name="divisiones" id="divisiones">
-          <option value="">Seleccionar la división</option>
-          <option value="1ºA">1ºA</option>
-          <option value="1ºB">1ºB</option>
-          <option value="1ºC">1ºC</option>
-          <option value="2ºA">2ºA</option>
-          <option value="2ºB">2ºB</option>
-          <option value="2ºC">2ºC</option>
-          <option value="3ºA">3ºA</option>
-          <option value="3ºB">3ºB</option>
-          <option value="3ºC">3ºC</option>
-          <option value="4ºA">4ºA</option>
-          <option value="4ºB">4ºB</option>
-          <option value="4ºC">4ºC</option>
-          <option value="5ºA">5ºA</option>
-          <option value="5ºB">5ºB</option>
-          <option value="5ºC">5ºC</option>
-          <option value="6ºA">6ºA</option>
-          <option value="6ºB">6ºB</option>
-          <option value="6ºC">6ºC</option>
-          <option value="7ºA">7ºA</option>
-          <option value="7ºB">7ºB</option>
-          <option value="7ºC">7ºC</option>
-        </select>
+
+
+      <div class="form-login-1" id="paso-3" hidden>
+        <p>Opción 3</p>
+        <div>
+          <p>Nombre o número de la escuela 1 (obligatorio)</p>
+          <input type="text" name="escuela" id="escuela-1-paso-3" placeholder="Ingresar el dato de la escuela">
+        </div>
+        <div>
+          <p>División del curso del alumno 1</p>
+          <select class="select-modal" name="divisiones" id="divisiones">
+            <option value="">Seleccionar la división</option>
+            <option value="1ºA">1ºA</option>
+            <option value="1ºB">1ºB</option>
+            <option value="1ºC">1ºC</option>
+            <option value="2ºA">2ºA</option>
+            <option value="2ºB">2ºB</option>
+            <option value="2ºC">2ºC</option>
+            <option value="3ºA">3ºA</option>
+            <option value="3ºB">3ºB</option>
+            <option value="3ºC">3ºC</option>
+            <option value="4ºA">4ºA</option>
+            <option value="4ºB">4ºB</option>
+            <option value="4ºC">4ºC</option>
+            <option value="5ºA">5ºA</option>
+            <option value="5ºB">5ºB</option>
+            <option value="5ºC">5ºC</option>
+            <option value="6ºA">6ºA</option>
+            <option value="6ºB">6ºB</option>
+            <option value="6ºC">6ºC</option>
+            <option value="7ºA">7ºA</option>
+            <option value="7ºB">7ºB</option>
+            <option value="7ºC">7ºC</option>
+          </select>
+        </div>
+        <div>
+          <p>Nombre del alumno 1</p>
+          <input type="text" name="docente" id="docente" placeholder="Ingresar el nombre del primer alumno">
+        </div>
+        <hr>
+        <div>
+          <p>Nombre o número de la escuela 2 (obligatorio)</p>
+          <input type="text" name="escuela2" id="escuela-2-paso-3" placeholder="Ingresar el dato de la escuela">
+        </div>
+        <div>
+          <p>División del curso del alumno 2</p>
+          <select class="select-modal" name="divisiones" id="divisiones">
+            <option value="">Seleccionar la división</option>
+            <option value="1ºA">1ºA</option>
+            <option value="1ºB">1ºB</option>
+            <option value="1ºC">1ºC</option>
+            <option value="2ºA">2ºA</option>
+            <option value="2ºB">2ºB</option>
+            <option value="2ºC">2ºC</option>
+            <option value="3ºA">3ºA</option>
+            <option value="3ºB">3ºB</option>
+            <option value="3ºC">3ºC</option>
+            <option value="4ºA">4ºA</option>
+            <option value="4ºB">4ºB</option>
+            <option value="4ºC">4ºC</option>
+            <option value="5ºA">5ºA</option>
+            <option value="5ºB">5ºB</option>
+            <option value="5ºC">5ºC</option>
+            <option value="6ºA">6ºA</option>
+            <option value="6ºB">6ºB</option>
+            <option value="6ºC">6ºC</option>
+            <option value="7ºA">7ºA</option>
+            <option value="7ºB">7ºB</option>
+            <option value="7ºC">7ºC</option>
+          </select>
+        </div>
+        <div>
+          <p>Nombre del alumno 2</p>
+          <input type="text" name="alumno1" id="alumno1" placeholder="Ingresar el nombre del segundo alumno">
+        </div>
+        <div>
+          <p>Parámetro de estudio</p>
+          <select class="select-modal" name="parametro" id="parametro">
+            <option value="">Seleccionar el parámetro</option>
+          </select>
+        </div>
+        <div>
+          <p>Desde</p>
+          <input type="date" name="desde" id="desde">
+        </div>
+        <div>
+          <p>Hasta</p>
+          <input type="date" name="hasta" id="hasta">
+        </div>
+        <button class="button-black" id="datos-button">Siguiente</button>
       </div>
-      <div>
-        <p>Nombre del alumno 2</p>
-        <input type="text" name="alumno1" id="alumno1" placeholder="Ingresar el nombre del segundo alumno">
-      </div>
-      <div>
-        <p>Parámetro de estudio</p>
-        <select name="parametro" id="parametro">
-          <option value="">Seleccionar el parámetro</option>
-        </select>
-      </div>
-      <div>
-        <p>Desde</p>
-        <input type="date" name="desde" id="desde" class="input-date" placeholder="Ingresar el nombre de usuario">
-      </div>
-      <div>
-        <p>Hasta</p>
-        <input type="date" name="hasta" id="hasta" class="input-date" placeholder="Ingresar el nombre de usuario">
-      </div>
-      <div class="buttons">
-        <button class="button-iniciar-sesion" onclick="buscarDatos()">Buscar</button>
+
+
+      <div class="form-login-1" id="paso-4" hidden>
+        <p>Opción 4</p>
+        <div>
+          <p>Nombre o número de la escuela 1 (obligatorio)</p>
+          <input type="text" name="escuela" id="escuela-1-paso-4" placeholder="Ingresar el dato de la escuela">
+        </div>
+        <div>
+          <p>Nombre o número de la escuela 2 (obligatorio)</p>
+          <input type="text" name="escuela2" id="escuela-2-paso-4" placeholder="Ingresar el dato de la escuela">
+        </div>
+        <div>
+          <p>Desde</p>
+          <input type="date" name="desde" id="desde">
+        </div>
+        <div>
+          <p>Hasta</p>
+          <input type="date" name="hasta" id="hasta">
+        </div>
+        <button class="button-black" id="datos-button">Siguiente</button>
       </div>
     </div>
   </div>
 
   <script type="module" src="/src/renderer.ts"></script>
-  <script type="text/javascript" src="/src/ts/cargar.ts"></script>
+  <script type="module" src="/src/ts/cargar.ts"></script>
 </body>
 
 <script>

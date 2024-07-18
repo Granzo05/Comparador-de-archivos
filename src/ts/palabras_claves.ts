@@ -1,5 +1,5 @@
 const palabrasClaves = document.getElementById('palabras') as HTMLElement;
-let palabrasClavesSplit: string[] = palabrasClaves.innerHTML.split(',');
+const palabrasClavesSplit: string[] = palabrasClaves.innerHTML.split(',');
 
 document.addEventListener('DOMContentLoaded', () => {
     const storedData = localStorage.getItem('uploadedFiles');
