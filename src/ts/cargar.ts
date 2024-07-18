@@ -59,6 +59,8 @@ export function volverModal() {
     const pasoSiguiente = document.getElementById(`paso-${select.value}`);
     pasoSiguiente.style.display = 'none';
     primerPaso.style.display = 'flex';
+
+    document.getElementById('volver-button').style.display = 'none';
 }
 
 export function abrirModal() {
@@ -70,10 +72,14 @@ export function cerrarModal() {
     primerPaso.style.display = 'flex';
     const pasoSiguiente = document.getElementById(`paso-${select.value}`);
     pasoSiguiente.style.display = 'none';
+
+    document.getElementById('volver-button').style.display = 'none';
 }
 
 export function siguientePaso() {
     primerPaso.style.display = 'none';
     const pasoSiguiente = document.getElementById(`paso-${select.value}`);
     pasoSiguiente.style.display = 'flex';
+
+    if (parseInt(select.value) > 0) document.getElementById('volver-button').style.display = 'block';
 }
