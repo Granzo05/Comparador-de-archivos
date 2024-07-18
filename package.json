@@ -39,6 +39,7 @@
   "license": "MIT",
   "dependencies": {
     "compromise": "^14.13.0",
+    "dotenv": "^16.4.5",
     "electron-squirrel-startup": "^1.0.1",
     "mammoth": "^1.8.0",
     "oracledb": "^6.5.1",

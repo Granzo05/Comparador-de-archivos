@@ -1,12 +1,18 @@
 const { app, BrowserWindow, screen: electronScreen, ipcMain } = require('electron');
 const path = require('path');
 const oracledb = require('oracledb');
+require('dotenv').config();
+
+// Configuración del cliente Oracle
+oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT;
+oracledb.initOracleClient({ libDir: 'B:/Oracle/instantclient_21_13' });
 
 if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
 let mainWindow;
+let connection: any;
 
 const createWindow = () => {
   const { width, height } = electronScreen.getPrimaryDisplay().workAreaSize;
@@ -16,21 +22,25 @@ const createWindow = () => {
     height: height,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      enableRemoteModule: false,
+      nodeIntegration: false
     },
   });
 
-  // and load the index.html of the app.
-  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-    mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+  if (process.env.MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+    mainWindow.loadURL(process.env.MAIN_WINDOW_VITE_DEV_SERVER_URL);
   } else {
-    mainWindow.loadFile(path.join(__dirname, `./html/index.html`));
+    mainWindow.loadFile(path.join(__dirname, './html/index.html'));
   }
 
-  // Open the DevTools.
   mainWindow.webContents.openDevTools();
 };
 
-app.on('ready', createWindow);
+app.on('ready', async () => {
+  createWindow();
+  await connectToDatabase();
+});
 
 app.on('window-all-closed', async () => {
   if (process.platform !== 'darwin') {
@@ -51,13 +61,12 @@ app.on('activate', () => {
   }
 });
 
-let connection: any;
 async function connectToDatabase() {
   try {
     connection = await oracledb.getConnection({
-      user: 'tu_usuario',
-      password: 'tu_contraseña',
-      connectString: 'localhost/XE'
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      connectString: process.env.DB_CONNECT_STRING,
     });
     console.log('Conexión exitosa a la base de datos');
   } catch (err) {
@@ -65,13 +74,25 @@ async function connectToDatabase() {
   }
 }
 
-app.on('ready', connectToDatabase);
-ipcMain.on('query-database', async (event: any, query: string) => {
+async function executeQuery(query: any) {
+  if (connection) {
+    try {
+      const result = await connection.execute(query);
+      return { rows: result.rows }; 
+    } catch (err) {
+      console.error('Error executing query:', err);
+      return { error: err.message };
+    }
+  } else {
+    return { error: 'No connection to the database.' };
+  }
+}
+
+ipcMain.handle('query-database', async (event: any, query: any) => {
   try {
-    const result = await connection.execute(query);
-    event.reply('query-result', { rows: result.rows });
+    return await executeQuery(query); 
   } catch (err) {
-    event.reply('query-result', { error: err.message });
+    return { error: err.message }; 
   }
 });
 
