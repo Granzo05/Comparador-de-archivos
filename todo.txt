@@ -1,0 +1,18 @@
+[] Agregar usuario
+[] Leer archivos
+[] Generar graficos
+[] Crear tabla de alumnos
+[] Crear tabla de escuelas
+[] Crear tabla de docentes?
+[] Encriptar datos
+[] Comparativa entre alumnos
+[] Comparativa entre divisiones
+[] Comparativa por fechas
+[] Verificar la carga de muchos archivos
+[] Ver en cuanto a memoria como es mejor almacenar estos datos en la sesion
+[] Control de roles
+[] Guia de usuario
+[] Historias de usuario
+[] Carpeta final
+
+ 
