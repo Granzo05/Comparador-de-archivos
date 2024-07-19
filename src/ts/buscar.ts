@@ -21,21 +21,6 @@ async function buscarDatos() {
         desde,
         hasta
     };
-
-    try {
-        const response = await fetch('/ruta/a/tu/api', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(datosBusqueda)
-        });
-        const result = await response.json();
-        console.log('Resultado de la búsqueda:', result);
-        // Aquí podrías mostrar los resultados en la UI
-    } catch (error) {
-        console.error('Error al buscar datos:', error);
-    }
 }
 
 async function buscarParametrosEstudio() {

@@ -1,5 +1,6 @@
 interface ElectronAPI {
-    queryDatabase: (query: string) => void;
+    selectDatabase: (query: string) => void;
+    insertDatabase: (query: string) => void;
     onQueryResult: (callback: (result: any) => void) => void;
 }
 

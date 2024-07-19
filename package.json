@@ -22,6 +22,7 @@
     "@electron-forge/plugin-vite": "^7.4.0",
     "@electron/fuses": "^1.8.0",
     "@types/pdfjs-dist": "^2.10.378",
+    "@types/toastify-js": "^1.12.3",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",
     "electron": "31.2.0",
@@ -29,7 +30,10 @@
     "eslint-plugin-import": "^2.29.1",
     "ts-node": "^10.9.2",
     "typescript": "~4.5.4",
-    "vite": "^5.3.3"
+    "vite": "^5.3.3",
+    "webpack": "^5.93.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^5.0.4"
   },
   "keywords": [],
   "author": {
@@ -38,12 +42,14 @@
   },
   "license": "MIT",
   "dependencies": {
+    "argon2": "^0.40.3",
     "compromise": "^14.13.0",
     "dotenv": "^16.4.5",
     "electron-squirrel-startup": "^1.0.1",
     "mammoth": "^1.8.0",
     "oracledb": "^6.5.1",
     "pdf-lib": "^1.17.1",
-    "pdfjs-dist": "^4.4.168"
+    "pdfjs-dist": "^4.4.168",
+    "toastify-js": "^1.12.0"
   }
 }

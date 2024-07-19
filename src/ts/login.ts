@@ -4,10 +4,10 @@ document.getElementById('login')?.addEventListener('click', async () => {
   const user = (document.getElementById('user') as HTMLInputElement).value;
   const password = (document.getElementById('pass') as HTMLInputElement).value;
 
-  const query = `SELECT * FROM USUARIOS WHERE usuario = '${user}' AND contraseña = '${password}'`;
+  const query = `SELECT * FROM USUARIO WHERE usuario = '${user}' AND contraseña = '${password}'`;
 
   try {
-    const result: any = await window.electronAPI.queryDatabase(query);
+    const result: any = await window.electronAPI.selectDatabase(query);
 
     if (result.error) {
       console.error('Error en la consulta:', result.error);

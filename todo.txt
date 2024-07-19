@@ -1,4 +1,4 @@
-[] Agregar usuario
+[x] Agregar usuario
 [] Leer archivos
 [] Generar graficos
 [] Crear tabla de alumnos

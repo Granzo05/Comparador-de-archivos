@@ -2,6 +2,7 @@ const { app, BrowserWindow, screen: electronScreen, ipcMain } = require('electro
 const path = require('path');
 const oracledb = require('oracledb');
 require('dotenv').config();
+const argon2 = require('argon2');
 
 // Configuración del cliente Oracle
 oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT;
@@ -78,7 +79,7 @@ async function executeQuery(query: any) {
   if (connection) {
     try {
       const result = await connection.execute(query);
-      return { rows: result.rows }; 
+      return { rows: result.rows };
     } catch (err) {
       console.error('Error executing query:', err);
       return { error: err.message };
@@ -88,11 +89,33 @@ async function executeQuery(query: any) {
   }
 }
 
-ipcMain.handle('query-database', async (event: any, query: any) => {
+async function executeInsert(query: string) {
+  if (connection) {
+    try {
+      const result = await connection.execute(query, [], { autoCommit: true });
+      return { rows: result.rows };  
+    } catch (err) {
+      console.error('Error executing insert query:', err);
+      return { error: err.message };
+    }
+  } else {
+    return { error: 'No connection to the database.' };
+  }
+}
+
+ipcMain.handle('select-database', async (event: any, query: any) => {
   try {
-    return await executeQuery(query); 
+    return await executeQuery(query);
   } catch (err) {
-    return { error: err.message }; 
+    return { error: err.message };
+  }
+});
+
+ipcMain.handle('insert-database', async (event: any, query: any) => {
+  try {
+    return await executeInsert(query);
+  } catch (err) {
+    return { error: err.message };
   }
 });
 
