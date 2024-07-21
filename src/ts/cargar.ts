@@ -1,8 +1,6 @@
 import { getDocument, PDFDocumentProxy } from 'pdfjs-dist';
 import * as mammoth from 'mammoth';
 
-console.log('El archivo cargar.ts se ha cargado correctamente');
-
 async function extractTextFromPDF(file: File): Promise<string> {
     const arrayBuffer = await file.arrayBuffer();
     const pdfDocument = await getDocument({ data: arrayBuffer }).promise as PDFDocumentProxy;
@@ -20,7 +18,13 @@ async function extractTextFromPDF(file: File): Promise<string> {
     return extractedText;
 }
 
-export async function leerArchivos(files: FileList) {
+
+
+document.getElementById('fileInput')?.addEventListener('input', async () => {
+    const filesElement = document.getElementById('fileInput') as HTMLInputElement;
+
+    const files = filesElement.files;
+
     if (files.length > 0) {
         let allText = '';
 
@@ -38,13 +42,15 @@ export async function leerArchivos(files: FileList) {
                 textContent = await file.text();
             }
 
+            console.log(textContent);
+
             allText += ` ${textContent}`;
         }
 
         sessionStorage.setItem('uploadedFiles', JSON.stringify(allText));
-        window.location.href = 'palabras_claves.html';
+        //window.location.href = 'palabras_claves.html';
     }
-}
+});
 
 document.getElementById('comparar-button').addEventListener('click', abrirModal);
 document.getElementById('cerrar-button').addEventListener('click', cerrarModal);
