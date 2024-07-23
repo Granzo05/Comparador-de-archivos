@@ -3,13 +3,13 @@
 
 <head>
   <meta charset="UTF-8" />
-  <title>Palabras claves</title>
+  <title>Login</title>
   <link rel="stylesheet" href="./src/css/index.css">
 </head>
 
 <body>
   <header>
-    <div class="cerrar" onclick="navigateTo('cargar_archivos.html')">
+    <div class="cerrar" onclick="navigateTo('menu_principal.html')">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-left"
         viewBox="0 0 16 16">
         <path fill-rule="evenodd"
@@ -23,19 +23,44 @@
         <p id="user-name">Invitado</p>
       </div>
   </header>
-  <hr>
-  <p>Archivos cargados correctamente, ingrese las palabras claves para generar un informe y obtener los datos buscados
-  </p>
-  <div class="div-claves">
-    <label for="palabras-claves">
-      <input type="text" id="palabras-claves" style="width: 1000px; margin-bottom: 25px;"
-        placeholder="Ingrese las palabras claves separadas por comas (Ej. Escuela, docente, alumno, estudio)">
-    </label>
-    <button class="button-black" id="filtro-button">Filtrar</button>
+  <div class="form-login">
+    <div>
+      <p>Nombre o número de la escuela (obligatorio)</p>
+      <input type="text" name="user" id="user" placeholder="Ingresar el dato de la escuela">
+    </div>
+    <div>
+      <p>Nombre del alumno (opcional)</p>
+      <input type="text" name="user" id="user" placeholder="Ingresar el nombre del alumno">
+    </div>
+    <div>
+      <p>Nombre del docente (opcional)</p>
+      <input type="text" name="user" id="user" placeholder="Ingresar el nombre del docente">
+    </div>
+    <div>
+      <p>División del curso</p>
+      <select name="divisiones" id="divisiones">
+        <option value="">Seleccionar la división</option>
+      </select>
+    </div>
+    <div>
+      <p>Parámetro de estudio</p>
+      <select name="parametro" id="parametro">
+        <option value="">Seleccionar el parámetro</option>
+      </select>
+    </div>
+    <div>
+      <p>Desde</p>
+      <input type="date" name="user" id="user" class="input-date" placeholder="Ingresar el nombre de usuario">
+    </div>
+    <div>
+      <p>Hasta</p>
+      <input type="date" name="user" id="user" class="input-date" placeholder="Ingresar el nombre de usuario">
+    </div>
+    <div class="buttons">
+      <button class="button-iniciar-sesion" onclick="navigateTo('resumen_datos.html')">Buscar</button>
+    </div>
   </div>
   <script type="module" src="/src/renderer.ts"></script>
-  <script type="module" src="/src/ts/cargar_archivos.ts"></script>
-  <script type="module" src="/src/ts/palabras_claves.ts"></script>
 </body>
 
 <script>

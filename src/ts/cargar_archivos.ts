@@ -42,9 +42,11 @@ document.getElementById('fileInput')?.addEventListener('input', async () => {
                 textContent = await file.text();
             }
 
-            console.log(textContent);
-
             allText += ` ${textContent}`;
+
+            if(i === 0) {
+                sessionStorage.setItem('exampleText', JSON.stringify(allText));
+            }
         }
 
         sessionStorage.setItem('uploadedFiles', JSON.stringify(allText));
