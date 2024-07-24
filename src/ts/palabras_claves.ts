@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     palabrasClavesInput.innerHTML = '';
 
     const result: any = await window.electronAPI.selectDatabase(query);
-    console.log(result);
+
     if (result.error) {
       console.error('Error en la consulta:', result.error);
     } else {
@@ -37,12 +37,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         ID_PALABRAS = row.ID;
 
         const formattedPalabras = palabrasClavesDB
-        .map((palabra: string) => palabra.trim().replace(/[\[\]"']/g, ''))
-        .filter(palabra => palabra && parsedText.includes(palabra)) 
-        .map((palabra: string) => `<span class="styled-word">${palabra}</span>`)
-        .join(', ');
+          .map((palabra: string) => palabra.trim().replace(/[\[\]"']/g, ''))
+          .filter(palabra => palabra && parsedText.includes(palabra))
+          .map((palabra: string) => `<span class="styled-word">${palabra}</span>`)
+          .join(', ');
 
-      palabrasClavesInput.innerHTML = formattedPalabras;
+        palabrasClavesInput.innerHTML = formattedPalabras;
       }
     }
   } catch (error) {
@@ -70,9 +70,9 @@ document.getElementById('filtro-button')?.addEventListener('click', async () => 
       const query = 'UPDATE model SET PALABRAS_CLAVES = :jsonPalabras WHERE ID = :id';
       const params = { jsonPalabras, id: ID_PALABRAS };
 
-      const result = await window.electronAPI.insertDatabase(query, params);
+      await window.electronAPI.insertDatabase(query, params);
 
-      console.log('Inserción exitosa:', result);
+
     } else {
       console.log('No hay nuevas palabras clave para insertar.');
     }
@@ -82,20 +82,26 @@ document.getElementById('filtro-button')?.addEventListener('click', async () => 
   }
 });
 
+let isDeleteKeyPressed = false;
+
 document.getElementById('palabras-claves').addEventListener('input', function () {
+  if (isDeleteKeyPressed) {
+    // Si la tecla presionada es Backspace o Delete, no ejecutar el código
+    return;
+  }
+
   const div = document.getElementById('palabras-claves') as HTMLElement;
   const content = div.innerText;
 
-  // Split content by commas
+  // Separar el texto cuando aparezca una coma
   const segments = content.split(',').map(segment => {
     const trimmedSegment = segment.trim();
-    // Apply class only if the segment is not empty
     return trimmedSegment ? `<span class="styled-word">${trimmedSegment}</span>` : '';
   }).join(', ');
 
   div.innerHTML = segments;
-
-  // Maintain cursor position at the end
+  
+  // Funcion para mantener el cursor al final del texto
   div.focus();
   if (typeof window.getSelection !== "undefined" && typeof document.createRange !== "undefined") {
     const range = document.createRange();
@@ -105,4 +111,14 @@ document.getElementById('palabras-claves').addEventListener('input', function ()
     sel.removeAllRanges();
     sel.addRange(range);
   }
+});
+
+document.getElementById('palabras-claves').addEventListener('keydown', function (event) {
+  if (event.key === 'Backspace' || event.key === 'Delete') {
+    isDeleteKeyPressed = true;
+  }
+});
+
+document.getElementById('palabras-claves').addEventListener('keyup', function () {
+  isDeleteKeyPressed = false; // Restablecer después de soltar la tecla
 });
