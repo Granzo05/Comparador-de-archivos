@@ -1,5 +1,5 @@
 [x] Agregar usuario
-[] Leer archivos
+[x] Leer archivos
 [] Generar graficos
 [] Crear tabla de alumnos
 [] Crear tabla de escuelas
