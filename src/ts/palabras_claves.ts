@@ -56,9 +56,10 @@ document.getElementById('filtro-button')?.addEventListener('click', async () => 
   try {
     const palabrasClavesInput = (document.getElementById('palabras-claves') as HTMLElement).innerText;
 
+    sessionStorage.setItem('palabras-claves', palabrasClavesInput);
+
     const palabrasClavesSplit = palabrasClavesInput.split(',').map(palabra => palabra.trim()).filter(palabra => palabra);
-    console.log(palabrasClavesDB);
-    console.log(palabrasClavesSplit);
+
     const palabrasNuevas = palabrasClavesSplit.filter(palabra =>
       !palabrasClavesDB.includes(palabra)
     );
@@ -72,10 +73,11 @@ document.getElementById('filtro-button')?.addEventListener('click', async () => 
 
       await window.electronAPI.insertDatabase(query, params);
 
-
     } else {
       console.log('No hay nuevas palabras clave para insertar.');
     }
+
+    window.location.href = 'resumen.html';
 
   } catch (error) {
     console.error('Error al insertar nuevas palabras clave:', error);
@@ -100,7 +102,7 @@ document.getElementById('palabras-claves').addEventListener('input', function ()
   }).join(', ');
 
   div.innerHTML = segments;
-  
+
   // Funcion para mantener el cursor al final del texto
   div.focus();
   if (typeof window.getSelection !== "undefined" && typeof document.createRange !== "undefined") {
