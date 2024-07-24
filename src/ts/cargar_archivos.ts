@@ -50,7 +50,7 @@ document.getElementById('fileInput')?.addEventListener('input', async () => {
         }
 
         sessionStorage.setItem('uploadedFiles', JSON.stringify(allText));
-        //window.location.href = 'palabras_claves.html';
+        window.location.href = 'palabras_claves.html';
     }
 });
 

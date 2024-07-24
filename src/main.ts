@@ -75,11 +75,22 @@ async function connectToDatabase() {
   }
 }
 
-async function executeQuery(query: any) {
+async function executeQuery(query: string) {
   if (connection) {
     try {
-      const result = await connection.execute(query);
-      return { rows: result.rows };
+      const result = await connection.execute(query, [], { outFormat: oracledb.OUT_FORMAT_OBJECT });
+
+      // Procesa los LOBs
+      const processedRows = await Promise.all(result.rows.map(async (row: any) => {
+        for (const key in row) {
+          if (row[key] instanceof oracledb.Lob) {
+            row[key] = await lobToString(row[key]);
+          }
+        }
+        return row;
+      }));
+
+      return { rows: processedRows };
     } catch (err) {
       console.error('Error executing query:', err);
       return { error: err.message };
@@ -89,10 +100,27 @@ async function executeQuery(query: any) {
   }
 }
 
-async function executeInsert(query: string) {
+const lobToString = (lob: any) => {
+  return new Promise((resolve, reject) => {
+    let lobData = '';
+
+    lob.setEncoding('utf8');
+    lob.on('data', (chunk: any) => {
+      lobData += chunk;
+    });
+    lob.on('end', () => {
+      resolve(lobData);
+    });
+    lob.on('error', (err: any) => {
+      reject(err);
+    });
+  });
+};
+
+async function executeInsert(query: string, params: any) {
   if (connection) {
     try {
-      const result = await connection.execute(query, [], { autoCommit: true });
+      const result = await connection.execute(query, params, { autoCommit: true });
       return { rows: result.rows };  
     } catch (err) {
       console.error('Error executing insert query:', err);
@@ -111,9 +139,9 @@ ipcMain.handle('select-database', async (event: any, query: any) => {
   }
 });
 
-ipcMain.handle('insert-database', async (event: any, query: any) => {
+ipcMain.handle('insert-database', async (event: any, query: any, params: any) => {
   try {
-    return await executeInsert(query);
+    return await executeInsert(query, params);
   } catch (err) {
     return { error: err.message };
   }

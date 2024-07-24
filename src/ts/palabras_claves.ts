@@ -1,25 +1,47 @@
 const palabrasClavesElement = document.getElementById('palabras-claves') as HTMLElement;
-const palabrasClavesDB: any = '';
+let palabrasClavesDB: string[] = [];
+let ID_PALABRAS: number = 0;
+
 
 document.addEventListener('DOMContentLoaded', async () => {
   try {
-    const query = 'SELECT palabras_claves FROM model';
-    const result = await window.electronAPI.selectDatabase(query);
+    const query = 'SELECT * FROM model ORDER BY ID DESC FETCH FIRST 1 ROWS ONLY';
+    const allText = sessionStorage.getItem('exampleText');
 
-    const allText: string = JSON.parse(sessionStorage.getItem('exampleText'));
+    if (!allText) {
+      console.error('No se encontró "exampleText" en el sessionStorage.');
+      return;
+    }
 
-    const palabrasClavesElement = document.getElementById('palabrasClaves');
+    const parsedText = JSON.parse(allText);
+    const palabrasClavesInput = document.getElementById('palabras-claves') as HTMLInputElement;
 
-    result.forEach(row => {
-      const palabrasClaves = row.palabras_claves.split(',');
+    if (!palabrasClavesInput) {
+      console.error('No se encontró el elemento "palabras-claves".');
+      return;
+    }
 
-      palabrasClaves.forEach(palabra => {
-        if (allText.includes(palabra.trim())) {
-          palabrasClavesElement.innerHTML += `${palabra.trim()}, `;
-        }
-      });
-    });
+    palabrasClavesInput.value = '';
 
+    const result: any = await window.electronAPI.selectDatabase(query);
+    console.log(result);
+    if (result.error) {
+      console.error('Error en la consulta:', result.error);
+    } else {
+      if (result.rows && result.rows.length > 0) {
+        const row = result.rows[0]; // Solo la última fila
+        palabrasClavesDB = JSON.parse(row.PALABRAS_CLAVES); // Parse the JSON string
+
+        ID_PALABRAS = row.ID;
+
+        palabrasClavesDB.forEach((palabra: string) => {
+          const cleanedPalabra = palabra.trim().replace(/[\[\]"']/g, '');
+          if (parsedText.includes(cleanedPalabra)) {
+            palabrasClavesInput.value += `${cleanedPalabra}, `;
+          }
+        });
+      }
+    }
   } catch (error) {
     console.error('Error al ejecutar la consulta:', error);
   }
@@ -27,27 +49,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 document.getElementById('filtro-button')?.addEventListener('click', async () => {
   try {
-    const palabrasClavesSplit = palabrasClaves.split(',');
-    const palabrasClavesDBSplit = palabrasClavesDB.split(',');
+    const palabrasClavesInput = (document.getElementById('palabras-claves') as HTMLInputElement).value;
 
-    let palabrasNuevas = [];
+    const palabrasClavesSplit = palabrasClavesInput.split(',').map(palabra => palabra.trim()).filter(palabra => palabra);
+    console.log(palabrasClavesDB)
+    console.log(palabrasClavesSplit)
+    const palabrasNuevas = palabrasClavesSplit.filter(palabra =>
+      !palabrasClavesDB.includes(palabra)
+    );
 
-    palabrasClavesSplit.forEach((palabra) => {
-      if (!palabrasClavesDBSplit.includes(palabra.trim())) {
-        palabrasNuevas.push(palabra.trim());
-      }
-    });
+    if (palabrasNuevas.length > 0) {
+      palabrasClavesDB = [...palabrasClavesDB, ...palabrasNuevas];
+      const jsonPalabras = JSON.stringify(palabrasClavesDB);
 
-    const jsonPalabras = JSON.stringify(palabrasNuevas);
+      const query = 'UPDATE model SET PALABRAS_CLAVES = :jsonPalabras WHERE ID = :id';
+      const params = { jsonPalabras, id: ID_PALABRAS };
 
-    const query = 'INSERT INTO palabras_claves (model) VALUES (:jsonPalabras)';
-    const params = { jsonPalabras };
+      const result = await window.electronAPI.insertDatabase(query, params);
 
-    const result = await window.electronAPI.insertDatabase(query, params);
+      console.log('Inserción exitosa:', result);
 
-    console.log('Inserción exitosa:', result);
-
-    window.location.href = 'resumen.html';
+      // Redirige a la página de resumen
+      //window.location.href = 'resumen.html';
+    } else {
+      console.log('No hay nuevas palabras clave para insertar.');
+    }
 
   } catch (error) {
     console.error('Error al insertar nuevas palabras clave:', error);
