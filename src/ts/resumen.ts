@@ -1,6 +1,7 @@
 let textoResumido: string[] = [];
 let tablaResumida: string[] = [];
 let headerColumna: string[] = [];
+let palabrasClaves: string;
 
 document.addEventListener('DOMContentLoaded', async () => {
   await buscarContenidoAsociadoAPalabrasClaves();
@@ -8,7 +9,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function buscarContenidoAsociadoAPalabrasClaves() {
-  const palabrasClaves = sessionStorage.getItem('palabras-claves');
+  palabrasClaves = sessionStorage.getItem('palabras-claves');
 
   palabrasClaves.split(',').forEach((palabraClave: string) => {
     palabraClave = palabraClave.trim();
@@ -22,20 +23,9 @@ async function buscarContenidoAsociadoAPalabrasClaves() {
 function adaptarPatronesDeCoincidencia(palabraClave: string) {
   return [
     // Captura la oración que sigue después de "palabraClave" hasta el próximo salto de línea o el final del texto.
-    new RegExp(`${palabraClave}:.*?(?=\n|$)`, 'g'),
+    new RegExp(`(^${palabraClave}|${palabraClave}:).*`),
 
-    // Captura el texto desde "palabraClave" hasta el siguiente título, que se asume que no inicia con un carácter de palabra o espacio, o hasta el final del texto.
-    new RegExp(`${palabraClave}[\\s\\S]*?(?=(?:\\n\\n|\\r\\r\\n\\r\\n|$|\\n|\\r)[^\\w\\s])`, 'g'),
-
-    // Captura el texto desde "palabraClave" (considerando posibles caracteres de agrupación como '*', '-', ' ') hasta un signo de puntuación seguido de un salto de línea, o el final del texto.
-    new RegExp(`(?:\\*|\\-|\\s)*${palabraClave}[\\s\\S]*?(?=[?¿!¡]*\n|\r\n|$)`, 'g'),
-
-    // Captura el texto desde "palabraClave" hasta un patrón que puede ser un salto de línea seguido de espacios y un carácter de agrupación como '*', '#', '-', o un número.
-    new RegExp(`${palabraClave}[\\s\\S]*?(?=\n\s*[\*#\-\\d]|\r\n\s*[\*#\-\\d]|$)`, 'g'),
-
-    // Detecta tablas
-    new RegExp(`\\b${palabraClave}\\b.*?(?=\\n\\n|\\r\\r|$)`, 'g'),
-
+    new RegExp(`${palabraClave}\n([\\s\\S]*?)\n\n\n.\n*`)
   ];
 }
 
@@ -74,10 +64,26 @@ function crearResumen() {
   const divDelResumen = document.getElementById('contenedor-resumen');
 
   textoResumido.forEach(parte => {
-    const p = document.createElement('p');
-    p.innerHTML = parte;
+    const partes = parte.split('\n');
 
-    divDelResumen.appendChild(p);
+    partes.forEach(parteSpliteada => {
+      const p = document.createElement('p');
+      let esPalabraClave = false;
+
+
+      palabrasClaves.split(',').forEach(palabraClave => {
+        if (parteSpliteada.includes(palabraClave.trim())) {
+          p.innerHTML = `<b>${palabraClave.trim()}</b>${parteSpliteada.replace(palabraClave.trim(), '')}`;
+          divDelResumen.appendChild(p);
+          esPalabraClave = true;
+        }
+      });
+
+      if (!esPalabraClave && parteSpliteada.length > 0) {
+        p.textContent = parteSpliteada;
+        divDelResumen.appendChild(p);
+      }
+    });
   });
 
   if (tablaResumida.length > 0) {
