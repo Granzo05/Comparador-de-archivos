@@ -1,5 +1,6 @@
 [x] Agregar usuario
 [x] Leer archivos
+[x] Verificar la carga de muchos archivos
 [] Generar graficos
 [] Crear tabla de alumnos
 [] Crear tabla de escuelas
@@ -8,7 +9,6 @@
 [] Comparativa entre alumnos
 [] Comparativa entre divisiones
 [] Comparativa por fechas
-[] Verificar la carga de muchos archivos
 [] Ver en cuanto a memoria como es mejor almacenar estos datos en la sesion
 [] Control de roles
 [] Guia de usuario

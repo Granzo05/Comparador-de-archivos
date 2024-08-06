@@ -69,19 +69,29 @@ function escribirContenidoRelacionadoAPalabrasClaves(oraciones: string) {
   let esPalabraClave = false;
 
   palabrasClaves.split(',').forEach(palabraClave => {
-    if (oraciones.includes(palabraIdentificadora.trim())) {
-      const textoAsociadoAPalabraClave = oraciones.replace(palabraClave.trim(), '').replace(':', '');
-      // Si es palabra identificadora creamos el select para poder mostrar los diferentes resumenes dependiendo de esta opción.
-      p.innerHTML = `<b>${palabraClave.trim()}</b><select id='select-palabras-identificadora'><option value={0}>${textoAsociadoAPalabraClave.trim()}</option></select>`;
-      divDelResumen.appendChild(p);
-      esPalabraClave = true;
-    } else if (oraciones.includes(palabraClave.trim()) && oraciones.trim().length > palabraClave.trim().length) {
-      p.innerHTML = `<b>${palabraClave.trim()}</b>${oraciones.replace(palabraClave.trim(), '')}`;
-      divDelResumen.appendChild(p);
-      esPalabraClave = true;
+    palabraClave = palabraClave.trim();
+    if (oraciones.includes(palabraClave)) {
+      const textoAsociado = oraciones.replace(palabraClave, '').replace(':', '').trim();
+      if (oraciones.includes(palabraIdentificadora.trim())) {
+        // Crear un select para palabras identificadoras
+        p.innerHTML = `<b>${palabraClave}</b><select id='select-palabras-identificadora'><option value="0">${textoAsociado}</option></select>`;
+        divDelResumen.appendChild(p);
+        esPalabraClave = true;
+      } else if (oraciones.includes(palabraClave.trim()) && oraciones.trim().length > palabraClave.trim().length) {
+        // Mostrar texto asociado para otras palabras claves
+        p.innerHTML = `<b>${palabraClave}: </b>${textoAsociado}`;
+        divDelResumen.appendChild(p);
+        esPalabraClave = true;
+      }
+
     }
   });
+
+  if (!esPalabraClave) {
+    console.log("No se encontraron palabras claves en las oraciones.");
+  }
 }
+
 
 async function crearOpcionesParaContenidoIdentificador(select: HTMLSelectElement) {
   select.addEventListener('change', async function () {
@@ -116,9 +126,19 @@ async function buscarResumenMediantePalabraIdentificadora(indexArchivo: string) 
 }
 
 function ordenarAlfabeticamenteOptions(select: HTMLSelectElement, opciones: HTMLOptionElement[]) {
-  opciones.sort((a, b) => a.textContent.localeCompare(b.textContent));
+  const uniqueOptions = new Set<string>();
+  const opcionesUnicas = opciones.filter(option => {
+    const text = option.textContent.trim();
+    if (!uniqueOptions.has(text)) {
+      uniqueOptions.add(text);
+      return true;
+    }
+    return false;
+  });
+
+  opcionesUnicas.sort((a, b) => a.textContent.localeCompare(b.textContent));
 
   select.innerHTML = '';
 
-  opciones.forEach(option => select.appendChild(option));
+  opcionesUnicas.forEach(option => select.appendChild(option));
 }
