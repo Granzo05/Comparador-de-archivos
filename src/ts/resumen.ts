@@ -1,86 +1,124 @@
-let textoResumido: string[] = [];
-let tablaResumida: string[] = [];
-let headerColumna: string[] = [];
-let palabrasClaves: string;
-let palabraIdentificadora: string;
-let textoDelArchivoHTML = sessionStorage.getItem('textoHTML').split('<table>');
-const textoSinElementos = textoDelArchivoHTML[0].replace(/<p>/g, '\n').replace(/<\/p>/g, '\n');
-const textoConTabla = '<table>' + textoDelArchivoHTML[1];
+let palabrasClaves: string = sessionStorage.getItem('palabras-claves');
+let palabraIdentificadora: string = sessionStorage.getItem('palabra-identificadora');
+let archivosEnHTML: string[] = JSON.parse(sessionStorage.getItem('archivosEnHTML'));
+let coincidenciasConPalabrasClaves: string[] = [];
 const divDelResumen = document.getElementById('contenedor-resumen');
 
 document.addEventListener('DOMContentLoaded', async () => {
-  await buscarContenidoAsociadoAPalabrasClaves();
-  crearResumen();
+  // Creamos el resumen con el primer archivo ingresado para tener una plantilla...
+  // en caso de haber una palabraIdentificadora se podrá ir navegando por los archivos gracias al select asociado a esa palabra.
+  await buscarContenidoAsociadoAPalabrasClaves(0);
+  await crearResumen(0);
 });
 
-async function buscarContenidoAsociadoAPalabrasClaves() {
-  palabrasClaves = sessionStorage.getItem('palabras-claves');
-  palabraIdentificadora = sessionStorage.getItem('palabra-identificadora');
+async function buscarContenidoAsociadoAPalabrasClaves(indexArchivo: number) {
+  coincidenciasConPalabrasClaves = [];
 
   palabrasClaves.split(',').forEach((palabraClave: string) => {
     palabraClave = palabraClave.trim();
-
     const regexPatterns = adaptarPatronesDeCoincidencia(palabraClave);
-
-    buscarCoincidencias(regexPatterns);
+    buscarCoincidencias(regexPatterns, indexArchivo);
   });
 }
 
 function adaptarPatronesDeCoincidencia(palabraClave: string) {
   return [
-    // Captura la oración que sigue después de "palabraClave" hasta el próximo salto de línea o el final del texto.
     new RegExp(`(${palabraClave}|${palabraClave}:).*`),
     new RegExp(`${palabraClave}\n([\\s\\S]*?)\n\n\n.\n*`),
   ];
 }
 
-async function buscarCoincidencias(regexPatterns: RegExp[]) {
+async function buscarCoincidencias(regexPatterns: RegExp[], indexArchivo: number) {
+  const textoSinElementos = archivosEnHTML[indexArchivo].replace(/<p>/g, '\n').replace(/<\/p>/g, '\n');
+
   regexPatterns.forEach((regex) => {
     let match;
     while ((match = regex.exec(textoSinElementos)) !== null) {
       if (match[0]) {
-        textoResumido.push(match[0].trim());
+        coincidenciasConPalabrasClaves.push(match[0].trim());
         break;
       }
     }
   });
 }
 
-function crearResumen() {
-  textoResumido.forEach(parte => {
-    const partes = parte.split('\n');
-    partes.forEach(parteSpliteada => {
-      const p = document.createElement('p');
-      let esPalabraClave = false;
+async function crearResumen(indexArchivo: number) {
+  divDelResumen.innerHTML = '';
 
-      palabrasClaves.split(',').forEach(palabraClave => {
-        if (parteSpliteada.includes(palabraIdentificadora.trim())) {
-          p.innerHTML = `<b>${palabraClave.trim()}</b><select id='select-palabras-identificadora'><option>${parteSpliteada.replace(palabraClave.trim(), '').replace(':', '')}</option></select>`;
-          divDelResumen.appendChild(p);
-          esPalabraClave = true;
-        } else if (parteSpliteada.includes(palabraClave.trim())) {
-          p.innerHTML = `<b>${palabraClave.trim()}</b>${parteSpliteada.replace(palabraClave.trim(), '')}`;
-          divDelResumen.appendChild(p);
-          esPalabraClave = true;
-        }
-      });
+  coincidenciasConPalabrasClaves.forEach(texto => {
+    const lineasDeTexto = texto.split('\n');
+    lineasDeTexto.forEach(oraciones => {
+      escribirContenidoRelacionadoAPalabrasClaves(oraciones);
+    });
+  });
 
-      if (!esPalabraClave && parteSpliteada.length > 0) {
-        p.textContent = parteSpliteada;
-        divDelResumen.appendChild(p);
+  if (archivosEnHTML[indexArchivo].split('<table>')[1].length > 0) {
+    const tabla = '<table>' + archivosEnHTML[indexArchivo].split('<table>')[1];
+    divDelResumen.innerHTML += tabla.replace('"', '');
+  }
+
+  const selectPalabrasIdentificadora = document.getElementById('select-palabras-identificadora') as HTMLSelectElement;
+  if (selectPalabrasIdentificadora) {
+    await crearOpcionesParaContenidoIdentificador(selectPalabrasIdentificadora);
+    selectPalabrasIdentificadora.value = `${indexArchivo}`;
+  }
+}
+
+function escribirContenidoRelacionadoAPalabrasClaves(oraciones: string) {
+  const p = document.createElement('p');
+  let esPalabraClave = false;
+
+  palabrasClaves.split(',').forEach(palabraClave => {
+    if (oraciones.includes(palabraIdentificadora.trim())) {
+      const textoAsociadoAPalabraClave = oraciones.replace(palabraClave.trim(), '').replace(':', '');
+      // Si es palabra identificadora creamos el select para poder mostrar los diferentes resumenes dependiendo de esta opción.
+      p.innerHTML = `<b>${palabraClave.trim()}</b><select id='select-palabras-identificadora'><option value={0}>${textoAsociadoAPalabraClave.trim()}</option></select>`;
+      divDelResumen.appendChild(p);
+      esPalabraClave = true;
+    } else if (oraciones.includes(palabraClave.trim()) && oraciones.trim().length > palabraClave.trim().length) {
+      p.innerHTML = `<b>${palabraClave.trim()}</b>${oraciones.replace(palabraClave.trim(), '')}`;
+      divDelResumen.appendChild(p);
+      esPalabraClave = true;
+    }
+  });
+}
+
+async function crearOpcionesParaContenidoIdentificador(select: HTMLSelectElement) {
+  select.addEventListener('change', async function () {
+    await buscarResumenMediantePalabraIdentificadora(this.value);
+  });
+
+  const opciones: HTMLOptionElement[] = [];
+
+  archivosEnHTML.forEach((archivo, index) => {
+    archivo = archivo.replace(/<p>/g, '\n').replace(/<\/p>/g, '\n');
+
+    archivo.split('\n').forEach(oraciones => {
+      if (oraciones.includes(palabraIdentificadora.trim())) {
+        const textoAsociadoAPalabraClave = oraciones.replace(palabraIdentificadora.trim(), '').replace(':', '').trim();
+        const option = document.createElement('option');
+        option.value = `${index}`;
+        option.textContent = textoAsociadoAPalabraClave;
+
+        opciones.push(option);
       }
     });
   });
 
-  divDelResumen.innerHTML += textoConTabla.replace('"', '');
-
-  const selectPalabrasIdentificadora = document.getElementById('select-palabras-identificadora');
-
-  selectPalabrasIdentificadora.addEventListener('onchange', function () {
-    buscarResumenMediantePalabraIdentificadora(this.value)
-  });
+  ordenarAlfabeticamenteOptions(select, opciones);
 }
 
-function buscarResumenMediantePalabraIdentificadora(value: string) {
-  divDelResumen.innerText = 'Resumen del texto buscado que contenga ' + value;
+
+
+async function buscarResumenMediantePalabraIdentificadora(indexArchivo: string) {
+  await buscarContenidoAsociadoAPalabrasClaves(parseInt(indexArchivo));
+  await crearResumen(parseInt(indexArchivo));
+}
+
+function ordenarAlfabeticamenteOptions(select: HTMLSelectElement, opciones: HTMLOptionElement[]) {
+  opciones.sort((a, b) => a.textContent.localeCompare(b.textContent));
+
+  select.innerHTML = '';
+
+  opciones.forEach(option => select.appendChild(option));
 }

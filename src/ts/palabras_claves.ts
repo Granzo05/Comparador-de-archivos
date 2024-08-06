@@ -8,11 +8,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   palabrasClavesDB = await buscarPalabrasClavesAlmacenadasEnDB();
 
   if (palabrasClavesDB) {
-    const textoDelArchivo = JSON.parse(sessionStorage.getItem('textoHTML'));
+    const archivos: string[] = JSON.parse(sessionStorage.getItem('archivosEnHTML'));
 
     limpiarInputPalabrasClaves();
 
-    const palabrasFormateadas = buscarPalabrasClavesEnElTexto(textoDelArchivo);
+    const palabrasFormateadas = buscarPalabrasClavesEnElTexto(archivos[0]);
 
     setPalabrasClavesEnInput(palabrasFormateadas);
 
@@ -51,7 +51,7 @@ function limpiarInputPalabrasClaves() {
   palabrasClavesInput.innerHTML = '';
 }
 
-function buscarPalabrasClavesEnElTexto(texto: string[]) {
+function buscarPalabrasClavesEnElTexto(texto: string) {
   return palabrasClavesDB
     .map((palabra: string) => palabra.trim().replace(/[\[\]"']/g, ''))
     .filter(palabra => palabra && texto.includes(palabra))
@@ -76,6 +76,13 @@ function setOnClickPalabrasClaves() {
 }
 
 document.getElementById('filtro-button')?.addEventListener('click', async () => {
+  const palabraIdentificadoraInput = (document.getElementById('palabra-identificadora') as HTMLElement).innerText;
+
+  if(palabraIdentificadoraInput.length === 81) {
+    alert('Es necesario elegir una palabra identificadora para continuar');
+    return;
+  }
+
   await setPalabrasClavesInStorage();
 
   const palabrasNuevas = findNuevasPalabrasClaves();
@@ -90,12 +97,15 @@ document.getElementById('filtro-button')?.addEventListener('click', async () => 
 });
 
 async function setPalabrasClavesInStorage() {
-  const palabrasClavesInput = (document.getElementById('palabras-claves') as HTMLElement).innerText;
-  sessionStorage.setItem('palabras-claves', palabrasClavesInput);
-
   const palabraIdentificadoraInput = (document.getElementById('palabra-identificadora') as HTMLElement).innerText;
   sessionStorage.setItem('palabra-identificadora', palabraIdentificadoraInput);
+
+  const palabrasClavesInput = (document.getElementById('palabras-claves') as HTMLElement).innerText;
+  const palabrasClavesSet = new Set(palabrasClavesInput.split(',').map(palabra => palabra.trim()));
+  const palabrasClavesUnicas = Array.from(palabrasClavesSet).join(',');
+  sessionStorage.setItem('palabras-claves', palabrasClavesUnicas);
 }
+
 
 function findNuevasPalabrasClaves() {
   const palabrasClaves = sessionStorage.getItem('palabras-claves');

@@ -1,10 +1,40 @@
 import { getDocument, PDFDocumentProxy } from 'pdfjs-dist';
 import * as mammoth from 'mammoth';
 
-async function extractTextFromPDF(file: File): Promise<string> {
-    const arrayBuffer = await file.arrayBuffer();
+document.getElementById('fileInput')?.addEventListener('input', async () => {
+    const inputArchivos = document.getElementById('fileInput') as HTMLInputElement;
+
+    const archivos = inputArchivos.files;
+
+    if (archivos && archivos.length > 0) {
+        let archivosConvertidosEnHTML: string[] = [];
+
+        for (let i = 0; i < archivos.length; i++) {
+            const archivo = archivos[i];
+
+            let texto = '';
+
+            if (archivo.type === 'application/pdf') {
+                texto = await extraerTextoPDF(archivo);
+            } else if (archivo.name.endsWith('.docx')) {
+                const arrayBuffer = await archivo.arrayBuffer();
+
+                const htmlResult = await mammoth.convertToHtml({ arrayBuffer });
+
+                archivosConvertidosEnHTML[i] = htmlResult.value;
+            }
+        }
+
+        sessionStorage.setItem('archivosEnHTML', JSON.stringify(archivosConvertidosEnHTML));
+
+        window.location.href = 'palabras_claves.html';
+    }
+});
+
+async function extraerTextoPDF(archivo: File): Promise<string> {
+    const arrayBuffer = await archivo.arrayBuffer();
     const pdfDocument = await getDocument({ data: arrayBuffer }).promise as PDFDocumentProxy;
-    let extractedText = '';
+    let texto = '';
 
     for (let pageNum = 1; pageNum <= pdfDocument.numPages; pageNum++) {
         const page = await pdfDocument.getPage(pageNum);
@@ -12,80 +42,8 @@ async function extractTextFromPDF(file: File): Promise<string> {
         const textItems = textContent.items;
         const pageText = textItems.map((item: any) => item.str).join(' ');
 
-        extractedText += pageText;
+        texto += pageText;
     }
 
-    return extractedText;
-}
-
-
-document.getElementById('fileInput')?.addEventListener('input', async () => {
-    const filesElement = document.getElementById('fileInput') as HTMLInputElement;
-
-    const files = filesElement.files;
-
-    if (files && files.length > 0) {
-        let allHtml = '';
-
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            let textContent = '';
-            let htmlContent = '';
-
-            if (file.type === 'application/pdf') {
-                textContent = await extractTextFromPDF(file);
-            } else if (file.name.endsWith('.docx')) {
-                const arrayBuffer = await file.arrayBuffer();
-            
-                const htmlResult = await mammoth.convertToHtml({ arrayBuffer });
-                htmlContent = htmlResult.value;
-            } else {
-                textContent = await file.text();
-            }
-
-            allHtml += ` ${htmlContent}`;
-        }
-
-        //sessionStorage.setItem('textoLimpio', JSON.stringify(allText));
-        sessionStorage.setItem('textoHTML', JSON.stringify(allHtml));
-        window.location.href = 'palabras_claves.html';
-    }
-});
-
-document.getElementById('comparar-button').addEventListener('click', abrirModal);
-document.getElementById('cerrar-button').addEventListener('click', cerrarModal);
-document.getElementById('volver-button').addEventListener('click', volverModal);
-document.getElementById('siguiente-button').addEventListener('click', siguientePaso);
-
-const primerPaso = document.getElementById('paso-1');
-const select = document.getElementById('tipo-comparativa') as HTMLSelectElement;
-const modalBackground = document.getElementById('modalBackground');
-
-export function volverModal() {
-    const pasoSiguiente = document.getElementById(`paso-${select.value}`);
-    pasoSiguiente.style.display = 'none';
-    primerPaso.style.display = 'flex';
-
-    document.getElementById('volver-button').style.display = 'none';
-}
-
-export function abrirModal() {
-    modalBackground.style.display = 'flex';
-}
-
-export function cerrarModal() {
-    modalBackground.style.display = 'none';
-    primerPaso.style.display = 'flex';
-    const pasoSiguiente = document.getElementById(`paso-${select.value}`);
-    pasoSiguiente.style.display = 'none';
-
-    document.getElementById('volver-button').style.display = 'none';
-}
-
-export function siguientePaso() {
-    primerPaso.style.display = 'none';
-    const pasoSiguiente = document.getElementById(`paso-${select.value}`);
-    pasoSiguiente.style.display = 'flex';
-
-    if (parseInt(select.value) > 0) document.getElementById('volver-button').style.display = 'block';
+    return texto;
 }
