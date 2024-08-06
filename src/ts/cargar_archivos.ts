@@ -19,37 +19,35 @@ async function extractTextFromPDF(file: File): Promise<string> {
 }
 
 
-
 document.getElementById('fileInput')?.addEventListener('input', async () => {
     const filesElement = document.getElementById('fileInput') as HTMLInputElement;
 
     const files = filesElement.files;
 
-    if (files.length > 0) {
-        let allText = '';
+    if (files && files.length > 0) {
+        let allHtml = '';
 
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
             let textContent = '';
+            let htmlContent = '';
 
             if (file.type === 'application/pdf') {
                 textContent = await extractTextFromPDF(file);
             } else if (file.name.endsWith('.docx')) {
                 const arrayBuffer = await file.arrayBuffer();
-                const result = await mammoth.extractRawText({ arrayBuffer });
-                textContent = result.value;
+            
+                const htmlResult = await mammoth.convertToHtml({ arrayBuffer });
+                htmlContent = htmlResult.value;
             } else {
                 textContent = await file.text();
             }
 
-            allText += ` ${textContent}`;
-
-            if(i === 0) {
-                sessionStorage.setItem('exampleText', JSON.stringify(allText));
-            }
+            allHtml += ` ${htmlContent}`;
         }
 
-        sessionStorage.setItem('uploadedFiles', JSON.stringify(allText));
+        //sessionStorage.setItem('textoLimpio', JSON.stringify(allText));
+        sessionStorage.setItem('textoHTML', JSON.stringify(allHtml));
         window.location.href = 'palabras_claves.html';
     }
 });

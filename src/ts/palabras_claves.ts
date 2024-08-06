@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   palabrasClavesDB = await buscarPalabrasClavesAlmacenadasEnDB();
 
   if (palabrasClavesDB) {
-    const textoDelArchivo = JSON.parse(sessionStorage.getItem('exampleText'));
+    const textoDelArchivo = JSON.parse(sessionStorage.getItem('textoHTML'));
     console.log(textoDelArchivo);
 
     limpiarInputPalabrasClaves();

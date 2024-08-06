@@ -10,7 +10,6 @@ html {
   align-items: center;
   font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
   overflow-x: hidden;
-  max-height: 120vh;
 }
 
 .form-login {
