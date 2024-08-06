@@ -2,9 +2,11 @@ let textoResumido: string[] = [];
 let tablaResumida: string[] = [];
 let headerColumna: string[] = [];
 let palabrasClaves: string;
+let palabraIdentificadora: string;
 let textoDelArchivoHTML = sessionStorage.getItem('textoHTML').split('<table>');
 const textoSinElementos = textoDelArchivoHTML[0].replace(/<p>/g, '\n').replace(/<\/p>/g, '\n');
 const textoConTabla = '<table>' + textoDelArchivoHTML[1];
+const divDelResumen = document.getElementById('contenedor-resumen');
 
 document.addEventListener('DOMContentLoaded', async () => {
   await buscarContenidoAsociadoAPalabrasClaves();
@@ -13,6 +15,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function buscarContenidoAsociadoAPalabrasClaves() {
   palabrasClaves = sessionStorage.getItem('palabras-claves');
+  palabraIdentificadora = sessionStorage.getItem('palabra-identificadora');
 
   palabrasClaves.split(',').forEach((palabraClave: string) => {
     palabraClave = palabraClave.trim();
@@ -44,9 +47,6 @@ async function buscarCoincidencias(regexPatterns: RegExp[]) {
 }
 
 function crearResumen() {
-  const divDelResumen = document.getElementById('contenedor-resumen');
-  console.log(textoResumido)
-
   textoResumido.forEach(parte => {
     const partes = parte.split('\n');
     partes.forEach(parteSpliteada => {
@@ -54,7 +54,11 @@ function crearResumen() {
       let esPalabraClave = false;
 
       palabrasClaves.split(',').forEach(palabraClave => {
-        if (parteSpliteada.includes(palabraClave.trim())) {
+        if (parteSpliteada.includes(palabraIdentificadora.trim())) {
+          p.innerHTML = `<b>${palabraClave.trim()}</b><select id='select-palabras-identificadora'><option>${parteSpliteada.replace(palabraClave.trim(), '').replace(':', '')}</option></select>`;
+          divDelResumen.appendChild(p);
+          esPalabraClave = true;
+        } else if (parteSpliteada.includes(palabraClave.trim())) {
           p.innerHTML = `<b>${palabraClave.trim()}</b>${parteSpliteada.replace(palabraClave.trim(), '')}`;
           divDelResumen.appendChild(p);
           esPalabraClave = true;
@@ -67,6 +71,16 @@ function crearResumen() {
       }
     });
   });
-  
+
   divDelResumen.innerHTML += textoConTabla.replace('"', '');
+
+  const selectPalabrasIdentificadora = document.getElementById('select-palabras-identificadora');
+
+  selectPalabrasIdentificadora.addEventListener('onchange', function () {
+    buscarResumenMediantePalabraIdentificadora(this.value)
+  });
+}
+
+function buscarResumenMediantePalabraIdentificadora(value: string) {
+  divDelResumen.innerText = 'Resumen del texto buscado que contenga ' + value;
 }

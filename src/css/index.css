@@ -247,6 +247,14 @@ header {
   overflow-wrap: break-word;
 }
 
+.editable-mini {
+  border: 1px solid #ccc;
+  padding: 10px;
+  min-height: 20px;
+  width: 450px;
+  overflow-wrap: break-word;
+}
+
 .styled-word {
   border-radius: 16px;
   margin-right: 5px;
@@ -255,6 +263,7 @@ header {
   position: relative;
   background-color: #e0e0e0;
   margin-bottom: 5px;
+  cursor: pointer;
 }
 
 .styled-word .remove {
@@ -285,3 +294,12 @@ header {
     transform: rotate(360deg);
   }
 }
+
+#palabras-claves {
+  margin-bottom: 35px;
+}
+
+label {
+  margin-bottom: 10px;
+}
+

@@ -9,13 +9,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (palabrasClavesDB) {
     const textoDelArchivo = JSON.parse(sessionStorage.getItem('textoHTML'));
-    console.log(textoDelArchivo);
 
     limpiarInputPalabrasClaves();
 
     const palabrasFormateadas = buscarPalabrasClavesEnElTexto(textoDelArchivo);
 
     setPalabrasClavesEnInput(palabrasFormateadas);
+
+    setOnClickPalabrasClaves();
   } else {
     alert('No se encontraron palabras claves en el texto');
   }
@@ -63,6 +64,17 @@ function setPalabrasClavesEnInput(palabrasFormateadas: string) {
   palabrasClavesInput.innerHTML = palabrasFormateadas;
 }
 
+function setOnClickPalabrasClaves() {
+  const elements = document.getElementsByClassName('styled-word');
+  const divPalabraId = document.getElementById('palabra-identificadora');
+
+  for (let i = 0; i < elements.length; i++) {
+    elements[i].addEventListener('click', function () {
+      divPalabraId.innerHTML = `${this.innerText}`;      
+    });
+  }
+}
+
 document.getElementById('filtro-button')?.addEventListener('click', async () => {
   await setPalabrasClavesInStorage();
 
@@ -80,6 +92,9 @@ document.getElementById('filtro-button')?.addEventListener('click', async () => 
 async function setPalabrasClavesInStorage() {
   const palabrasClavesInput = (document.getElementById('palabras-claves') as HTMLElement).innerText;
   sessionStorage.setItem('palabras-claves', palabrasClavesInput);
+
+  const palabraIdentificadoraInput = (document.getElementById('palabra-identificadora') as HTMLElement).innerText;
+  sessionStorage.setItem('palabra-identificadora', palabraIdentificadoraInput);
 }
 
 function findNuevasPalabrasClaves() {
@@ -153,3 +168,6 @@ function fijarCursorAlFinal(div: HTMLElement) {
   }
 }
 
+document.getElementById('palabra-identificadora').addEventListener('click', function () {
+  this.innerText = '';
+});

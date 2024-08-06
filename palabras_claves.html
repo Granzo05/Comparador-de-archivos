@@ -27,14 +27,15 @@
   <p>Archivos cargados correctamente, ingrese las palabras claves para generar un informe y obtener los datos buscados
   </p>
   <div class="div-claves">
-    <label for="palabras-claves">
-      <div id="loading"
-        style="display:none; margin: 0 auto; margin-bottom: 25px; flex-direction: row; justify-content: center; align-items: center;">
-        <div style="margin-right: 10px;">Buscando palabras claves</div>
-        <span class="loading-spinner"></span>
-      </div>
-      <div id="palabras-claves" contenteditable="true" class="editable"></div>
-    </label>
+    <div id="loading"
+      style="display:none; margin: 0 auto; margin-bottom: 25px; flex-direction: row; justify-content: center; align-items: center;">
+      <div style="margin-right: 10px;">Buscando palabras claves</div>
+      <span class="loading-spinner"></span>
+    </div>
+    <label for="palabra-identificadora">Ingresar las palabras claves que quieres filtrar</label>
+    <div id="palabras-claves" contenteditable="true" class="editable"></div>
+    <label for="palabra-identificadora">Ingresar la palabra clave identificadora</label>
+    <div id="palabra-identificadora" contenteditable="true" class="editable-mini">Puedes ingresar la palabra manualmente o clickeando una de las palabras de arriba</div>
     <button class="button-black" id="filtro-button" style="margin-top: 25px;">Filtrar</button>
   </div>
   <script type="module" src="/src/renderer.ts"></script>

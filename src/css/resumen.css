@@ -30,3 +30,7 @@ tr:nth-child(even) {
   background-color: #d1d1d1; 
 }
 
+#select-palabras-identificadora {
+  margin-left: 15px;
+  width: fit-content;
+}
