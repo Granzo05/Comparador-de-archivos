@@ -1,3 +1,5 @@
+import Chart from 'chart.js/auto';
+
 let palabrasClaves: string = sessionStorage.getItem('palabras-claves');
 let palabraIdentificadora: string = sessionStorage.getItem('palabra-identificadora');
 let archivosEnHTML: string[] = JSON.parse(sessionStorage.getItem('archivosEnHTML'));
@@ -54,6 +56,32 @@ async function crearResumen(indexArchivo: number) {
 
   if (archivosEnHTML[indexArchivo].split('<table>')[1].length > 0) {
     const tabla = '<table>' + archivosEnHTML[indexArchivo].split('<table>')[1];
+
+    const fechaRegex = /((?:0?[1-9]|[12][0-9]|3[01])[\/-](?:0?[1-9]|1[0-2])[\/-]\d{4})|((?:0?[1-9]|1[0-2])[\/-](?:0?[1-9]|[12][0-9]|3[01])[\/-]\d{4})/g;
+
+    const numberRegex = /\b\d+(\.\d+)?\b/g;
+
+    const tablaSinFechas = tabla.replace(fechaRegex, '');
+
+    let match;
+    let numeros: number[] = [];
+
+    // Extraer números de la tabla sin fechas
+    while ((match = numberRegex.exec(tablaSinFechas)) !== null) {
+      if (match[0]) {
+        const num = parseFloat(match[0].trim());
+        if (!isNaN(num)) {
+          numeros.push(num);
+        }
+      }
+    }
+
+
+    if (numeros.length > 0) {
+      let grafico = document.getElementById("grafico") as HTMLCanvasElement;
+      await crearGrafico(numeros, grafico);
+    }
+
     divDelResumen.innerHTML += tabla.replace('"', '');
   }
 
@@ -62,6 +90,7 @@ async function crearResumen(indexArchivo: number) {
     await crearOpcionesParaContenidoIdentificador(selectPalabrasIdentificadora);
     selectPalabrasIdentificadora.value = `${indexArchivo}`;
   }
+
 }
 
 function escribirContenidoRelacionadoAPalabrasClaves(oraciones: string) {
@@ -86,12 +115,48 @@ function escribirContenidoRelacionadoAPalabrasClaves(oraciones: string) {
 
     }
   });
-
-  if (!esPalabraClave) {
-    console.log("No se encontraron palabras claves en las oraciones.");
-  }
 }
 
+async function crearGrafico(numeros: number[], canvas: HTMLCanvasElement) {
+  const ctx = canvas.getContext('2d');
+  if (ctx) {
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: numeros.map((_, index) => `Etiqueta ${index + 1}`),
+        datasets: [{
+          label: 'Ventas',
+          data: numeros,
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1,
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'top',
+          },
+          title: {
+            display: true,
+            text: 'Palabras por minutos'
+          }
+        },
+        scales: {
+          x: {
+            beginAtZero: true
+          },
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+  } else {
+    console.error('No se pudo obtener el contexto 2D del canvas.');
+  }
+}
 
 async function crearOpcionesParaContenidoIdentificador(select: HTMLSelectElement) {
   select.addEventListener('change', async function () {
