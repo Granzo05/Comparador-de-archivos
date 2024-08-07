@@ -1,4 +1,5 @@
-import Chart from 'chart.js/auto';
+import Chart, { ChartItem } from 'chart.js/auto';
+import { getRelativePosition } from 'chart.js/helpers';
 
 let palabrasClaves: string = sessionStorage.getItem('palabras-claves');
 let palabraIdentificadora: string = sessionStorage.getItem('palabra-identificadora');
@@ -54,48 +55,36 @@ async function crearResumen(indexArchivo: number) {
     });
   });
 
-  if (archivosEnHTML[indexArchivo].split('<table>')[1].length > 0) {
-    const tabla = '<table>' + archivosEnHTML[indexArchivo].split('<table>')[1];
+  archivosEnHTML[indexArchivo].split('<table>').forEach((tablaSpliteada, index) => {
+    try {
+      if (tablaSpliteada.trim().length > 0) {
+        const button = document.createElement('button');
+        button.textContent = 'Crear gráfico';
+        button.onclick = () => { crearGraficoDesdeTabla('data-table-' + index); };
 
-    const fechaRegex = /((?:0?[1-9]|[12][0-9]|3[01])[\/-](?:0?[1-9]|1[0-2])[\/-]\d{4})|((?:0?[1-9]|1[0-2])[\/-](?:0?[1-9]|[12][0-9]|3[01])[\/-]\d{4})/g;
-
-    const numberRegex = /\b\d+(\.\d+)?\b/g;
-
-    const tablaSinFechas = tabla.replace(fechaRegex, '');
-
-    let match;
-    let numeros: number[] = [];
-
-    // Extraer números de la tabla sin fechas
-    while ((match = numberRegex.exec(tablaSinFechas)) !== null) {
-      if (match[0]) {
-        const num = parseFloat(match[0].trim());
-        if (!isNaN(num)) {
-          numeros.push(num);
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = '<table>' + tablaSpliteada.replace(/<p>/g, '').replace(/<\/p>/g, '');
+        const tabla = tempDiv.querySelector('table');
+        if (tabla) {
+          tabla.id = 'data-table-' + index;
+          insertarHeaderYBody(tabla);
+          divDelResumen.appendChild(button);
+          divDelResumen.appendChild(tabla);
         }
       }
+    } catch (e) {
     }
-
-
-    if (numeros.length > 0) {
-      let grafico = document.getElementById("grafico") as HTMLCanvasElement;
-      await crearGrafico(numeros, grafico);
-    }
-
-    divDelResumen.innerHTML += tabla.replace('"', '');
-  }
+  });
 
   const selectPalabrasIdentificadora = document.getElementById('select-palabras-identificadora') as HTMLSelectElement;
   if (selectPalabrasIdentificadora) {
     await crearOpcionesParaContenidoIdentificador(selectPalabrasIdentificadora);
     selectPalabrasIdentificadora.value = `${indexArchivo}`;
   }
-
 }
 
 function escribirContenidoRelacionadoAPalabrasClaves(oraciones: string) {
   const p = document.createElement('p');
-  let esPalabraClave = false;
 
   palabrasClaves.split(',').forEach(palabraClave => {
     palabraClave = palabraClave.trim();
@@ -105,58 +94,119 @@ function escribirContenidoRelacionadoAPalabrasClaves(oraciones: string) {
         // Crear un select para palabras identificadoras
         p.innerHTML = `<b>${palabraClave}</b><select id='select-palabras-identificadora'><option value="0">${textoAsociado}</option></select>`;
         divDelResumen.appendChild(p);
-        esPalabraClave = true;
       } else if (oraciones.includes(palabraClave.trim()) && oraciones.trim().length > palabraClave.trim().length) {
         // Mostrar texto asociado para otras palabras claves
         p.innerHTML = `<b>${palabraClave}: </b>${textoAsociado}`;
         divDelResumen.appendChild(p);
-        esPalabraClave = true;
       }
-
     }
   });
 }
 
-async function crearGrafico(numeros: number[], canvas: HTMLCanvasElement) {
-  const ctx = canvas.getContext('2d');
-  if (ctx) {
-    new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: numeros.map((_, index) => `Etiqueta ${index + 1}`),
-        datasets: [{
-          label: 'Ventas',
-          data: numeros,
-          borderColor: 'rgba(75, 192, 192, 1)',
-          borderWidth: 1,
-          backgroundColor: 'rgba(75, 192, 192, 0.2)',
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: 'top',
-          },
-          title: {
-            display: true,
-            text: 'Palabras por minutos'
-          }
-        },
-        scales: {
-          x: {
-            beginAtZero: true
-          },
-          y: {
-            beginAtZero: true
-          }
-        }
-      }
+function insertarHeaderYBody(tabla: HTMLDivElement) {
+  const firstTr = tabla.querySelector('tr');
+  const thead = document.createElement('thead');
+  thead.appendChild(firstTr.cloneNode(true));
+  thead.innerHTML = thead.innerHTML.replace(/<td>/g, '<th>').replace(/<\/td>/g, '</th>');
+
+  thead.querySelectorAll('th').forEach((th, index) => {
+    th.addEventListener('click', () => {
+      pintarColumnaSeleccionada(index);
     });
-  } else {
-    console.error('No se pudo obtener el contexto 2D del canvas.');
+  });
+
+  firstTr.remove();
+
+  const tbody = document.createElement('tbody');
+  while (tabla.firstChild) {
+    tbody.appendChild(tabla.firstChild);
+  }
+
+  tabla.appendChild(thead);
+
+  tbody.innerHTML = tbody.innerHTML.replace('<tbody>', '').replace('</tbody>', '');
+  tabla.appendChild(tbody);
+}
+
+function pintarColumnaSeleccionada(index: number) {
+  const table = document.querySelector('table');
+  if (table) {
+    const rows = table.rows;
+    for (let i = 0; i < rows.length; i++) {
+      rows[i].cells[index].classList.toggle('selected');
+    }
   }
 }
+
+let chart: any;
+
+function crearGraficoDesdeTabla(tableId: string) {
+  const table = document.getElementById(tableId) as HTMLTableElement;
+  const labels = [];
+  const datasets: any = [];
+  const rows = table.rows;
+  const selectedColumns = [];
+
+  // Obtener los índices de las columnas seleccionadas
+  for (let i = 0; i < rows[0].cells.length; i++) {
+    if (rows[0].cells[i].classList.contains('selected')) {
+      selectedColumns.push(i);
+    }
+  }
+
+  // Generar las etiquetas y los datos para el gráfico
+  for (let i = 1; i < rows.length; i++) {
+    labels.push(rows[i].cells[0].textContent);
+    selectedColumns.forEach((colIndex, j) => {
+      if (!datasets[j]) {
+        datasets[j] = {
+          label: rows[0].cells[colIndex].textContent,
+          data: [],
+          borderColor: `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 1)`,
+          borderWidth: 1,
+          fill: false
+        };
+      }
+      datasets[j].data.push(parseFloat(rows[i].cells[colIndex].textContent));
+    });
+  }
+
+  // Destruir gráfico existente si hay uno
+  if (chart) {
+    chart.destroy();
+  }
+
+  // Crear el gráfico
+  const ctx = (document.getElementById('chart-canvas') as HTMLCanvasElement).getContext('2d');
+  chart = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: labels,
+      datasets: datasets
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'top',
+        },
+        title: {
+          display: true,
+          text: 'Gráfico de Datos'
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true
+        },
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+}
+
 
 async function crearOpcionesParaContenidoIdentificador(select: HTMLSelectElement) {
   select.addEventListener('change', async function () {
