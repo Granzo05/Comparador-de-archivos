@@ -1,11 +1,12 @@
-import Chart, { ChartItem } from 'chart.js/auto';
-import { getRelativePosition } from 'chart.js/helpers';
+import Chart from 'chart.js/auto';
 
 let palabrasClaves: string = sessionStorage.getItem('palabras-claves');
 let palabraIdentificadora: string = sessionStorage.getItem('palabra-identificadora');
 let archivosEnHTML: string[] = JSON.parse(sessionStorage.getItem('archivosEnHTML'));
 let coincidenciasConPalabrasClaves: string[] = [];
 const divDelResumen = document.getElementById('contenedor-resumen');
+let habilitarEdicion: boolean = false;
+let idTablaGlobal: string;
 
 document.addEventListener('DOMContentLoaded', async () => {
   // Creamos el resumen con el primer archivo ingresado para tener una plantilla...
@@ -60,7 +61,8 @@ async function crearResumen(indexArchivo: number) {
       if (tablaSpliteada.trim().length > 0) {
         const button = document.createElement('button');
         button.textContent = 'Crear gráfico';
-        button.onclick = () => { crearGraficoDesdeTabla('data-table-' + index); };
+        button.className = 'button-crear-grafico'
+        button.onclick = () => { abrirModal('data-table-' + index); };
 
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = '<table>' + tablaSpliteada.replace(/<p>/g, '').replace(/<\/p>/g, '');
@@ -118,9 +120,20 @@ function insertarHeaderYBody(tabla: HTMLDivElement) {
   firstTr.remove();
 
   const tbody = document.createElement('tbody');
+
   while (tabla.firstChild) {
     tbody.appendChild(tabla.firstChild);
   }
+
+  tbody.querySelectorAll('td').forEach((td) => {
+    td.addEventListener('click', (event) => {
+      const cell = event.target as HTMLTableCellElement;
+      const row = cell.parentElement as HTMLTableRowElement;
+      const cellIndex = cell.cellIndex;
+      const rowIndex = row.rowIndex;
+      pintarCasillaSeleccionada(rowIndex, cellIndex);
+    });
+  });
 
   tabla.appendChild(thead);
 
@@ -129,12 +142,30 @@ function insertarHeaderYBody(tabla: HTMLDivElement) {
 }
 
 function pintarColumnaSeleccionada(index: number) {
-  const table = document.querySelector('table');
-  if (table) {
-    const rows = table.rows;
-    for (let i = 0; i < rows.length; i++) {
-      rows[i].cells[index].classList.toggle('selected');
+  if (habilitarEdicion) {
+    const table = document.querySelector('table');
+    if (table) {
+      const rows = table.rows;
+      for (let i = 0; i < rows.length; i++) {
+        rows[i].cells[index].classList.toggle('selected');
+      }
     }
+
+    abrirModal(idTablaGlobal);
+    habilitarEdicion = false;
+  }
+}
+
+function pintarCasillaSeleccionada(rowIndex: number, cellIndex: number) {
+  if (habilitarEdicion) {
+    const table = document.querySelector('table');
+    if (table) {
+      const cell = table.rows[rowIndex].cells[cellIndex];
+      cell.classList.toggle('selected');
+    }
+
+    cerrarModal();
+    habilitarEdicion = false;
   }
 }
 
@@ -179,7 +210,7 @@ function crearGraficoDesdeTabla(tableId: string) {
   // Crear el gráfico
   const ctx = (document.getElementById('chart-canvas') as HTMLCanvasElement).getContext('2d');
   chart = new Chart(ctx, {
-    type: 'pie',
+    type: 'bar',
     data: {
       labels: labels,
       datasets: datasets
@@ -256,4 +287,40 @@ function ordenarAlfabeticamenteOptions(select: HTMLSelectElement, opciones: HTML
   select.innerHTML = '';
 
   opcionesUnicas.forEach(option => select.appendChild(option));
+}
+
+
+document.getElementById('seleccionar-referencia').addEventListener('click', () => {
+  cerrarModal();
+
+
+  habilitarEdicion = true;
+});
+
+document.getElementById('seleccionar-numeros').addEventListener('click', () => {
+  cerrarModal();
+  habilitarEdicion = true;
+});
+
+document.getElementById('crear-grafico').addEventListener('click', () => {
+  crearGraficoDesdeTabla(idTablaGlobal);
+  cerrarModal();
+});
+
+document.getElementById('cerrar-button').addEventListener('click', () => {
+  cerrarModal();
+});
+
+function abrirModal(idTabla: string) {
+  if (idTabla !== undefined) {
+    idTablaGlobal = idTabla;
+  }
+
+  const modal = document.getElementById('modal-grafico');
+  modal.style.display = 'flex';
+}
+
+function cerrarModal() {
+  const modal = document.getElementById('modal-grafico');
+  modal.style.display = 'none';
 }
