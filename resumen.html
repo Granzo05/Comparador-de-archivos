@@ -25,8 +25,10 @@
   </header>
   <hr>
   <div id="contenedor-resumen"></div>
-  
-  <canvas id="chart-canvas" width="400" height="300"></canvas>
+
+  <div class="contenedor-grafico" id="contenedor-grafico">
+    <canvas id="chart-canvas"></canvas>
+  </div>
 
   <div id="modal-grafico" class="modal">
     <div class="modal-content">
@@ -38,9 +40,10 @@
         <option value="pie">Torta</option>
       </select>
 
-      <button class="button-modal-grafico" id="seleccionar-referencia">Seleccionar columna con referencia a los datos</button>
+      <button class="button-modal-grafico" id="seleccionar-referencia">Seleccionar columna con referencia a los
+        datos</button>
       <button class="button-modal-grafico" id="seleccionar-numeros">Seleccionar columna con los números</button>
-      <button class="button-black-grafico" id="crear-grafico">Crear gráfico</button>      
+      <button class="button-black-grafico" id="crear-grafico">Crear gráfico</button>
     </div>
   </div>
 

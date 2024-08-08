@@ -1,12 +1,14 @@
-import Chart from 'chart.js/auto';
+import Chart, { ChartTypeRegistry } from 'chart.js/auto';
 
 let palabrasClaves: string = sessionStorage.getItem('palabras-claves');
 let palabraIdentificadora: string = sessionStorage.getItem('palabra-identificadora');
 let archivosEnHTML: string[] = JSON.parse(sessionStorage.getItem('archivosEnHTML'));
 let coincidenciasConPalabrasClaves: string[] = [];
-const divDelResumen = document.getElementById('contenedor-resumen');
 let habilitarEdicion: boolean = false;
 let idTablaGlobal: string;
+let colorCasillas: string;
+let tipoGrafico: keyof ChartTypeRegistry;
+const divDelResumen = document.getElementById('contenedor-resumen');
 
 document.addEventListener('DOMContentLoaded', async () => {
   // Creamos el resumen con el primer archivo ingresado para tener una plantilla...
@@ -147,7 +149,7 @@ function pintarColumnaSeleccionada(index: number) {
     if (table) {
       const rows = table.rows;
       for (let i = 0; i < rows.length; i++) {
-        rows[i].cells[index].classList.toggle('selected');
+        rows[i].cells[index].classList.toggle(colorCasillas);
       }
     }
 
@@ -161,10 +163,10 @@ function pintarCasillaSeleccionada(rowIndex: number, cellIndex: number) {
     const table = document.querySelector('table');
     if (table) {
       const cell = table.rows[rowIndex].cells[cellIndex];
-      cell.classList.toggle('selected');
+      cell.classList.toggle(colorCasillas);
     }
 
-    cerrarModal();
+    abrirModal(idTablaGlobal);
     habilitarEdicion = false;
   }
 }
@@ -180,12 +182,11 @@ function crearGraficoDesdeTabla(tableId: string) {
 
   // Obtener los índices de las columnas seleccionadas
   for (let i = 0; i < rows[0].cells.length; i++) {
-    if (rows[0].cells[i].classList.contains('selected')) {
+    if (rows[0].cells[i].classList.contains(colorCasillas)) {
       selectedColumns.push(i);
     }
   }
 
-  // Generar las etiquetas y los datos para el gráfico
   for (let i = 1; i < rows.length; i++) {
     labels.push(rows[i].cells[0].textContent);
     selectedColumns.forEach((colIndex, j) => {
@@ -193,7 +194,8 @@ function crearGraficoDesdeTabla(tableId: string) {
         datasets[j] = {
           label: rows[0].cells[colIndex].textContent,
           data: [],
-          borderColor: `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 1)`,
+          backgroundColor: generarColores(rows.length - 1),
+          borderColor: `rgba(1, 1, 1, 1)`,
           borderWidth: 1,
           fill: false
         };
@@ -202,15 +204,32 @@ function crearGraficoDesdeTabla(tableId: string) {
     });
   }
 
-  // Destruir gráfico existente si hay uno
   if (chart) {
     chart.destroy();
   }
 
-  // Crear el gráfico
+  dibujarGrafico(labels, datasets);
+}
+
+function getRandomColor(): string {
+  const r = Math.floor(Math.random() * 255);
+  const g = Math.floor(Math.random() * 255);
+  const b = Math.floor(Math.random() * 255);
+  return `rgba(${r}, ${g}, ${b}, 0.7)`;
+}
+
+function generarColores(cantidad: number): string[] {
+  const colores = [];
+  for (let i = 0; i < cantidad; i++) {
+    colores.push(getRandomColor());
+  }
+  return colores;
+}
+
+function dibujarGrafico(labels: any, datasets: any) {
   const ctx = (document.getElementById('chart-canvas') as HTMLCanvasElement).getContext('2d');
   chart = new Chart(ctx, {
-    type: 'bar',
+    type: tipoGrafico,
     data: {
       labels: labels,
       datasets: datasets
@@ -238,7 +257,6 @@ function crearGraficoDesdeTabla(tableId: string) {
   });
 }
 
-
 async function crearOpcionesParaContenidoIdentificador(select: HTMLSelectElement) {
   select.addEventListener('change', async function () {
     await buscarResumenMediantePalabraIdentificadora(this.value);
@@ -248,7 +266,6 @@ async function crearOpcionesParaContenidoIdentificador(select: HTMLSelectElement
 
   archivosEnHTML.forEach((archivo, index) => {
     archivo = archivo.replace(/<p>/g, '\n').replace(/<\/p>/g, '\n');
-
     archivo.split('\n').forEach(oraciones => {
       if (oraciones.includes(palabraIdentificadora.trim())) {
         const textoAsociadoAPalabraClave = oraciones.replace(palabraIdentificadora.trim(), '').replace(':', '').trim();
@@ -263,8 +280,6 @@ async function crearOpcionesParaContenidoIdentificador(select: HTMLSelectElement
 
   ordenarAlfabeticamenteOptions(select, opciones);
 }
-
-
 
 async function buscarResumenMediantePalabraIdentificadora(indexArchivo: string) {
   await buscarContenidoAsociadoAPalabrasClaves(parseInt(indexArchivo));
@@ -289,26 +304,51 @@ function ordenarAlfabeticamenteOptions(select: HTMLSelectElement, opciones: HTML
   opcionesUnicas.forEach(option => select.appendChild(option));
 }
 
-
 document.getElementById('seleccionar-referencia').addEventListener('click', () => {
-  cerrarModal();
-
-
+  ocultarModal();
+  colorCasillas = 'casilla-gray';
   habilitarEdicion = true;
 });
 
 document.getElementById('seleccionar-numeros').addEventListener('click', () => {
-  cerrarModal();
+  ocultarModal();
+  colorCasillas = 'casilla-yellow';
   habilitarEdicion = true;
 });
 
+(document.getElementById('tipo-grafico') as HTMLSelectElement).addEventListener('change', (event) => {
+  const selectElement = event.target as HTMLSelectElement;
+  tipoGrafico = selectElement.value as keyof ChartTypeRegistry;
+});
+
 document.getElementById('crear-grafico').addEventListener('click', () => {
+  if (tipoGrafico === undefined) {
+    alert('Necesitamos que elijas un tipo de gráfico');
+    return;
+  }
+
+  const labels = document.getElementsByClassName('casilla-gray');
+  const data = document.getElementsByClassName('casilla-yellow');
+
+  if (labels.length === 0) {
+    alert('Necesitamos que elijas los datos que referencian a los números, como por ejemplo: "nombres de personas"');
+    return;
+  }
+
+  if (data.length === 0) {
+    alert('Necesitamos que elijas los datos que contienen números');
+    return;
+  }
+
   crearGraficoDesdeTabla(idTablaGlobal);
-  cerrarModal();
+  document.getElementById('contenedor-grafico').style.display = 'flex';
+  ocultarModal();
 });
 
 document.getElementById('cerrar-button').addEventListener('click', () => {
   cerrarModal();
+  colorCasillas = 'casilla-gray';
+  tipoGrafico = undefined;
 });
 
 function abrirModal(idTabla: string) {
@@ -320,7 +360,23 @@ function abrirModal(idTabla: string) {
   modal.style.display = 'flex';
 }
 
+function ocultarModal() {
+  const modal = document.getElementById('modal-grafico');
+  modal.style.display = 'none';
+}
+
 function cerrarModal() {
   const modal = document.getElementById('modal-grafico');
   modal.style.display = 'none';
+
+  const labels = document.getElementsByClassName('casilla-gray');
+  const data = document.getElementsByClassName('casilla-yellow');
+
+  Array.from(labels).forEach(element => {
+    element.classList.remove('casilla-gray');
+  });
+
+  Array.from(data).forEach(element => {
+    element.classList.remove('casilla-yellow');
+  });
 }
