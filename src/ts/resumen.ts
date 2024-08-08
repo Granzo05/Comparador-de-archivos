@@ -71,6 +71,7 @@ async function crearResumen(indexArchivo: number) {
         const tabla = tempDiv.querySelector('table');
         if (tabla) {
           tabla.id = 'data-table-' + index;
+          tabla.className = 'tabla';
           insertarHeaderYBody(tabla);
           divDelResumen.appendChild(button);
           divDelResumen.appendChild(tabla);
@@ -379,4 +380,76 @@ function cerrarModal() {
   Array.from(data).forEach(element => {
     element.classList.remove('casilla-yellow');
   });
+}
+
+document.getElementById('button-guardar-datos').addEventListener('click', () => {
+  const tablas = document.getElementsByClassName('tabla') as HTMLCollectionOf<HTMLTableElement>;
+
+  const alumnos: string[] = [];
+  buscarColumnaDeAlumno(alumnos, tablas);
+
+  const fechas: string[] = [];
+  buscarColumnaDeFecha(fechas, tablas);
+
+  const libros: string[] = [];
+  buscarMaterialDeLectura(libros, tablas);
+
+  console.log(alumnos)
+  console.log(fechas)
+  console.log(libros)
+});
+
+function buscarColumnaDeAlumno(alumnos: string[], tablas: HTMLCollectionOf<HTMLTableElement>) {
+  Array.from(tablas).forEach((tabla) => {
+    const filas = tabla.rows;
+    const posiblesPalabras = ['alumno', 'alumnos', 'Nombre de los alumnos'];
+
+    let indexColumna = buscarPalabrasEnElHeader(filas, posiblesPalabras);
+
+    if (indexColumna !== -1) {
+      for (let i = 1; i < filas.length; i++) {
+        alumnos.push(filas[i].cells[indexColumna].innerHTML.trim());
+      }
+    }
+  });
+}
+
+function buscarColumnaDeFecha(fechas: string[], tablas: HTMLCollectionOf<HTMLTableElement>) {
+  Array.from(tablas).forEach((tabla) => {
+    const filas = tabla.rows;
+    const posiblesPalabras = ['fecha', 'dia'];
+
+    let indexColumna = buscarPalabrasEnElHeader(filas, posiblesPalabras);
+
+    if (indexColumna !== -1) {
+      for (let i = 1; i < filas.length; i++) {
+        fechas.push(filas[i].cells[indexColumna].innerHTML.trim());
+      }
+    }
+  });
+}
+
+function buscarMaterialDeLectura(libros: string[], tablas: HTMLCollectionOf<HTMLTableElement>) {
+  Array.from(tablas).forEach((tabla) => {
+    const filas = tabla.rows;
+    const posiblesPalabras = ['libro', 'material de lectura', 'lectura'];
+
+    let indexColumna = buscarPalabrasEnElHeader(filas, posiblesPalabras);
+
+    if (indexColumna !== -1) {
+      for (let i = 1; i < filas.length; i++) {
+        libros.push(filas[i].cells[indexColumna].innerHTML.trim());
+      }
+    }
+  });
+}
+
+function buscarPalabrasEnElHeader(filas: HTMLCollectionOf<HTMLTableRowElement>, palabrasBuscadas: string[]): number {
+  for (let i = 0; i < filas[0].cells.length; i++) {
+    const cellText = filas[0].cells[i].innerHTML.toLowerCase();
+    if (palabrasBuscadas.some(palabra => cellText.includes(palabra.toLowerCase()))) {
+      return i;
+    }
+  }
+  return -1;
 }

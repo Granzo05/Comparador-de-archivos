@@ -1,7 +1,9 @@
 [x] Agregar usuario
 [x] Leer archivos
 [x] Verificar la carga de muchos archivos
-[] Generar graficos
+[x] Generar graficos
+[] Guardar datos
+[] Comparar datos
 [] Crear tabla de alumnos
 [] Crear tabla de escuelas
 [] Crear tabla de docentes?
