@@ -388,6 +388,18 @@ document.getElementById('button-guardar-datos').addEventListener('click', () => 
   const alumnos: string[] = [];
   buscarColumnaDeAlumno(alumnos, tablas);
 
+  const docentes: string[] = [];
+  buscarNombresDeDocente(docentes);
+
+  const curso: string = buscarCurso();
+
+  const escuela: string = buscarEscuela();
+
+  const parametroEstudio: string = buscarParametroEstudio();
+
+  const resultados: string[] = [];
+  buscarResultados(resultados, tablas);
+
   const fechas: string[] = [];
   buscarColumnaDeFecha(fechas, tablas);
 
@@ -397,6 +409,11 @@ document.getElementById('button-guardar-datos').addEventListener('click', () => 
   console.log(alumnos)
   console.log(fechas)
   console.log(libros)
+  console.log(docentes)
+  console.log(curso)
+  console.log(escuela)
+  console.log(parametroEstudio)
+  console.log(resultados)
 });
 
 function buscarColumnaDeAlumno(alumnos: string[], tablas: HTMLCollectionOf<HTMLTableElement>) {
@@ -409,6 +426,57 @@ function buscarColumnaDeAlumno(alumnos: string[], tablas: HTMLCollectionOf<HTMLT
     if (indexColumna !== -1) {
       for (let i = 1; i < filas.length; i++) {
         alumnos.push(filas[i].cells[indexColumna].innerHTML.trim());
+      }
+    }
+  });
+}
+
+function buscarNombresDeDocente(docentes: string[]) {
+  const posiblesPalabras = ['docente', 'maestra', 'maestro'];
+
+  let palabraEncontrada = buscarPalabrasEnArchivo(posiblesPalabras);
+
+  if (palabraEncontrada)
+    docentes.push(palabraEncontrada);
+}
+
+function buscarCurso() {
+  const posiblesPalabras = ['curso', 'division', 'división'];
+
+  let palabraEncontrada = buscarPalabrasEnArchivo(posiblesPalabras);
+
+  if (palabraEncontrada)
+    return palabraEncontrada;
+}
+
+function buscarEscuela() {
+  const posiblesPalabras = ['establecimiento', 'escuela'];
+
+  let palabraEncontrada = buscarPalabrasEnArchivo(posiblesPalabras);
+
+  if (palabraEncontrada)
+    return palabraEncontrada;
+}
+
+function buscarParametroEstudio() {
+  const posiblesPalabras = ['parametro de estudio', 'estudio', 'metodologia de estudio'];
+
+  let palabraEncontrada = buscarPalabrasEnArchivo(posiblesPalabras);
+
+  if (palabraEncontrada)
+    return palabraEncontrada;
+}
+
+function buscarResultados(resultados: string[], tablas: HTMLCollectionOf<HTMLTableElement>) {
+  Array.from(tablas).forEach((tabla) => {
+    const filas = tabla.rows;
+    const posiblesPalabras = ['resultado', 'nota', 'notas', 'palabra por minuto', 'palabras por minuto'];
+
+    let indexColumna = buscarPalabrasEnElHeader(filas, posiblesPalabras);
+
+    if (indexColumna !== -1) {
+      for (let i = 1; i < filas.length; i++) {
+        resultados.push(filas[i].cells[indexColumna].innerHTML.trim());
       }
     }
   });
@@ -452,4 +520,17 @@ function buscarPalabrasEnElHeader(filas: HTMLCollectionOf<HTMLTableRowElement>, 
     }
   }
   return -1;
+}
+
+function buscarPalabrasEnArchivo(palabrasBuscadas: string[]): string | null {
+  for (let i = 0; i < archivosEnHTML.length; i++) {
+    for (let palabra of palabrasBuscadas) {
+      const regex = new RegExp(`${palabra}:\\s*([^<]*)`, 'i');
+      const match = archivosEnHTML[i].match(regex);
+      if (match) {
+        return match[1].trim();
+      }
+    }
+  }
+  return null;
 }
