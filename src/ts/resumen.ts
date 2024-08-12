@@ -386,55 +386,111 @@ document.getElementById('button-guardar-datos').addEventListener('click', () => 
   const tablas = document.getElementsByClassName('tabla') as HTMLCollectionOf<HTMLTableElement>;
 
   const alumnos: string[] = [];
-  buscarColumnaDeAlumno(alumnos, tablas);
-
   const docentes: string[] = [];
-  buscarNombresDeDocente(docentes);
-
-  const curso: string = buscarCurso();
-
-  const escuela: string = buscarEscuela();
-
-  const parametroEstudio: string = buscarParametroEstudio();
-
+  let curso: string = '';
+  let escuela: string = '';
+  let parametroEstudio: string = '';
   const resultados: string[] = [];
-  buscarResultados(resultados, tablas);
-
   const fechas: string[] = [];
-  buscarColumnaDeFecha(fechas, tablas);
-
   const libros: string[] = [];
-  buscarMaterialDeLectura(libros, tablas);
 
-  console.log(alumnos)
-  console.log(fechas)
-  console.log(libros)
-  console.log(docentes)
-  console.log(curso)
-  console.log(escuela)
-  console.log(parametroEstudio)
-  console.log(resultados)
+  buscarDatos()
+
+  async function buscarDatos() {
+    await buscarColumnaDeAlumno(alumnos, tablas);
+
+    await buscarNombresDeDocente(docentes);
+
+    curso = await buscarCurso();
+
+    escuela = await buscarEscuela();
+
+    parametroEstudio = await buscarParametroEstudio();
+
+    await buscarResultados(resultados, tablas);
+
+    await buscarColumnaDeFecha(fechas, tablas);
+
+    await buscarMaterialDeLectura(libros, tablas);
+
+    //guardarDatos();
+  }
+
+  async function guardarDatos() {
+    const idsAlumno: number[] = [];
+
+    for (const alumno of Array.from(alumnos)) {
+      idsAlumno.push(await verificarOCrear('alumno', 'nombre', alumno));
+    }
+
+    const idsDocente: number[] = [];
+
+    for (const docente of Array.from(docentes)) {
+      let idDocente = await verificarOCrear('docente', 'nombre', docente);
+    }
+
+    const idCurso = await verificarOCrear('curso', 'nombre', curso);
+
+    const idEscuela = await verificarOCrear('escuela', 'nombre', escuela);
+
+    const idParametro = await verificarOCrear('parametro', 'descripcion', parametroEstudio);
+
+    for (const resultado of Array.from(resultados)) {
+    }
+
+    for (let i = 0; i < resultados.length; i++) {
+      let idResultado = await verificarOCrear('resultado', 'puntuacion', idsAlumno[i]);
+    }
+
+    const idsLibros: number[] = [];
+
+    for (const libro of Array.from(libros)) {
+      idsLibros.push(await verificarOCrear('libro', 'nombre', libro));
+    }
+  }
+
+  async function verificarOCrear(tabla: string, columna: string, valor: string | number) {
+    try {
+      const querySelect = `SELECT id_${tabla} FROM ${tabla} WHERE ${columna} = :valor`;
+      const result = await connection.execute(querySelect, [valor]);
+
+      if (result.rows.length > 0) {
+        return result.rows[0][0];
+      } else {
+        const queryInsert = `INSERT INTO ${tabla} (${columna}) VALUES (:valor) RETURNING id_${tabla} INTO :id`;
+        const resultInsert = await connection.execute(
+          queryInsert,
+          { valor, id: { type: oracledb.NUMBER, dir: oracledb.BIND_OUT } },
+          { autoCommit: true }
+        );
+        return resultInsert.outBinds.id[0];
+      }
+    } catch (e) {
+      return 0;
+    }
+  };
 });
 
-function buscarColumnaDeAlumno(alumnos: string[], tablas: HTMLCollectionOf<HTMLTableElement>) {
-  Array.from(tablas).forEach((tabla) => {
+async function buscarColumnaDeAlumno(alumnos: string[], tablas: HTMLCollectionOf<HTMLTableElement>) {
+  for (const tabla of Array.from(tablas)) {
     const filas = tabla.rows;
     const posiblesPalabras = ['alumno', 'alumnos', 'Nombre de los alumnos'];
 
-    let indexColumna = buscarPalabrasEnElHeader(filas, posiblesPalabras);
+    let indexColumna = await buscarPalabrasEnElHeader(filas, posiblesPalabras);
 
     if (indexColumna !== -1) {
       for (let i = 1; i < filas.length; i++) {
         alumnos.push(filas[i].cells[indexColumna].innerHTML.trim());
       }
     }
-  });
+  }
 }
 
-function buscarNombresDeDocente(docentes: string[]) {
+
+async function buscarNombresDeDocente(docentes: string[]) {
   const posiblesPalabras = ['docente', 'maestra', 'maestro'];
 
-  let palabraEncontrada = buscarPalabrasEnArchivo(posiblesPalabras);
+  let palabraEncontrada = await buscarPalabrasEnArchivo(posiblesPalabras);
 
   if (palabraEncontrada)
     docentes.push(palabraEncontrada);
@@ -449,7 +505,7 @@ function buscarCurso() {
     return palabraEncontrada;
 }
 
-function buscarEscuela() {
+async function buscarEscuela() {
   const posiblesPalabras = ['establecimiento', 'escuela'];
 
   let palabraEncontrada = buscarPalabrasEnArchivo(posiblesPalabras);
@@ -458,7 +514,7 @@ function buscarEscuela() {
     return palabraEncontrada;
 }
 
-function buscarParametroEstudio() {
+async function buscarParametroEstudio() {
   const posiblesPalabras = ['parametro de estudio', 'estudio', 'metodologia de estudio'];
 
   let palabraEncontrada = buscarPalabrasEnArchivo(posiblesPalabras);
@@ -467,52 +523,52 @@ function buscarParametroEstudio() {
     return palabraEncontrada;
 }
 
-function buscarResultados(resultados: string[], tablas: HTMLCollectionOf<HTMLTableElement>) {
-  Array.from(tablas).forEach((tabla) => {
+async function buscarResultados(resultados: string[], tablas: HTMLCollectionOf<HTMLTableElement>) {
+  for (const tabla of Array.from(tablas)) {
     const filas = tabla.rows;
     const posiblesPalabras = ['resultado', 'nota', 'notas', 'palabra por minuto', 'palabras por minuto'];
 
-    let indexColumna = buscarPalabrasEnElHeader(filas, posiblesPalabras);
+    let indexColumna = await buscarPalabrasEnElHeader(filas, posiblesPalabras);
 
     if (indexColumna !== -1) {
       for (let i = 1; i < filas.length; i++) {
         resultados.push(filas[i].cells[indexColumna].innerHTML.trim());
       }
     }
-  });
+  }
 }
 
-function buscarColumnaDeFecha(fechas: string[], tablas: HTMLCollectionOf<HTMLTableElement>) {
-  Array.from(tablas).forEach((tabla) => {
+async function buscarColumnaDeFecha(fechas: string[], tablas: HTMLCollectionOf<HTMLTableElement>) {
+  for (const tabla of Array.from(tablas)) {
     const filas = tabla.rows;
     const posiblesPalabras = ['fecha', 'dia'];
 
-    let indexColumna = buscarPalabrasEnElHeader(filas, posiblesPalabras);
+    let indexColumna = await buscarPalabrasEnElHeader(filas, posiblesPalabras);
 
     if (indexColumna !== -1) {
       for (let i = 1; i < filas.length; i++) {
         fechas.push(filas[i].cells[indexColumna].innerHTML.trim());
       }
     }
-  });
+  }
 }
 
-function buscarMaterialDeLectura(libros: string[], tablas: HTMLCollectionOf<HTMLTableElement>) {
-  Array.from(tablas).forEach((tabla) => {
+async function buscarMaterialDeLectura(libros: string[], tablas: HTMLCollectionOf<HTMLTableElement>) {
+  for (const tabla of Array.from(tablas)) {
     const filas = tabla.rows;
     const posiblesPalabras = ['libro', 'material de lectura', 'lectura'];
 
-    let indexColumna = buscarPalabrasEnElHeader(filas, posiblesPalabras);
+    let indexColumna = await buscarPalabrasEnElHeader(filas, posiblesPalabras);
 
     if (indexColumna !== -1) {
       for (let i = 1; i < filas.length; i++) {
         libros.push(filas[i].cells[indexColumna].innerHTML.trim());
       }
     }
-  });
+  }
 }
 
-function buscarPalabrasEnElHeader(filas: HTMLCollectionOf<HTMLTableRowElement>, palabrasBuscadas: string[]): number {
+async function buscarPalabrasEnElHeader(filas: HTMLCollectionOf<HTMLTableRowElement>, palabrasBuscadas: string[]) {
   for (let i = 0; i < filas[0].cells.length; i++) {
     const cellText = filas[0].cells[i].innerHTML.toLowerCase();
     if (palabrasBuscadas.some(palabra => cellText.includes(palabra.toLowerCase()))) {
@@ -522,7 +578,7 @@ function buscarPalabrasEnElHeader(filas: HTMLCollectionOf<HTMLTableRowElement>, 
   return -1;
 }
 
-function buscarPalabrasEnArchivo(palabrasBuscadas: string[]): string | null {
+async function buscarPalabrasEnArchivo(palabrasBuscadas: string[]) {
   for (let i = 0; i < archivosEnHTML.length; i++) {
     for (let palabra of palabrasBuscadas) {
       const regex = new RegExp(`${palabra}:\\s*([^<]*)`, 'i');
