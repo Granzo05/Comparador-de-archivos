@@ -385,25 +385,27 @@ function cerrarModal() {
 document.getElementById('button-guardar-datos').addEventListener('click', () => {
   const tablas = document.getElementsByClassName('tabla') as HTMLCollectionOf<HTMLTableElement>;
 
-  const alumnos: string[] = [];
-  const docentes: string[] = [];
-  let curso: string = '';
-  let escuela: string = '';
+  const nombresAlumnos: string[] = [];
+  const nombresDocentes: string[] = [];
+  let divisionDelCurso: string = '';
+  let nombreEscuela: string = '';
   let parametroEstudio: string = '';
   const resultados: string[] = [];
   const fechas: string[] = [];
-  const libros: string[] = [];
+  const nombresLibros: string[] = [];
 
   buscarDatos()
 
   async function buscarDatos() {
-    await buscarColumnaDeAlumno(alumnos, tablas);
 
-    await buscarNombresDeDocente(docentes);
+    nombreEscuela = await buscarEscuela();
 
-    curso = await buscarCurso();
+    divisionDelCurso = await buscarCurso();
 
-    escuela = await buscarEscuela();
+    await buscarColumnaDeAlumno(nombresAlumnos, tablas);
+
+    await buscarNombresDeDocente(nombresDocentes);
+
 
     parametroEstudio = await buscarParametroEstudio();
 
@@ -411,93 +413,101 @@ document.getElementById('button-guardar-datos').addEventListener('click', () => 
 
     await buscarColumnaDeFecha(fechas, tablas);
 
-    await buscarMaterialDeLectura(libros, tablas);
+    await buscarMaterialDeLectura(nombresLibros, tablas);
 
-    //guardarDatos();
+    guardarDatos();
   }
 
   async function guardarDatos() {
+    const idEscuela = await verificarOCrearEscuela('nombre', nombreEscuela);
+    console.log(idEscuela)
     const idsAlumno: number[] = [];
 
-    for (const alumno of Array.from(alumnos)) {
-      idsAlumno.push(await verificarOCrear('alumno', 'nombre', alumno));
+    for (const alumno of Array.from(nombresAlumnos)) {
+      //idsAlumno.push(await verificarOCrear('alumno', 'nombre', alumno));
     }
 
     const idsDocente: number[] = [];
 
-    for (const docente of Array.from(docentes)) {
-      let idDocente = await verificarOCrear('docente', 'nombre', docente);
+    for (const docente of Array.from(nombresDocentes)) {
+      //let idDocente = await verificarOCrear('docente', 'nombre', docente);
     }
 
-    const idCurso = await verificarOCrear('curso', 'nombre', curso);
+    //const idCurso = await verificarOCrear('divisionDelCurso', 'nombre', divisionDelCurso);
 
-    const idEscuela = await verificarOCrear('escuela', 'nombre', escuela);
 
-    const idParametro = await verificarOCrear('parametro', 'descripcion', parametroEstudio);
+    //const idParametro = await verificarOCrear('parametro', 'descripcion', parametroEstudio);
 
     for (const resultado of Array.from(resultados)) {
     }
 
     for (let i = 0; i < resultados.length; i++) {
-      let idResultado = await verificarOCrear('resultado', 'puntuacion', idsAlumno[i]);
+      //let idResultado = await verificarOCrear('resultado', 'puntuacion', idsAlumno[i]);
     }
 
     const idsLibros: number[] = [];
 
-    for (const libro of Array.from(libros)) {
-      idsLibros.push(await verificarOCrear('libro', 'nombre', libro));
+    for (const libro of Array.from(nombresLibros)) {
+      //idsLibros.push(await verificarOCrear('libro', 'nombre', libro));
     }
   }
 
-  async function verificarOCrear(tabla: string, columna: string, valor: string | number) {
+  async function verificarOCrearEscuela(nombreColumna: string, valor: string) {
     try {
-      const querySelect = `SELECT id_${tabla} FROM ${tabla} WHERE ${columna} = :valor`;
-      const result = await connection.execute(querySelect, [valor]);
+      const querySelect = `SELECT id_escuela FROM escuelas WHERE ${nombreColumna} = '${valor}'`;
+      const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
 
-      if (result.rows.length > 0) {
-        return result.rows[0][0];
+      if (resultSelect.rows.length > 0) {
+        return resultSelect.rows[0].ID_ESCUELA; 
       } else {
-        const queryInsert = `INSERT INTO ${tabla} (${columna}) VALUES (:valor) RETURNING id_${tabla} INTO :id`;
-        const resultInsert = await connection.execute(
-          queryInsert,
-          { valor, id: { type: oracledb.NUMBER, dir: oracledb.BIND_OUT } },
-          { autoCommit: true }
-        );
-        return resultInsert.outBinds.id[0];
+        const queryInsert = `INSERT INTO escuelas (${nombreColumna}) VALUES (:valor)`;
+        const params = { valor };
+        await window.electronAPI.insertDatabase(queryInsert, params);
+                
+        const querySelect = `SELECT id_escuela FROM escuelas WHERE ${nombreColumna} = '${valor}'`;
+        const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);  
+
+        if (resultSelect.rows.length > 0) {
+          return resultSelect.rows[0].ID_ESCUELA; 
+        }
       }
     } catch (e) {
-      return 0;
+      console.error(e);
+      return 0; 
     }
   };
+  
+  
+  
 });
 
-async function buscarColumnaDeAlumno(alumnos: string[], tablas: HTMLCollectionOf<HTMLTableElement>) {
+async function buscarColumnaDeAlumno(nombresAlumnos: string[], tablas: HTMLCollectionOf<HTMLTableElement>) {
   for (const tabla of Array.from(tablas)) {
     const filas = tabla.rows;
-    const posiblesPalabras = ['alumno', 'alumnos', 'Nombre de los alumnos'];
+    const posiblesPalabras = ['alumno', 'nombresAlumnos', 'Nombre de los nombresAlumnos'];
 
     let indexColumna = await buscarPalabrasEnElHeader(filas, posiblesPalabras);
 
     if (indexColumna !== -1) {
       for (let i = 1; i < filas.length; i++) {
-        alumnos.push(filas[i].cells[indexColumna].innerHTML.trim());
+        nombresAlumnos.push(filas[i].cells[indexColumna].innerHTML.trim());
       }
     }
   }
 }
 
 
-async function buscarNombresDeDocente(docentes: string[]) {
+async function buscarNombresDeDocente(nombresDocentes: string[]) {
   const posiblesPalabras = ['docente', 'maestra', 'maestro'];
 
   let palabraEncontrada = await buscarPalabrasEnArchivo(posiblesPalabras);
 
   if (palabraEncontrada)
-    docentes.push(palabraEncontrada);
+    nombresDocentes.push(palabraEncontrada);
 }
 
 function buscarCurso() {
-  const posiblesPalabras = ['curso', 'division', 'división'];
+  const posiblesPalabras = ['divisionDelCurso', 'division', 'división'];
 
   let palabraEncontrada = buscarPalabrasEnArchivo(posiblesPalabras);
 
@@ -553,7 +563,7 @@ async function buscarColumnaDeFecha(fechas: string[], tablas: HTMLCollectionOf<H
   }
 }
 
-async function buscarMaterialDeLectura(libros: string[], tablas: HTMLCollectionOf<HTMLTableElement>) {
+async function buscarMaterialDeLectura(nombresLibros: string[], tablas: HTMLCollectionOf<HTMLTableElement>) {
   for (const tabla of Array.from(tablas)) {
     const filas = tabla.rows;
     const posiblesPalabras = ['libro', 'material de lectura', 'lectura'];
@@ -562,7 +572,7 @@ async function buscarMaterialDeLectura(libros: string[], tablas: HTMLCollectionO
 
     if (indexColumna !== -1) {
       for (let i = 1; i < filas.length; i++) {
-        libros.push(filas[i].cells[indexColumna].innerHTML.trim());
+        nombresLibros.push(filas[i].cells[indexColumna].innerHTML.trim());
       }
     }
   }
