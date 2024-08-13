@@ -1,5 +1,5 @@
-import { buscarPalabrasEnElHeader } from "src/ts/resumen";
-import { Resultado } from "src/types/Resultado";
+import { buscarPalabrasEnElHeader } from "../ts/resumen";
+import { Resultado } from "../types/Resultado";
 
 export const ResultadoService = {
     buscarResultados: async (resultados: Resultado[], tablas: HTMLCollectionOf<HTMLTableElement>) => {
@@ -21,8 +21,8 @@ export const ResultadoService = {
 
     verificarExistenciaOCrearResultado: async (resultado: Resultado) => {
         try {
-            const querySelect = `SELECT id_resultado FROM resultados_estudios WHERE id_alumno = '${resultado.idAlumno} AND id_estudio = '${resultado.idEstudio}' 
-          AND id_libro = ${resultado.idLibro} AND fecha = '${resultado.fecha} AND puntuacion = '${resultado.puntuacion}'`;
+            const querySelect = `SELECT id_resultado FROM resultados_estudios WHERE id_alumno = ${resultado.idAlumno} AND id_estudio = ${resultado.idEstudio}
+          AND id_libro = ${resultado.idLibro} AND fecha = '${new Date(resultado.fecha)}' AND puntuacion = ${resultado.puntuacion}`;
             const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
 
             if (resultSelect.rows.length === 0) {

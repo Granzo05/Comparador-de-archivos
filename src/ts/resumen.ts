@@ -1,18 +1,19 @@
 import Chart, { ChartTypeRegistry } from 'chart.js/auto';
-import { AlumnoService } from 'src/services/AlumnoService';
-import { CursoService } from 'src/services/CursoService';
-import { DocenteService } from 'src/services/DocenteService';
-import { EscuelaService } from 'src/services/EscuelaService';
-import { LibroService } from 'src/services/LibroService';
-import { ParametroEstudioService } from 'src/services/ParametroEstudioService';
-import { ResultadoService } from 'src/services/ResultadoService';
-import { Alumno } from 'src/types/Alumno';
-import { Curso } from 'src/types/Curso';
-import { Docente } from 'src/types/Docente';
-import { Escuela } from 'src/types/Escuela';
-import { Libro } from 'src/types/Libro';
-import { ParametroEstudio } from 'src/types/ParametroEstudio';
-import { Resultado } from 'src/types/Resultado';
+import { AlumnoService } from '../services/AlumnoService';
+import { CursoService } from '../services/CursoService';
+import { DocenteService } from '../services/DocenteService';
+import { EscuelaService } from '../services/EscuelaService';
+import { LibroService } from '../services/LibroService';
+import { ParametroEstudioService } from '../services/ParametroEstudioService';
+import { ResultadoService } from '../services/ResultadoService';
+import { Alumno } from '../types/Alumno';
+import { Curso } from '../types/Curso';
+import { Docente } from '../types/Docente';
+import { Escuela } from '../types/Escuela';
+import { Libro } from '../types/Libro';
+import { ParametroEstudio } from '../types/ParametroEstudio';
+import { Resultado } from '../types/Resultado';
+import { c } from 'vite/dist/node/types.d-aGj9QkWt';
 
 let palabrasClaves: string = sessionStorage.getItem('palabras-claves');
 let palabraIdentificadora: string = sessionStorage.getItem('palabra-identificadora');
@@ -411,69 +412,90 @@ document.getElementById('button-guardar-datos').addEventListener('click', () => 
   buscarDatos()
 
   async function buscarDatos() {
+    const [nombreEscuela, divisionCurso, descripcionParametroEstudio] = await Promise.all([
+      EscuelaService.buscarEscuela(),
+      CursoService.buscarCurso(),
+      ParametroEstudioService.buscarParametroEstudio()
+    ]);
 
-    escuela.nombre = await EscuelaService.buscarEscuela();
+    escuela.nombre = nombreEscuela;
+    curso.division = divisionCurso;
+    parametroEstudio.descripcion = descripcionParametroEstudio;
 
-    curso.division = await CursoService.buscarCurso();
-
-    await AlumnoService.buscarDatosAlumnos(alumnos, tablas);
-
-    await DocenteService.buscarDatosDocente(docentes);
-
-    parametroEstudio.descripcion = await ParametroEstudioService.buscarParametroEstudio();
-
-    await ResultadoService.buscarResultados(resultados, tablas);
-
-    await buscarColumnaDeFecha(fechas, tablas);
-
-    await LibroService.buscarMaterialDeLectura(libros, tablas);
+    await Promise.all([
+      AlumnoService.buscarDatosAlumnos(alumnos, tablas),
+      DocenteService.buscarDatosDocente(docentes),
+      ResultadoService.buscarResultados(resultados, tablas),
+      buscarColumnaDeFecha(fechas, tablas),
+      LibroService.buscarMaterialDeLectura(libros, tablas)
+    ]);
 
     guardarDatos();
   }
 
   async function guardarDatos() {
-    escuela.id = (await verificarExistenciaOCrear('id_escuela', 'escuelas', 'nombre', escuela.nombre)).ID_ESCUELA;
+    if (escuela.nombre.length > 1)
+      escuela.id = (await verificarExistenciaOCrear('id_escuela', 'escuelas', 'nombre', escuela.nombre)).ID_ESCUELA;
 
-    curso.id = await CursoService.verificarExistenciaOCrearCurso(curso.division, escuela.id);
+    if (curso.division.length > 1 && escuela.id > 0)
+      curso.id = await CursoService.verificarExistenciaOCrearCurso(curso.division, escuela.id);
 
     for (const alumno of Array.from(alumnos)) {
-      alumno.id = (await verificarExistenciaOCrear('id_alumno', 'alumnos', 'dni', alumno.dni)).ID_ALUMNO;
-      await AlumnoService.relacionarCursoAlumnos(curso.id, alumno.id, fechas[0].split('/')[2]);
+      if (alumno.dni.length > 1)
+        alumno.id = (await verificarExistenciaOCrear('id_alumno', 'alumnos', 'dni', alumno.dni)).ID_ALUMNO;
+
+      if (curso.id > 0 && alumno.id > 0 && fechas.length > 0)
+        await AlumnoService.relacionarCursoAlumnos(curso.id, alumno.id, fechas[0].split('/')[2]);
     }
 
     for (const docente of Array.from(docentes)) {
-      docente.id = (await verificarExistenciaOCrear('id_docente', 'docentes', 'cuil', docente.cuil)).ID_DOCENTE;
-      await DocenteService.relacionarCursoDocente(curso.id, docente.id, fechas);
+      if (docente.cuil)
+        docente.id = (await verificarExistenciaOCrear('id_docente', 'docentes', 'cuil', docente.cuil)).ID_DOCENTE;
+
+      if (docente.id > 0 && curso.id > 0 && fechas.length > 0)
+        await DocenteService.relacionarCursoDocente(curso.id, docente.id, fechas);
     }
 
-    parametroEstudio.id = (await verificarExistenciaOCrear('id_estudio', 'estudios', 'descripcion', parametroEstudio.descripcion)).ID_ESTUDIO;
+    if (parametroEstudio.descripcion.length > 1)
+      parametroEstudio.id = (await verificarExistenciaOCrear('id_estudio', 'estudios', 'descripcion', parametroEstudio.descripcion)).ID_ESTUDIO;
 
     for (const libro of Array.from(libros)) {
-      libro.id = (await verificarExistenciaOCrear('id_libro', 'libros', 'nombre', libro.nombre)).ID_LIBRO;
-      await LibroService.relacionarLibroEstudio(libro.id, parametroEstudio.id, fechas);
+      if (libro.nombre.length > 1) {
+        libro.id = (await verificarExistenciaOCrear('id_libro', 'libros', 'nombre', libro.nombre)).ID_LIBRO;
+      }
+
+      if (libro.id > 0 && parametroEstudio.id > 0 && fechas.length > 0)
+        await LibroService.relacionarLibroEstudio(libro.id, parametroEstudio.id, fechas);
     }
 
-    await ParametroEstudioService.relacionarEstudioCurso(parametroEstudio.id, curso.id, fechas);
+    if (parametroEstudio.id > 0 && curso.id > 0 && fechas.length > 0)
+      await ParametroEstudioService.relacionarEstudioCurso(parametroEstudio.id, curso.id, fechas);
 
-    for (let i = 0; i < alumnos.length; i++) {
-      const resultado = resultados[i];
-      resultado.idAlumno = alumnos[i].id;
-      resultado.idEstudio = parametroEstudio.id;
-      resultado.idLibro = libros[i].id;
-      resultado.fecha = new Date(fechas[i]);
+    if (alumnos.length === 0 && resultados.length === 0 && libros.length === 0 && fechas.length === 0) {
+      for (let i = 0; i < alumnos.length; i++) {
+        const resultado = resultados[i];
+        resultado.idAlumno = alumnos[i].id;
+        resultado.idEstudio = parametroEstudio.id;
+        resultado.idLibro = libros[i].id;
+        resultado.fecha = new Date(fechas[i]);
+      }
     }
 
     for (const resultado of Array.from(resultados)) {
-      await ResultadoService.verificarExistenciaOCrearResultado(resultado);
+      if (resultado.idAlumno !== 0)
+        await ResultadoService.verificarExistenciaOCrearResultado(resultado);
     }
+
+    alert('Datos cargados con éxito');
   }
 
-  async function verificarExistenciaOCrear(nombreColumnaResultadoId: string, nombreTabla: string, nombreColumnaBusqueda: string, valor: string | number) {
+  async function verificarExistenciaOCrear(nombreColumnaResultadoId: string, nombreTabla: string, nombreColumnaBusqueda: string, valor: string) {
     try {
       const querySelect = `SELECT ${nombreColumnaResultadoId} FROM ${nombreTabla} WHERE ${nombreColumnaBusqueda} = '${valor}'`;
       const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
 
       if (resultSelect.rows.length > 0) {
+        console.log(resultSelect)
         return resultSelect.rows[0];
       } else {
         const queryInsert = `INSERT INTO ${nombreTabla} (${nombreColumnaBusqueda}) VALUES (:valor)`;
@@ -484,6 +506,7 @@ document.getElementById('button-guardar-datos').addEventListener('click', () => 
         const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
 
         if (resultSelect.rows.length > 0) {
+          console.log(resultSelect)
           return resultSelect.rows[0];
         }
       }

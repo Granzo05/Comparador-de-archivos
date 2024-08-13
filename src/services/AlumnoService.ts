@@ -1,11 +1,11 @@
-import { buscarPalabrasEnElHeader } from "src/ts/resumen";
-import { Alumno } from "src/types/Alumno";
+import { buscarPalabrasEnElHeader } from "../ts/resumen";
+import { Alumno } from "../types/Alumno";
 
 export const AlumnoService = {
     buscarDatosAlumnos: async (alumnos: Alumno[], tablas: HTMLCollectionOf<HTMLTableElement>) => {
         for (const tabla of Array.from(tablas)) {
             const filas = tabla.rows;
-            let posiblesPalabras = ['alumno', 'alumnos'];
+            let posiblesPalabras = ['nombre de alumnos', 'nombre alumnos', 'nombre de los alumnos', 'alumnos', 'nombre del alumno'];
 
             let indexColumna = await buscarPalabrasEnElHeader(filas, posiblesPalabras);
 
@@ -33,7 +33,7 @@ export const AlumnoService = {
 
     relacionarCursoAlumnos: async (idCurso: number, idAlumno: number, año: string) => {
         try {
-            const querySelect = `SELECT id_curso_alumno FROM cursos_alumnos WHERE id_curso = '${idCurso} AND id_alumno = '${idAlumno}' AND año = '${año}'`;
+            const querySelect = `SELECT id_curso_alumno FROM cursos_alumnos WHERE id_curso = ${idCurso} AND id_alumno = ${idAlumno} AND año = '${año}'`;
             const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
 
             if (resultSelect.rows.length === 0) {

@@ -1,4 +1,4 @@
-import { buscarPalabrasEnArchivo } from "src/ts/resumen";
+import { buscarPalabrasEnArchivo } from "../ts/resumen";
 
 export const EscuelaService = {
     buscarEscuela: async () => {

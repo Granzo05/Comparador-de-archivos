@@ -1,5 +1,5 @@
-import { buscarPalabrasEnElHeader } from "src/ts/resumen";
-import { Libro } from "src/types/Libro";
+import { buscarPalabrasEnElHeader } from "../ts/resumen";
+import { Libro } from "../types/Libro";
 
 export const LibroService = {
     buscarMaterialDeLectura: async (nombresLibros: Libro[], tablas: HTMLCollectionOf<HTMLTableElement>) => {
@@ -27,7 +27,7 @@ export const LibroService = {
                 mesesYAñosSet.add(fecha.split('/')[2]);
 
                 try {
-                    const querySelect = `SELECT id_libros_estudios FROM libros_estudios WHERE id_libro = :idLibro AND id_estudio = :idParametroEstudio AND año = :año`;
+                    const querySelect = `SELECT id_libros_estudios FROM libros_estudios WHERE id_libro = ${idLibro} AND id_estudio = ${idParametroEstudio} AND año = '${fecha.split('/')[2]}'`;
 
                     const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
 

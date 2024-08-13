@@ -1,5 +1,5 @@
-import { buscarPalabrasEnArchivo } from "src/ts/resumen";
-import { Docente } from "src/types/Docente";
+import { buscarPalabrasEnArchivo } from "../ts/resumen";
+import { Docente } from "../types/Docente";
 
 export const DocenteService = {
     buscarDatosDocente: async (docentes: Docente[]) => {
@@ -34,8 +34,7 @@ export const DocenteService = {
                 mesesYAñosSet.add(mesYAño);
 
                 try {
-                    const querySelect = `SELECT id_curso_docente FROM cursos_docentes WHERE id_curso = :idCurso AND id_docente = :idDocente AND mes_y_año = :mesYAño`;
-
+                    const querySelect = `SELECT id_curso_docente FROM cursos_docentes WHERE id_curso = ${idCurso} AND id_docente = ${idDocente} AND mes_y_año = '${mesYAño}'`;
                     const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
 
                     if (resultSelect.rows.length === 0) {

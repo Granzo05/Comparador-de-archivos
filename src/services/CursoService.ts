@@ -1,4 +1,4 @@
-import { buscarPalabrasEnArchivo } from "src/ts/resumen";
+import { buscarPalabrasEnArchivo } from "../ts/resumen";
 
 export const CursoService = {
 
@@ -11,9 +11,9 @@ export const CursoService = {
             return palabraEncontrada;
     },
     
-    verificarExistenciaOCrearCurso: async (division: string, idEscuela: number) => {
+    verificarExistenciaOCrearCurso: async (division: string, idEscuela: number) => {     
         try {
-            const querySelect = `SELECT id_curso FROM cursos WHERE division = '${division}' AND id_escuela = '${idEscuela}'`;
+            const querySelect = `SELECT id_curso FROM cursos WHERE division = '${division}' AND id_escuela = ${idEscuela}`;
             const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
 
             if (resultSelect.rows.length > 0) {
@@ -23,7 +23,7 @@ export const CursoService = {
                 const params = { division: division, id_escuela: idEscuela };
                 await window.electronAPI.insertDatabase(queryInsert, params);
 
-                const querySelect = `SELECT id_curso FROM cursos WHERE division = '${division} AND id_escuela = '${idEscuela}'`;
+                const querySelect = `SELECT id_curso FROM cursos WHERE division = '${division} AND id_escuela = ${idEscuela}`;
                 const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
 
                 if (resultSelect.rows.length > 0) {

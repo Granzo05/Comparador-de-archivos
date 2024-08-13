@@ -1,4 +1,4 @@
-import { buscarPalabrasEnArchivo } from "src/ts/resumen";
+import { buscarPalabrasEnArchivo } from "../ts/resumen";
 
 export const ParametroEstudioService = {
     buscarParametroEstudio: async () => {
@@ -18,7 +18,7 @@ export const ParametroEstudioService = {
                 mesesYAñosSet.add(fecha.split('/')[2]);
 
                 try {
-                    const querySelect = `SELECT id_estudio_curso FROM estudio_cursos WHERE id_estudio = :idParametroEstudio AND id_curso = :idCurso`;
+                    const querySelect = `SELECT id_estudio_curso FROM estudio_cursos WHERE id_estudio = ${idParametroEstudio} AND id_curso = ${idCurso}`;
 
                     const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
 
