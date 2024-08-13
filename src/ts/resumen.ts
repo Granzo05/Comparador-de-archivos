@@ -1,4 +1,11 @@
 import Chart, { ChartTypeRegistry } from 'chart.js/auto';
+import { Alumno } from 'src/types/Alumno';
+import { Curso } from 'src/types/Curso';
+import { Docente } from 'src/types/Docente';
+import { Escuela } from 'src/types/Escuela';
+import { Libro } from 'src/types/Libro';
+import { ParametroEstudio } from 'src/types/ParametroEstudio';
+import { Resultado } from 'src/types/Resultado';
 
 let palabrasClaves: string = sessionStorage.getItem('palabras-claves');
 let palabraIdentificadora: string = sessionStorage.getItem('palabra-identificadora');
@@ -385,58 +392,57 @@ function cerrarModal() {
 document.getElementById('button-guardar-datos').addEventListener('click', () => {
   const tablas = document.getElementsByClassName('tabla') as HTMLCollectionOf<HTMLTableElement>;
 
-  const nombresAlumnos: string[] = [];
-  const nombresDocentes: string[] = [];
-  let divisionDelCurso: string = '';
-  let nombreEscuela: string = '';
-  let parametroEstudio: string = '';
-  const resultados: string[] = [];
+  const alumnos: Alumno[] = [];
+  const docentes: Docente[] = [];
+  const curso: Curso = new Curso();
+  const escuela: Escuela = new Escuela();
+  const parametroEstudio: ParametroEstudio = new ParametroEstudio();
+  const resultados: Resultado[] = [];
   const fechas: string[] = [];
-  const nombresLibros: string[] = [];
+  const libros: Libro[] = [];
 
   buscarDatos()
 
   async function buscarDatos() {
 
-    nombreEscuela = await buscarEscuela();
+    escuela.nombre = await buscarEscuela();
 
-    divisionDelCurso = await buscarCurso();
+    curso.division = await buscarCurso();
 
-    await buscarColumnaDeAlumno(nombresAlumnos, tablas);
+    await buscarColumnaDeAlumno(alumnos, tablas);
 
-    await buscarNombresDeDocente(nombresDocentes);
+    await buscarNombresDeDocente(docentes);
 
-
-    parametroEstudio = await buscarParametroEstudio();
+    parametroEstudio.descripcion = await buscarParametroEstudio();
 
     await buscarResultados(resultados, tablas);
 
     await buscarColumnaDeFecha(fechas, tablas);
 
-    await buscarMaterialDeLectura(nombresLibros, tablas);
+    await buscarMaterialDeLectura(libros, tablas);
 
     guardarDatos();
   }
 
   async function guardarDatos() {
-    const idEscuela = await verificarOCrearEscuela('nombre', nombreEscuela);
-    console.log(idEscuela)
+    const idEscuela = await verificarOCrearEscuela('nombre', escuela.nombre);
+
     const idsAlumno: number[] = [];
 
-    for (const alumno of Array.from(nombresAlumnos)) {
-      //idsAlumno.push(await verificarOCrear('alumno', 'nombre', alumno));
+    for (const alumno of Array.from(alumnos)) {
+      //idsAlumno.push(await verificarOCrear('alumno', 'nombre', alumno.nombre));
     }
 
     const idsDocente: number[] = [];
 
-    for (const docente of Array.from(nombresDocentes)) {
-      //let idDocente = await verificarOCrear('docente', 'nombre', docente);
+    for (const docente of Array.from(docentes)) {
+      //let idDocente = await verificarOCrear('docente', 'nombre', docente.nombre);
     }
 
-    //const idCurso = await verificarOCrear('divisionDelCurso', 'nombre', divisionDelCurso);
+    //const idCurso = await verificarOCrear('divisionDelCurso', 'nombre', curso.division);
 
 
-    //const idParametro = await verificarOCrear('parametro', 'descripcion', parametroEstudio);
+    //const idParametro = await verificarOCrear('parametro', 'descripcion', parametroEstudio.descripcion);
 
     for (const resultado of Array.from(resultados)) {
     }
@@ -447,8 +453,8 @@ document.getElementById('button-guardar-datos').addEventListener('click', () => 
 
     const idsLibros: number[] = [];
 
-    for (const libro of Array.from(nombresLibros)) {
-      //idsLibros.push(await verificarOCrear('libro', 'nombre', libro));
+    for (const libro of Array.from(libros)) {
+      //idsLibros.push(await verificarOCrear('libro', 'nombre', libro.nombre));
     }
   }
 
@@ -458,30 +464,30 @@ document.getElementById('button-guardar-datos').addEventListener('click', () => 
       const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
 
       if (resultSelect.rows.length > 0) {
-        return resultSelect.rows[0].ID_ESCUELA; 
+        return resultSelect.rows[0].ID_ESCUELA;
       } else {
         const queryInsert = `INSERT INTO escuelas (${nombreColumna}) VALUES (:valor)`;
         const params = { valor };
         await window.electronAPI.insertDatabase(queryInsert, params);
-                
+
         const querySelect = `SELECT id_escuela FROM escuelas WHERE ${nombreColumna} = '${valor}'`;
-        const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);  
+        const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
 
         if (resultSelect.rows.length > 0) {
-          return resultSelect.rows[0].ID_ESCUELA; 
+          return resultSelect.rows[0].ID_ESCUELA;
         }
       }
     } catch (e) {
       console.error(e);
-      return 0; 
+      return 0;
     }
   };
-  
-  
-  
+
+
+
 });
 
-async function buscarColumnaDeAlumno(nombresAlumnos: string[], tablas: HTMLCollectionOf<HTMLTableElement>) {
+async function buscarColumnaDeAlumno(alumnos: Alumno[], tablas: HTMLCollectionOf<HTMLTableElement>) {
   for (const tabla of Array.from(tablas)) {
     const filas = tabla.rows;
     const posiblesPalabras = ['alumno', 'nombresAlumnos', 'Nombre de los nombresAlumnos'];
@@ -490,20 +496,26 @@ async function buscarColumnaDeAlumno(nombresAlumnos: string[], tablas: HTMLColle
 
     if (indexColumna !== -1) {
       for (let i = 1; i < filas.length; i++) {
-        nombresAlumnos.push(filas[i].cells[indexColumna].innerHTML.trim());
+        const alumno: Alumno = new Alumno();
+        alumno.nombre = filas[i].cells[indexColumna].innerHTML.trim();
+        alumnos.push(alumno);
       }
     }
   }
 }
 
 
-async function buscarNombresDeDocente(nombresDocentes: string[]) {
+async function buscarNombresDeDocente(docentes: Docente[]) {
   const posiblesPalabras = ['docente', 'maestra', 'maestro'];
 
   let palabraEncontrada = await buscarPalabrasEnArchivo(posiblesPalabras);
 
-  if (palabraEncontrada)
-    nombresDocentes.push(palabraEncontrada);
+  if (palabraEncontrada) {
+    const newDocente: Docente = new Docente();
+    newDocente.nombre = palabraEncontrada;
+    docentes.push(newDocente);
+  }
+
 }
 
 function buscarCurso() {
@@ -533,7 +545,7 @@ async function buscarParametroEstudio() {
     return palabraEncontrada;
 }
 
-async function buscarResultados(resultados: string[], tablas: HTMLCollectionOf<HTMLTableElement>) {
+async function buscarResultados(resultados: Resultado[], tablas: HTMLCollectionOf<HTMLTableElement>) {
   for (const tabla of Array.from(tablas)) {
     const filas = tabla.rows;
     const posiblesPalabras = ['resultado', 'nota', 'notas', 'palabra por minuto', 'palabras por minuto'];
@@ -542,7 +554,9 @@ async function buscarResultados(resultados: string[], tablas: HTMLCollectionOf<H
 
     if (indexColumna !== -1) {
       for (let i = 1; i < filas.length; i++) {
-        resultados.push(filas[i].cells[indexColumna].innerHTML.trim());
+        const result: Resultado = new Resultado();
+        result.puntuacion = parseFloat(filas[i].cells[indexColumna].innerHTML.trim());
+        resultados.push(result);
       }
     }
   }
@@ -563,7 +577,7 @@ async function buscarColumnaDeFecha(fechas: string[], tablas: HTMLCollectionOf<H
   }
 }
 
-async function buscarMaterialDeLectura(nombresLibros: string[], tablas: HTMLCollectionOf<HTMLTableElement>) {
+async function buscarMaterialDeLectura(nombresLibros: Libro[], tablas: HTMLCollectionOf<HTMLTableElement>) {
   for (const tabla of Array.from(tablas)) {
     const filas = tabla.rows;
     const posiblesPalabras = ['libro', 'material de lectura', 'lectura'];
@@ -572,7 +586,9 @@ async function buscarMaterialDeLectura(nombresLibros: string[], tablas: HTMLColl
 
     if (indexColumna !== -1) {
       for (let i = 1; i < filas.length; i++) {
-        nombresLibros.push(filas[i].cells[indexColumna].innerHTML.trim());
+        const newLibro: Libro = new Libro();
+        newLibro.nombre = filas[i].cells[indexColumna].innerHTML.trim();
+        nombresLibros.push(newLibro);
       }
     }
   }
