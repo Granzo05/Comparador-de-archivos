@@ -10,6 +10,27 @@ export const ParametroEstudioService = {
             return palabraEncontrada;
     },
 
+    verificarExistenciaOCrearEstudio: async (descripcionParametro: string) => {
+        try {
+            const querySelect = `SELECT id_estudio FROM estudios WHERE descripcion = '${descripcionParametro}'`;
+            const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
+
+            if (resultSelect.rows.length > 0) {
+                console.log(resultSelect)
+                return resultSelect.rows[0].ID_ESTUDIO;
+            } else {
+                const queryInsert = `INSERT INTO estudios (descripcion) VALUES (:descripcion)`;
+                const params = { descripcion: descripcionParametro };
+
+                const result: any = await window.electronAPI.insertDatabase(queryInsert, params, 'id_estudio');
+                return result.id;
+            }
+        } catch (e) {
+            console.error(e);
+            return 0;
+        }
+    },
+
     relacionarEstudioCurso: async (idParametroEstudio: number, idCurso: number, fechas: string[]) => {
         const mesesYAñosSet = new Set<string>();
 
@@ -26,7 +47,7 @@ export const ParametroEstudioService = {
                         const queryInsert = `INSERT INTO estudio_cursos (id_estudio, id_curso) 
                                      VALUES (:idParametroEstudio, :id_curso)`;
                         const params = { id_estudio: idParametroEstudio, id_curso: idCurso };
-                        await window.electronAPI.insertDatabase(queryInsert, params);
+                        await window.electronAPI.insertDatabase(queryInsert, params, '');
                     }
                 } catch (e) {
                     console.error(e);

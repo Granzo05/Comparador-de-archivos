@@ -1,6 +1,6 @@
 const { app, BrowserWindow, screen: electronScreen, ipcMain } = require('electron');
 const path = require('path');
-const oracledb = require('oracledb');
+export const oracledb = require('oracledb');
 require('dotenv').config();
 const argon2 = require('argon2');
 
@@ -80,7 +80,6 @@ async function executeQuery(query: string) {
     try {
       const result = await connection.execute(query, [], { outFormat: oracledb.OUT_FORMAT_OBJECT });
 
-      // Procesa los LOBs
       const processedRows = await Promise.all(result.rows.map(async (row: any) => {
         for (const key in row) {
           if (row[key] instanceof oracledb.Lob) {
@@ -117,11 +116,22 @@ const lobToString = (lob: any) => {
   });
 };
 
-async function executeInsert(query: string, params: any) {
+async function executeInsert(query: string, params: any, nombreColumnaId: string) {
   if (connection) {
     try {
-      const result = await connection.execute(query, params, { autoCommit: true });
-      return { rows: result.rows };  
+      if (nombreColumnaId.length > 0) {
+        const queryWithReturning = `${query} RETURNING ${nombreColumnaId} INTO :id`;
+
+        params.id = { dir: oracledb.BIND_OUT, type: oracledb.NUMBER };
+
+        const result = await connection.execute(queryWithReturning, params, { autoCommit: true });
+
+        return { id: result.outBinds.id[0] };
+
+      } else {
+        const result = await connection.execute(query, params, { autoCommit: true });
+        return { rows: result.rows };
+      }
     } catch (err) {
       console.error('Error executing insert query:', err);
       return { error: err.message };
@@ -131,6 +141,7 @@ async function executeInsert(query: string, params: any) {
   }
 }
 
+
 ipcMain.handle('select-database', async (event: any, query: any) => {
   try {
     return await executeQuery(query);
@@ -139,9 +150,9 @@ ipcMain.handle('select-database', async (event: any, query: any) => {
   }
 });
 
-ipcMain.handle('insert-database', async (event: any, query: any, params: any) => {
+ipcMain.handle('insert-database', async (event: any, query: any, params: any, nombreColumnaId: string) => {
   try {
-    return await executeInsert(query, params);
+    return await executeInsert(query, params, nombreColumnaId);
   } catch (err) {
     return { error: err.message };
   }

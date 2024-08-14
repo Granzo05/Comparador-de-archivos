@@ -10,9 +10,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
       throw error;
     }
   },
-  insertDatabase: async (query: string, params: any) => {
+  insertDatabase: async (query: string, params: any, nombreColumnaId: string) => {
     try {
-      const response = await ipcRenderer.invoke('insert-database', query, params);
+      const response = await ipcRenderer.invoke('insert-database', query, params, nombreColumnaId);
       return response;
     } catch (error) {
       console.error('Error:', error);
@@ -20,17 +20,4 @@ contextBridge.exposeInMainWorld('electronAPI', {
     }
   },
   onQueryResult: (callback: (result: any) => void) => ipcRenderer.on('query-result', (event: any, result: any) => callback(result)),
-});
-
-
-contextBridge.exposeInMainWorld('argon', {
-  hashPassword: async (password: string) => {
-    try {
-      const hashedPassword = await argon2.hash(password);
-      return hashedPassword;
-    } catch (err) {
-      console.error('Error:', err);
-      throw err;
-    }
-  }
 });

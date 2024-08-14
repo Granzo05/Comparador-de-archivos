@@ -24,6 +24,27 @@ export const DocenteService = {
         }
     },
 
+    verificarExistenciaOCrearDocente: async (docente: Docente) => {
+        try {
+            const querySelect = `SELECT id_docente FROM docentes WHERE cuil = '${docente.cuil}'`;
+            const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
+
+            if (resultSelect.rows.length > 0) {
+                console.log(resultSelect)
+                return resultSelect.rows[0].ID_DOCENTE;
+            } else {
+                const queryInsert = `INSERT INTO docentes (nombre, cuild) VALUES (:nombre, :cuil)`;
+                const params = { nombre: docente.nombre, cuil: docente.cuil };
+
+                const result: any = await window.electronAPI.insertDatabase(queryInsert, params, 'id_docente');
+                return result.id;
+            }
+        } catch (e) {
+            console.error(e);
+            return 0;
+        }
+    },
+
     relacionarCursoDocente: async (idCurso: number, idDocente: number, fechas: string[]) => {
         const mesesYAñosSet = new Set<string>();
 
@@ -41,7 +62,7 @@ export const DocenteService = {
                         const queryInsert = `INSERT INTO cursos_docentes (id_curso, id_docente, mes_y_año) 
                                      VALUES (:idCurso, :idDocente, :mesYAño)`;
                         const params = { idCurso, idDocente, mesYAño };
-                        await window.electronAPI.insertDatabase(queryInsert, params);
+                        await window.electronAPI.insertDatabase(queryInsert, params, '');
                     }
                 } catch (e) {
                     console.error(e);

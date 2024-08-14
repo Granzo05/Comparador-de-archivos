@@ -4,9 +4,9 @@
 [x] Generar graficos
 [] Guardar datos
 [] Comparar datos
-[] Crear tabla de alumnos
-[] Crear tabla de escuelas
-[] Crear tabla de docentes?
+[x] Crear tabla de alumnos
+[x] Crear tabla de escuelas
+[x] Crear tabla de docentes
 [] Encriptar datos
 [] Comparativa entre alumnos
 [] Comparativa entre divisiones

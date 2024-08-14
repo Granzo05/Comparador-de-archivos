@@ -434,49 +434,51 @@ document.getElementById('button-guardar-datos').addEventListener('click', () => 
   }
 
   async function guardarDatos() {
-    if (escuela.nombre.length > 1)
-      escuela.id = (await verificarExistenciaOCrear('id_escuela', 'escuelas', 'nombre', escuela.nombre)).ID_ESCUELA;
 
-    if (curso.division.length > 1 && escuela.id > 0)
+    if (escuela.nombre && escuela.nombre.length > 1)
+      escuela.id = await EscuelaService.verificarExistenciaOCrearEscuela(escuela.nombre);
+
+    if (curso.division && curso.division.length > 1 && escuela.id > 0)
       curso.id = await CursoService.verificarExistenciaOCrearCurso(curso.division, escuela.id);
 
     for (const alumno of Array.from(alumnos)) {
-      if (alumno.dni.length > 1)
-        alumno.id = (await verificarExistenciaOCrear('id_alumno', 'alumnos', 'dni', alumno.dni)).ID_ALUMNO;
+      if (alumno.dni && alumno.dni.length > 1)
+        alumno.id = await AlumnoService.verificarExistenciaOCrearAlumnos(alumno);
 
-      if (curso.id > 0 && alumno.id > 0 && fechas.length > 0)
+      if (curso.id && curso.id > 0 && alumno.id && alumno.id > 0 && fechas.length > 0)
         await AlumnoService.relacionarCursoAlumnos(curso.id, alumno.id, fechas[0].split('/')[2]);
     }
 
     for (const docente of Array.from(docentes)) {
       if (docente.cuil)
-        docente.id = (await verificarExistenciaOCrear('id_docente', 'docentes', 'cuil', docente.cuil)).ID_DOCENTE;
+        docente.id = await DocenteService.verificarExistenciaOCrearDocente(docente);
 
-      if (docente.id > 0 && curso.id > 0 && fechas.length > 0)
+      if (docente.id && docente.id > 0 && curso.id && curso.id > 0 && fechas.length > 0)
         await DocenteService.relacionarCursoDocente(curso.id, docente.id, fechas);
     }
 
-    if (parametroEstudio.descripcion.length > 1)
-      parametroEstudio.id = (await verificarExistenciaOCrear('id_estudio', 'estudios', 'descripcion', parametroEstudio.descripcion)).ID_ESTUDIO;
+    if (parametroEstudio.descripcion && parametroEstudio.descripcion.length > 1)
+      parametroEstudio.id = await ParametroEstudioService.verificarExistenciaOCrearEstudio(parametroEstudio.descripcion);
 
     for (const libro of Array.from(libros)) {
-      if (libro.nombre.length > 1) {
-        libro.id = (await verificarExistenciaOCrear('id_libro', 'libros', 'nombre', libro.nombre)).ID_LIBRO;
+      if (libro.nombre && libro.nombre.length > 1) {
+        libro.id = await LibroService.verificarExistenciaOCrearLibro(libro.nombre);
       }
 
-      if (libro.id > 0 && parametroEstudio.id > 0 && fechas.length > 0)
+      if (libro.id && libro.id > 0 && parametroEstudio.id > 0 && fechas.length > 0)
         await LibroService.relacionarLibroEstudio(libro.id, parametroEstudio.id, fechas);
     }
 
-    if (parametroEstudio.id > 0 && curso.id > 0 && fechas.length > 0)
+    if (parametroEstudio.id && parametroEstudio.id > 0 && curso.id && curso.id > 0 && fechas.length > 0)
       await ParametroEstudioService.relacionarEstudioCurso(parametroEstudio.id, curso.id, fechas);
 
-    if (alumnos.length === 0 && resultados.length === 0 && libros.length === 0 && fechas.length === 0) {
+    if (alumnos.length === 0 && resultados.length === 0 && fechas.length === 0) {
       for (let i = 0; i < alumnos.length; i++) {
         const resultado = resultados[i];
         resultado.idAlumno = alumnos[i].id;
         resultado.idEstudio = parametroEstudio.id;
-        resultado.idLibro = libros[i].id;
+        if (libros[i].id && libros[i].id > 0)
+          resultado.idLibro = libros[i].id;
         resultado.fecha = new Date(fechas[i]);
       }
     }
@@ -488,33 +490,6 @@ document.getElementById('button-guardar-datos').addEventListener('click', () => 
 
     alert('Datos cargados con éxito');
   }
-
-  async function verificarExistenciaOCrear(nombreColumnaResultadoId: string, nombreTabla: string, nombreColumnaBusqueda: string, valor: string) {
-    try {
-      const querySelect = `SELECT ${nombreColumnaResultadoId} FROM ${nombreTabla} WHERE ${nombreColumnaBusqueda} = '${valor}'`;
-      const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
-
-      if (resultSelect.rows.length > 0) {
-        console.log(resultSelect)
-        return resultSelect.rows[0];
-      } else {
-        const queryInsert = `INSERT INTO ${nombreTabla} (${nombreColumnaBusqueda}) VALUES (:valor)`;
-        const params = { valor };
-        await window.electronAPI.insertDatabase(queryInsert, params);
-
-        const querySelect = `SELECT ${nombreColumnaResultadoId} FROM ${nombreTabla} WHERE ${nombreColumnaBusqueda} = '${valor}'`;
-        const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
-
-        if (resultSelect.rows.length > 0) {
-          console.log(resultSelect)
-          return resultSelect.rows[0];
-        }
-      }
-    } catch (e) {
-      console.error(e);
-      return 0;
-    }
-  };
 });
 
 async function buscarColumnaDeFecha(fechas: string[], tablas: HTMLCollectionOf<HTMLTableElement>) {
