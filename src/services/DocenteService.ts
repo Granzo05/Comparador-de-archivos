@@ -3,23 +3,16 @@ import { Docente } from "../types/Docente";
 
 export const DocenteService = {
     buscarDatosDocente: async (docentes: Docente[]) => {
-        let posiblesPalabras = ['docente', 'maestra', 'maestro'];
+        const posiblesPalabrasNombre = ['docente', 'maestra', 'maestro'];
+        const posiblesPalabrasCuil = ['cuil', 'cuil de docente'];
 
-        let palabraEncontrada = await buscarPalabrasEnArchivo(posiblesPalabras);
+        const palabraEncontradaNombreDocente = await buscarPalabrasEnArchivo(posiblesPalabrasNombre);
+        const palabraEncontradaCUIL = await buscarPalabrasEnArchivo(posiblesPalabrasCuil);
 
-        if (palabraEncontrada) {
+        if (palabraEncontradaNombreDocente?.length > 0 && palabraEncontradaCUIL?.length > 0) {
             const newDocente: Docente = new Docente();
-            newDocente.nombre = palabraEncontrada;
-            docentes.push(newDocente);
-        }
-
-        posiblesPalabras = ['cuil', 'cuil de docente'];
-
-        palabraEncontrada = await buscarPalabrasEnArchivo(posiblesPalabras);
-
-        if (palabraEncontrada) {
-            const newDocente: Docente = new Docente();
-            newDocente.cuil = palabraEncontrada;
+            newDocente.nombre = palabraEncontradaNombreDocente;
+            newDocente.cuil = palabraEncontradaCUIL;
             docentes.push(newDocente);
         }
     },
@@ -30,10 +23,9 @@ export const DocenteService = {
             const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
 
             if (resultSelect.rows.length > 0) {
-                console.log(resultSelect)
                 return resultSelect.rows[0].ID_DOCENTE;
             } else {
-                const queryInsert = `INSERT INTO docentes (nombre, cuild) VALUES (:nombre, :cuil)`;
+                const queryInsert = `INSERT INTO docentes (nombre, cuil) VALUES (:nombre, :cuil)`;
                 const params = { nombre: docente.nombre, cuil: docente.cuil };
 
                 const result: any = await window.electronAPI.insertDatabase(queryInsert, params, 'id_docente');
@@ -60,8 +52,8 @@ export const DocenteService = {
 
                     if (resultSelect.rows.length === 0) {
                         const queryInsert = `INSERT INTO cursos_docentes (id_curso, id_docente, mes_y_año) 
-                                     VALUES (:idCurso, :idDocente, :mesYAño)`;
-                        const params = { idCurso, idDocente, mesYAño };
+                                     VALUES (:id_curso, :id_docente, :mes_y_año)`;
+                        const params = { id_curso: idCurso, id_docente: idDocente, mes_y_año: mesYAño };
                         await window.electronAPI.insertDatabase(queryInsert, params, '');
                     }
                 } catch (e) {

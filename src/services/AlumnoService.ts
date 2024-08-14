@@ -5,31 +5,19 @@ export const AlumnoService = {
     buscarDatosAlumnos: async (alumnos: Alumno[], tablas: HTMLCollectionOf<HTMLTableElement>) => {
         for (const tabla of Array.from(tablas)) {
             const filas = tabla.rows;
-            let posiblesPalabras = ['nombre de alumnos', 'nombre alumnos', 'nombre de los alumnos', 'alumnos', 'nombre del alumno'];
+            let posiblesPalabrasNombres = ['nombre de alumnos', 'nombre alumnos', 'nombre de los alumnos', 'alumnos', 'nombre del alumno'];
+            let posiblesPalabrasDNI = ['dni', 'documento de alumno', 'documento de identidad'];
 
-            let indexColumna = await buscarPalabrasEnElHeader(filas, posiblesPalabras);
+            let indexColumnaNombre = await buscarPalabrasEnElHeader(filas, posiblesPalabrasNombres);
+            let indexColumnaDNI = await buscarPalabrasEnElHeader(filas, posiblesPalabrasDNI);
 
-            if (indexColumna !== -1) {
+            if (indexColumnaNombre !== -1 && indexColumnaDNI !== -1) {
                 for (let i = 1; i < filas.length; i++) {
                     const alumno: Alumno = new Alumno();
-                    alumno.nombre = filas[i].cells[indexColumna].innerHTML.trim();
+                    alumno.nombre = filas[i].cells[indexColumnaNombre].innerHTML.trim();
+                    alumno.dni = filas[i].cells[indexColumnaDNI].innerHTML.trim();
+                    alumnos.push(alumno);
                 }
-            }
-
-            posiblesPalabras = ['dni', 'documento de alumno', 'documento de identidad'];
-
-            indexColumna = await buscarPalabrasEnElHeader(filas, posiblesPalabras);
-
-            if (indexColumna !== -1) {
-                for (let i = 1; i < filas.length; i++) {
-                    const alumno: Alumno = new Alumno();
-                    alumno.dni = filas[i].cells[indexColumna].innerHTML.trim();
-
-                    if (alumno.dni.length > 0 && alumno.nombre.length > 0) {
-                        alumnos.push(alumno);
-                    }
-                }
-
             }
         }
     },
@@ -40,7 +28,6 @@ export const AlumnoService = {
             const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
 
             if (resultSelect.rows.length > 0) {
-                console.log(resultSelect)
                 return resultSelect.rows[0].ID_ALUMNO;
             } else {
                 const queryInsert = `INSERT INTO alumnos (dni, nombre) VALUES (:dni, :nombre)`;
@@ -63,7 +50,7 @@ export const AlumnoService = {
             const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
 
             if (resultSelect.rows.length === 0) {
-                const queryInsert = `INSERT INTO cursos_alumnos (idCurso, idAlumno, año) VALUES (:id_alumno, :id_estudio, :año)`;
+                const queryInsert = `INSERT INTO cursos_alumnos (id_curso, id_alumno, año) VALUES (:id_curso, :id_alumno, :año)`;
                 const params = { id_curso: idCurso, id_alumno: idAlumno, año: año };
                 await window.electronAPI.insertDatabase(queryInsert, params, '');
             }

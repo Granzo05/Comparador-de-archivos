@@ -22,11 +22,12 @@ export const ResultadoService = {
     verificarExistenciaOCrearResultado: async (resultado: Resultado) => {
         try {
             const querySelect = `SELECT id_resultados_estudios FROM resultados_estudios WHERE id_alumno = ${resultado.idAlumno} AND id_estudio = ${resultado.idEstudio}
-          AND id_libro = ${resultado.idLibro} AND fecha = '${new Date(resultado.fecha)}' AND puntuacion = ${resultado.puntuacion}`;
+          AND id_libro = ${resultado.idLibro} AND fecha = '${resultado.fecha}' AND puntuacion = ${resultado.puntuacion}`;
             const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
 
             if (resultSelect.rows.length === 0) {
-                const queryInsert = `INSERT INTO resultados_estudios (id_alumno, id_estudio, id_libro, fecha, puntuacion) VALUES (:id_alumno, :id_estudio, :idLibro, :fecha, :puntuacion)`;
+                const queryInsert = `INSERT INTO resultados_estudios (id_alumno, id_estudio, id_libro, fecha, puntuacion) 
+                VALUES (:id_alumno, :id_estudio, :id_libro, :fecha, :puntuacion)`;
                 const params = { id_alumno: resultado.idAlumno, id_estudio: resultado.idEstudio, id_libro: resultado.idLibro, fecha: resultado.fecha, puntuacion: resultado.puntuacion };
                 await window.electronAPI.insertDatabase(queryInsert, params, '');
             }

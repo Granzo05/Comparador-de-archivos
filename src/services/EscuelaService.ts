@@ -16,7 +16,6 @@ export const EscuelaService = {
             const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
 
             if (resultSelect.rows.length > 0) {
-                console.log(resultSelect)
                 return resultSelect.rows[0].ID_ESCUELA;
             } else {
                 const queryInsert = `INSERT INTO escuelas (nombre) VALUES (:nombre)`;

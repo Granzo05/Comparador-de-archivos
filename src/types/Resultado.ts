@@ -3,7 +3,7 @@ export class Resultado {
     idAlumno: number = 0;
     idEstudio: number = 0;
     idLibro: number = 0;
-    fecha: Date = new Date();
+    fecha: string = '';
     puntuacion: number = 0;
 
     constructor() {

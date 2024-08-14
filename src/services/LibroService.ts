@@ -25,7 +25,6 @@ export const LibroService = {
             const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
 
             if (resultSelect.rows.length > 0) {
-                console.log(resultSelect)
                 return resultSelect.rows[0].ID_LIBRO;
             } else {
                 const queryInsert = `INSERT INTO libros (nombre) VALUES (:nombre)`;
@@ -44,19 +43,21 @@ export const LibroService = {
         const mesesYAñosSet = new Set<string>();
 
         for (const fecha of fechas) {
-            if (!mesesYAñosSet.has(fecha.split('/')[2])) {
-                mesesYAñosSet.add(fecha.split('/')[2]);
-
+            if (!mesesYAñosSet.has(fecha)) {
+                mesesYAñosSet.add(fecha);
                 try {
-                    const querySelect = `SELECT id_libros_estudios FROM libros_estudios WHERE id_libro = ${idLibro} AND id_estudio = ${idParametroEstudio} AND año = '${fecha.split('/')[2]}'`;
+                    const querySelect = `SELECT id_libros_estudios FROM libros_estudios 
+                                         WHERE id_libro = ${idLibro} AND id_estudio = ${idParametroEstudio} 
+                                         AND fecha = '${fecha}'`;
 
                     const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
 
                     if (resultSelect.rows.length === 0) {
-                        const queryInsert = `INSERT INTO libros_estudios (id_libro, id_estudio, año) 
-                                     VALUES (:idLibro, :idParametroEstudio, :año)`;
-                        const params = { id_libro: idLibro, id_estudio: idParametroEstudio, año: fecha.split('/')[2] };
+                        const queryInsert = `INSERT INTO libros_estudios (id_libro, id_estudio, fecha) 
+                        VALUES (:id_libro, :id_estudio, :fecha)`;
+                        const params = { id_libro: idLibro, id_estudio: idParametroEstudio, fecha: fecha };
                         await window.electronAPI.insertDatabase(queryInsert, params, '');
+
                     }
                 } catch (e) {
                     console.error(e);
@@ -65,4 +66,5 @@ export const LibroService = {
             }
         }
     }
+
 }

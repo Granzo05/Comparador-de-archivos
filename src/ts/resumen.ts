@@ -472,20 +472,19 @@ document.getElementById('button-guardar-datos').addEventListener('click', () => 
     if (parametroEstudio.id && parametroEstudio.id > 0 && curso.id && curso.id > 0 && fechas.length > 0)
       await ParametroEstudioService.relacionarEstudioCurso(parametroEstudio.id, curso.id, fechas);
 
-    if (alumnos.length === 0 && resultados.length === 0 && fechas.length === 0) {
-      for (let i = 0; i < alumnos.length; i++) {
+    if ((alumnos.length > 0 && resultados.length > 0 && fechas.length > 0) && alumnos.length === resultados.length && alumnos.length === fechas.length) {
+      for (let i = 0; i < resultados.length; i++) {
         const resultado = resultados[i];
         resultado.idAlumno = alumnos[i].id;
         resultado.idEstudio = parametroEstudio.id;
         if (libros[i].id && libros[i].id > 0)
           resultado.idLibro = libros[i].id;
-        resultado.fecha = new Date(fechas[i]);
-      }
-    }
+        resultado.fecha = fechas[i];
 
-    for (const resultado of Array.from(resultados)) {
-      if (resultado.idAlumno !== 0)
         await ResultadoService.verificarExistenciaOCrearResultado(resultado);
+      }
+    } else {
+      alert('Los datos recopilados no coinciden en cantidad, por favor revisar. Hay ' + alumnos.length + ' alumnos, ' + resultados.length + ' resultados y ' + fechas.length + ' fechas');
     }
 
     alert('Datos cargados con éxito');

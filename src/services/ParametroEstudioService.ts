@@ -2,7 +2,7 @@ import { buscarPalabrasEnArchivo } from "../ts/resumen";
 
 export const ParametroEstudioService = {
     buscarParametroEstudio: async () => {
-        const posiblesPalabras = ['parametro de estudio', 'estudio', 'metodologia de estudio'];
+        const posiblesPalabras = ['parametro de estudio', 'metodo de estudio', 'método de estudio', 'metodología de estudio', 'metodologia de estudio', 'palabras por minuto', 'palabras por minutos', 'palabra en minutos'];
 
         let palabraEncontrada = buscarPalabrasEnArchivo(posiblesPalabras);
 
@@ -16,7 +16,6 @@ export const ParametroEstudioService = {
             const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
 
             if (resultSelect.rows.length > 0) {
-                console.log(resultSelect)
                 return resultSelect.rows[0].ID_ESTUDIO;
             } else {
                 const queryInsert = `INSERT INTO estudios (descripcion) VALUES (:descripcion)`;
@@ -39,14 +38,14 @@ export const ParametroEstudioService = {
                 mesesYAñosSet.add(fecha.split('/')[2]);
 
                 try {
-                    const querySelect = `SELECT id_estudio_curso FROM estudio_cursos WHERE id_estudio = ${idParametroEstudio} AND id_curso = ${idCurso}`;
+                    const querySelect = `SELECT id_estudio_cursos FROM estudio_cursos WHERE id_estudio = ${idParametroEstudio} AND id_curso = ${idCurso} AND fecha = '${fecha}'`;
 
                     const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
 
                     if (resultSelect.rows.length === 0) {
-                        const queryInsert = `INSERT INTO estudio_cursos (id_estudio, id_curso) 
-                                     VALUES (:idParametroEstudio, :id_curso)`;
-                        const params = { id_estudio: idParametroEstudio, id_curso: idCurso };
+                        const queryInsert = `INSERT INTO estudio_cursos (id_estudio, id_curso, fecha) 
+                                     VALUES (:id_estudio, :id_curso, :fecha)`;
+                        const params = { id_estudio: idParametroEstudio, id_curso: idCurso, fecha: fecha };
                         await window.electronAPI.insertDatabase(queryInsert, params, '');
                     }
                 } catch (e) {
