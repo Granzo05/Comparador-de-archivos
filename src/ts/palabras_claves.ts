@@ -15,8 +15,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const palabrasFormateadas = buscarPalabrasClavesEnElTexto(archivos[0]);
 
     setPalabrasClavesEnInput(palabrasFormateadas);
-
-    setOnClickPalabrasClaves();
   } else {
     alert('No se encontraron palabras claves en el texto');
   }
@@ -64,25 +62,7 @@ function setPalabrasClavesEnInput(palabrasFormateadas: string) {
   palabrasClavesInput.innerHTML = palabrasFormateadas;
 }
 
-function setOnClickPalabrasClaves() {
-  const elements = document.getElementsByClassName('styled-word');
-  const divPalabraId = document.getElementById('palabra-identificadora');
-
-  for (let i = 0; i < elements.length; i++) {
-    elements[i].addEventListener('click', function () {
-      divPalabraId.innerHTML = `${this.innerText}`;      
-    });
-  }
-}
-
 document.getElementById('filtro-button')?.addEventListener('click', async () => {
-  const palabraIdentificadoraInput = (document.getElementById('palabra-identificadora') as HTMLElement).innerText;
-
-  if(palabraIdentificadoraInput.length === 81) {
-    alert('Es necesario elegir una palabra identificadora para continuar');
-    return;
-  }
-
   await setPalabrasClavesInStorage();
 
   const palabrasNuevas = findNuevasPalabrasClaves();
@@ -97,9 +77,6 @@ document.getElementById('filtro-button')?.addEventListener('click', async () => 
 });
 
 async function setPalabrasClavesInStorage() {
-  const palabraIdentificadoraInput = (document.getElementById('palabra-identificadora') as HTMLElement).innerText;
-  sessionStorage.setItem('palabra-identificadora', palabraIdentificadoraInput);
-
   const palabrasClavesInput = (document.getElementById('palabras-claves') as HTMLElement).innerText;
   const palabrasClavesSet = new Set(palabrasClavesInput.split(',').map(palabra => palabra.trim()));
   const palabrasClavesUnicas = Array.from(palabrasClavesSet).join(',');
@@ -125,7 +102,7 @@ async function añadirPalabrasNuevasEnDB(palabras: string[]) {
     const query = 'UPDATE model SET PALABRAS_CLAVES = :jsonPalabras WHERE ID = :id';
     const params = { jsonPalabras, id: ID_FILA_PALABRAS };
 
-    await window.electronAPI.insertDatabase(query, params);
+    await window.electronAPI.insertDatabase(query, params, '');
   } catch (error) {
     console.error('Error al insertar nuevas palabras clave:', error);
   }
@@ -177,7 +154,3 @@ function fijarCursorAlFinal(div: HTMLElement) {
     sel.addRange(range);
   }
 }
-
-document.getElementById('palabra-identificadora').addEventListener('click', function () {
-  this.innerText = '';
-});

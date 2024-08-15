@@ -263,7 +263,6 @@ header {
   position: relative;
   background-color: #e0e0e0;
   margin-bottom: 5px;
-  cursor: pointer;
 }
 
 .styled-word .remove {
@@ -271,7 +270,6 @@ header {
   top: 0;
   right: 0;
   padding: 2px 5px;
-  cursor: pointer;
   color: red;
   font-weight: bold;
   font-size: 12px;

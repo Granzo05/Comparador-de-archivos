@@ -13,10 +13,8 @@ import { Escuela } from '../types/Escuela';
 import { Libro } from '../types/Libro';
 import { ParametroEstudio } from '../types/ParametroEstudio';
 import { Resultado } from '../types/Resultado';
-import { c } from 'vite/dist/node/types.d-aGj9QkWt';
 
 let palabrasClaves: string = sessionStorage.getItem('palabras-claves');
-let palabraIdentificadora: string = sessionStorage.getItem('palabra-identificadora');
 let archivosEnHTML: string[] = JSON.parse(sessionStorage.getItem('archivosEnHTML'));
 let coincidenciasConPalabrasClaves: string[] = [];
 let habilitarEdicion: boolean = false;
@@ -24,10 +22,15 @@ let idTablaGlobal: string;
 let colorCasillas: string;
 let tipoGrafico: keyof ChartTypeRegistry;
 const divDelResumen = document.getElementById('contenedor-resumen');
+const palabrasIdentificadoras = ['Escuela', 'Grado'];
+
+const escuelas: Set<string> = new Set();
+const grados: Map<string, Set<string>> = new Map();
+let valueSelectEscuela: string = '0';
+let valueSelectGrado: string = '0';
 
 document.addEventListener('DOMContentLoaded', async () => {
   // Creamos el resumen con el primer archivo ingresado para tener una plantilla...
-  // en caso de haber una palabraIdentificadora se podrá ir navegando por los archivos gracias al select asociado a esa palabra.
   await buscarContenidoAsociadoAPalabrasClaves(0);
   await crearResumen(0);
 });
@@ -96,10 +99,16 @@ async function crearResumen(indexArchivo: number) {
     }
   });
 
-  const selectPalabrasIdentificadora = document.getElementById('select-palabras-identificadora') as HTMLSelectElement;
-  if (selectPalabrasIdentificadora) {
-    await crearOpcionesParaContenidoIdentificador(selectPalabrasIdentificadora);
-    selectPalabrasIdentificadora.value = `${indexArchivo}`;
+  await buscarEscuelasYGrados();
+
+  const selectEscuelas = document.getElementById('select-escuelas') as HTMLSelectElement;
+  const selectGrados = document.getElementById('select-grados') as HTMLSelectElement;
+  if (selectEscuelas) {
+    await crearOpcionesParaEscuelas(selectEscuelas);
+    const escuelaSeleccionada = Array.from(selectEscuelas.options).find(opt => opt.value === valueSelectEscuela).textContent;
+    crearOpcionesParaGrados(selectGrados, escuelaSeleccionada);
+    selectEscuelas.value = valueSelectEscuela;
+    selectGrados.value = valueSelectGrado;
   }
 }
 
@@ -110,12 +119,23 @@ function escribirContenidoRelacionadoAPalabrasClaves(oraciones: string) {
     palabraClave = palabraClave.trim();
     if (oraciones.includes(palabraClave)) {
       const textoAsociado = oraciones.replace(palabraClave, '').replace(':', '').trim();
-      if (oraciones.includes(palabraIdentificadora.trim())) {
-        // Crear un select para palabras identificadoras
-        p.innerHTML = `<b>${palabraClave}</b><select id='select-palabras-identificadora'><option value="0">${textoAsociado}</option></select>`;
-        divDelResumen.appendChild(p);
-      } else if (oraciones.includes(palabraClave.trim()) && oraciones.trim().length > palabraClave.trim().length) {
-        // Mostrar texto asociado para otras palabras claves
+
+      let palabraIdenficadoraEncontrada = false;
+
+      for (let i = 0; i < palabrasIdentificadoras.length; i++) {
+        if (oraciones.includes(palabrasIdentificadoras[i])) {
+          if (palabrasIdentificadoras[i] === 'Escuela') {
+            p.innerHTML = `<b>${palabraClave}</b><select id='select-escuelas'><option value="0">${textoAsociado}</option></select>`;
+          } else {
+            p.innerHTML = `<b>${palabraClave}</b><select id='select-grados'><option>${textoAsociado}</option></select>`;
+          }
+          divDelResumen.appendChild(p);
+
+          palabraIdenficadoraEncontrada = true;
+        }
+      }
+
+      if ((oraciones.includes(palabraClave.trim()) && oraciones.trim().length > palabraClave.trim().length) && !palabraIdenficadoraEncontrada) {
         p.innerHTML = `<b>${palabraClave}: </b>${textoAsociado}`;
         divDelResumen.appendChild(p);
       }
@@ -196,7 +216,6 @@ function crearGraficoDesdeTabla(tableId: string) {
   const rows = table.rows;
   const selectedColumns = [];
 
-  // Obtener los índices de las columnas seleccionadas
   for (let i = 0; i < rows[0].cells.length; i++) {
     if (rows[0].cells[i].classList.contains(colorCasillas)) {
       selectedColumns.push(i);
@@ -273,34 +292,117 @@ function dibujarGrafico(labels: any, datasets: any) {
   });
 }
 
-async function crearOpcionesParaContenidoIdentificador(select: HTMLSelectElement) {
+async function crearOpcionesParaEscuelas(select: HTMLSelectElement) {
   select.addEventListener('change', async function () {
-    await buscarResumenMediantePalabraIdentificadora(this.value);
+    valueSelectEscuela = this.value;
+    const option = Array.from(select.options).find(opt => opt.value === this.value);
+    await buscarResumenMediantePalabraIdentificadora(option.textContent);
   });
 
   const opciones: HTMLOptionElement[] = [];
+  let contador = 0;
 
-  archivosEnHTML.forEach((archivo, index) => {
-    archivo = archivo.replace(/<p>/g, '\n').replace(/<\/p>/g, '\n');
-    archivo.split('\n').forEach(oraciones => {
-      if (oraciones.includes(palabraIdentificadora.trim())) {
-        const textoAsociadoAPalabraClave = oraciones.replace(palabraIdentificadora.trim(), '').replace(':', '').trim();
+  archivosEnHTML.forEach(archivo => {
+    for (const escuela of escuelas) {
+      if (archivo.includes(`Escuela: ${escuela}`)) {
         const option = document.createElement('option');
-        option.value = `${index}`;
-        option.textContent = textoAsociadoAPalabraClave;
-
+        option.value = `${contador}`;
+        option.innerText = escuela;
         opciones.push(option);
+
+        contador++;
       }
-    });
+    }
+  });
+
+  opciones.forEach(option => {
+    select.appendChild(option);
   });
 
   ordenarAlfabeticamenteOptions(select, opciones);
 }
 
-async function buscarResumenMediantePalabraIdentificadora(indexArchivo: string) {
-  await buscarContenidoAsociadoAPalabrasClaves(parseInt(indexArchivo));
-  await crearResumen(parseInt(indexArchivo));
+async function crearOpcionesParaGrados(select: HTMLSelectElement, escuelaSeleccionada: string) {
+  select.innerHTML = '';
+
+  select.addEventListener('change', async function () {
+    const option = Array.from(select.options).find(opt => opt.value === this.value);
+    if (option) {
+      await buscarResumenMediantePalabraIdentificadora(option.textContent || '');
+    }
+  });
+
+  const opciones: HTMLOptionElement[] = [];
+  let contador = 0;
+
+  for (const [escuela, gradosDeEscuela] of grados) {
+    if (escuela === escuelaSeleccionada) {
+      gradosDeEscuela.forEach(grado => {
+      const option = document.createElement('option');
+        option.value = `${contador}`;
+        option.textContent = grado;
+        opciones.push(option);
+        contador++;
+      });
+    }
+  }
+
+  opciones.forEach(option => {
+    select.appendChild(option);
+  });
+
+  ordenarAlfabeticamenteOptions(select, opciones);
 }
+
+
+async function buscarEscuelasYGrados() {
+  for (let index = 0; index < archivosEnHTML.length; index++) {
+    let archivo = archivosEnHTML[index].replace(/<p>/g, '\n').replace(/<\/p>/g, '\n');
+
+    const oraciones = archivo.split('\n');
+    let escuelaActual: string | null = null;
+
+    oraciones.forEach(oracion => {
+      if (oracion.includes('Escuela')) {
+        const nombreEscuela = oracion.replace('Escuela:', '').trim();
+        escuelas.add(nombreEscuela);
+        escuelaActual = nombreEscuela;
+
+        if (!grados.has(nombreEscuela)) {
+          grados.set(nombreEscuela, new Set());
+        }
+      }
+
+      if (escuelaActual) {
+        if (oracion.includes('Grado')) {
+          const grado = oracion.replace('Grado:', '').trim();
+          grados.get(escuelaActual)?.add(grado);
+        }
+      }
+    });
+  }
+}
+
+async function buscarResumenMediantePalabraIdentificadora(palabraIdentificadora: string) {
+  let indexArchivo: number = 0;
+
+  for (let index = 0; index < archivosEnHTML.length; index++) {
+    let archivo = archivosEnHTML[index].replace(/<p>/g, '\n').replace(/<\/p>/g, '\n');
+
+    const oraciones = archivo.split('\n');
+    if (oraciones.some(oracion => oracion.includes(palabraIdentificadora))) {
+      indexArchivo = index;
+      break;
+    }
+  }
+
+  document.getElementById('select-escuelas').innerHTML = '';
+  document.getElementById('select-escuelas').innerHTML = '';
+
+  await buscarContenidoAsociadoAPalabrasClaves(indexArchivo);
+  await crearResumen(indexArchivo);
+}
+
 
 function ordenarAlfabeticamenteOptions(select: HTMLSelectElement, opciones: HTMLOptionElement[]) {
   const uniqueOptions = new Set<string>();
@@ -447,18 +549,18 @@ document.getElementById('button-guardar-datos').addEventListener('click', () => 
     let estadoCorrectoDeCarga = false;
 
     if (escuela.nombre && escuela.nombre.length > 1)
-      //escuela.id = await EscuelaService.verificarExistenciaOCrearEscuela(escuela.nombre);
+      escuela.id = await EscuelaService.verificarExistenciaOCrearEscuela(escuela.nombre);
 
-      if (curso.division && curso.division.length > 1 && escuela.id > 0)
-        //curso.id = await CursoService.verificarExistenciaOCrearCurso(curso.division, escuela.id);
+    if (curso.division && curso.division.length > 1 && escuela.id > 0)
+      curso.id = await CursoService.verificarExistenciaOCrearCurso(curso.division, escuela.id);
 
-        for (const alumno of Array.from(alumnos)) {
-          if (alumno.dni && alumno.dni.length > 1)
-            alumno.id = await AlumnoService.verificarExistenciaOCrearAlumnos(alumno);
+    for (const alumno of Array.from(alumnos)) {
+      if (alumno.dni && alumno.dni.length > 1)
+        alumno.id = await AlumnoService.verificarExistenciaOCrearAlumnos(alumno);
 
-          if (curso.id && curso.id > 0 && alumno.id && alumno.id > 0 && fechas.length > 0)
-            await AlumnoService.relacionarCursoAlumnos(curso.id, alumno.id, fechas[0].split('/')[2]);
-        }
+      if (curso.id && curso.id > 0 && alumno.id && alumno.id > 0 && fechas.length > 0)
+        await AlumnoService.relacionarCursoAlumnos(curso.id, alumno.id, fechas[0].split('/')[2]);
+    }
 
     for (const docente of Array.from(docentes)) {
       if (docente.cuil)
@@ -538,7 +640,6 @@ document.getElementById('button-modal').addEventListener('click', () => {
   document.getElementById('error-icon').style.display = 'none';
   document.getElementById('loader-container').style.display = 'none';
 });
-
 
 async function buscarColumnaDeFecha(fechas: string[], tablas: HTMLCollectionOf<HTMLTableElement>) {
   for (const tabla of Array.from(tablas)) {
