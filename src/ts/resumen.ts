@@ -398,6 +398,10 @@ function cerrarModal() {
 }
 
 document.getElementById('button-guardar-datos').addEventListener('click', () => {
+  modificarMensajeModal('Recopilando datos', 'Los datos están siendo guardados, por favor espere puede demorar unos segundos...');
+
+  mostrarModalCarga();
+
   const tablas = document.getElementsByClassName('tabla') as HTMLCollectionOf<HTMLTableElement>;
 
   const alumnos: Alumno[] = [];
@@ -430,24 +434,31 @@ document.getElementById('button-guardar-datos').addEventListener('click', () => 
       LibroService.buscarMaterialDeLectura(libros, tablas)
     ]);
 
-    guardarDatos();
+    const cargaExitosa: boolean = await guardarDatos();
+
+    if (cargaExitosa) {
+      mostrarCargaExitosa();
+    } else {
+      mostrarCargaErronea();
+    }
   }
 
-  async function guardarDatos() {
+  async function guardarDatos(): Promise<boolean> {
+    let estadoCorrectoDeCarga = false;
 
     if (escuela.nombre && escuela.nombre.length > 1)
-      escuela.id = await EscuelaService.verificarExistenciaOCrearEscuela(escuela.nombre);
+      //escuela.id = await EscuelaService.verificarExistenciaOCrearEscuela(escuela.nombre);
 
-    if (curso.division && curso.division.length > 1 && escuela.id > 0)
-      curso.id = await CursoService.verificarExistenciaOCrearCurso(curso.division, escuela.id);
+      if (curso.division && curso.division.length > 1 && escuela.id > 0)
+        //curso.id = await CursoService.verificarExistenciaOCrearCurso(curso.division, escuela.id);
 
-    for (const alumno of Array.from(alumnos)) {
-      if (alumno.dni && alumno.dni.length > 1)
-        alumno.id = await AlumnoService.verificarExistenciaOCrearAlumnos(alumno);
+        for (const alumno of Array.from(alumnos)) {
+          if (alumno.dni && alumno.dni.length > 1)
+            alumno.id = await AlumnoService.verificarExistenciaOCrearAlumnos(alumno);
 
-      if (curso.id && curso.id > 0 && alumno.id && alumno.id > 0 && fechas.length > 0)
-        await AlumnoService.relacionarCursoAlumnos(curso.id, alumno.id, fechas[0].split('/')[2]);
-    }
+          if (curso.id && curso.id > 0 && alumno.id && alumno.id > 0 && fechas.length > 0)
+            await AlumnoService.relacionarCursoAlumnos(curso.id, alumno.id, fechas[0].split('/')[2]);
+        }
 
     for (const docente of Array.from(docentes)) {
       if (docente.cuil)
@@ -474,22 +485,60 @@ document.getElementById('button-guardar-datos').addEventListener('click', () => 
 
     if ((alumnos.length > 0 && resultados.length > 0 && fechas.length > 0) && alumnos.length === resultados.length && alumnos.length === fechas.length) {
       for (let i = 0; i < resultados.length; i++) {
-        const resultado = resultados[i];
-        resultado.idAlumno = alumnos[i].id;
-        resultado.idEstudio = parametroEstudio.id;
-        if (libros[i].id && libros[i].id > 0)
-          resultado.idLibro = libros[i].id;
-        resultado.fecha = fechas[i];
+        if (resultados[i].fecha.length > 0 && resultados[i].idAlumno > 0 && resultados[i].idEstudio > 0 && resultados[i].idLibro > 0) {
+          const resultado = resultados[i];
+          resultado.idAlumno = alumnos[i].id;
+          resultado.idEstudio = parametroEstudio.id;
+          if (libros[i].id && libros[i].id > 0)
+            resultado.idLibro = libros[i].id;
+          resultado.fecha = fechas[i];
 
-        await ResultadoService.verificarExistenciaOCrearResultado(resultado);
+          await ResultadoService.verificarExistenciaOCrearResultado(resultado);
+        }
       }
     } else {
-      alert('Los datos recopilados no coinciden en cantidad, por favor revisar. Hay ' + alumnos.length + ' alumnos, ' + resultados.length + ' resultados y ' + fechas.length + ' fechas');
+      modificarMensajeModal('Error', 'Los datos recopilados no coinciden en cantidad, por favor revisar. Hay ' + alumnos.length + ' alumnos, ' + resultados.length + ' resultados y ' + fechas.length + ' fechas');
+      estadoCorrectoDeCarga = false;
     }
 
-    alert('Datos cargados con éxito');
+    return estadoCorrectoDeCarga;
   }
 });
+
+function mostrarModalCarga() {
+  document.getElementById('modal-carga').style.display = 'flex';
+  document.getElementById('button-modal').style.display = 'none';
+  document.getElementById('loader-container').style.display = 'flex';
+}
+
+function modificarMensajeModal(titulo: string, mensaje: string) {
+  document.getElementById('title-modal').textContent = titulo;
+  document.getElementById('mensaje-modal').textContent = mensaje;
+}
+
+function mostrarCargaExitosa() {
+  modificarMensajeModal('Carga exitosa', 'Los datos han sido guardados correctamente');
+
+  document.getElementById('loader-container').style.display = 'none';
+  document.getElementById('button-modal').style.display = 'block';
+  document.getElementById('success-icon').style.display = 'block';
+  document.getElementById('error-icon').style.display = 'none';
+}
+
+function mostrarCargaErronea() {
+  document.getElementById('loader-container').style.display = 'none';
+  document.getElementById('button-modal').style.display = 'block';
+  document.getElementById('success-icon').style.display = 'none';
+  document.getElementById('error-icon').style.display = 'block';
+}
+
+document.getElementById('button-modal').addEventListener('click', () => {
+  document.getElementById('modal-carga').style.display = 'none';
+  document.getElementById('success-icon').style.display = 'none';
+  document.getElementById('error-icon').style.display = 'none';
+  document.getElementById('loader-container').style.display = 'none';
+});
+
 
 async function buscarColumnaDeFecha(fechas: string[], tablas: HTMLCollectionOf<HTMLTableElement>) {
   for (const tabla of Array.from(tablas)) {
