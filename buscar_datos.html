@@ -25,48 +25,23 @@
   </header>
   <div class="form-login" style="margin-bottom: 25px;">
     <div>
-      <p>Nombre o número de la escuela (obligatorio)</p>
-      <input type="text" name="escuela" id="escuela" placeholder="Ingresar el dato de la escuela">
+      <label for="escuelas">Nombre o número de la escuela (obligatorio)</label>
+      <select name="escuelas" id="escuelas"></select>
     </div>
     <div>
-      <p>Nombre del alumno (opcional)</p>
-      <input type="text" name="alumno" id="alumno" placeholder="Ingresar el nombre del alumno">
-    </div>
-    <div>
-      <p>Nombre del docente (opcional)</p>
-      <input type="text" name="docente" id="docente" placeholder="Ingresar el nombre del docente">
-    </div>
-    <div>
-      <p>División del curso</p>
-      <select name="divisiones" id="divisiones">
-        <option value="">Seleccionar la división</option>
-        <option value="1ºA">1ºA</option>
-        <option value="1ºB">1ºB</option>
-        <option value="1ºC">1ºC</option>
-        <option value="2ºA">2ºA</option>
-        <option value="2ºB">2ºB</option>
-        <option value="2ºC">2ºC</option>
-        <option value="3ºA">3ºA</option>
-        <option value="3ºB">3ºB</option>
-        <option value="3ºC">3ºC</option>
-        <option value="4ºA">4ºA</option>
-        <option value="4ºB">4ºB</option>
-        <option value="4ºC">4ºC</option>
-        <option value="5ºA">5ºA</option>
-        <option value="5ºB">5ºB</option>
-        <option value="5ºC">5ºC</option>
-        <option value="6ºA">6ºA</option>
-        <option value="6ºB">6ºB</option>
-        <option value="6ºC">6ºC</option>
-        <option value="7ºA">7ºA</option>
-        <option value="7ºB">7ºB</option>
-        <option value="7ºC">7ºC</option>
+      <label for="grados">Grados</label>
+      <select name="grados" id="grados">
+        <option value="">Seleccionar el grado</option>
       </select>
     </div>
     <div>
+      <label for="alumno">DNI del alumno (opcional)</label>
+      <input type="number" name="alumno" id="alumno" placeholder="Ingresar el DNI del alumno">
+      <div class="results-container" id="results-alumnos"></div>
+    </div>
+    <div>
       <p>Parámetro de estudio</p>
-      <select name="parametro" id="parametro">
-        <option value="">Seleccionar el parámetro</option>
+      <select name="estudios" id="estudios">
       </select>
     </div>
     <div>
@@ -82,7 +57,7 @@
     </div>
   </div>
   <script type="module" src="/src/renderer.ts"></script>
-  <script src="/src/ts/buscar_datos.ts"></script>
+  <script type="module" src="/src/ts/buscar_datos.ts"></script>
 </body>
 
 <script>

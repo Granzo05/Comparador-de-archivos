@@ -1,6 +1,6 @@
 import { Escuela } from "./Escuela";
 
-export class Curso {
+export class Grado {
     id: number = 0;
     division: string = '';
     escuela: Escuela = new Escuela();

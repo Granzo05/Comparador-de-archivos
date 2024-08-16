@@ -1,18 +1,18 @@
 import Chart, { ChartTypeRegistry } from 'chart.js/auto';
 import { AlumnoService } from '../services/AlumnoService';
-import { CursoService } from '../services/CursoService';
 import { DocenteService } from '../services/DocenteService';
 import { EscuelaService } from '../services/EscuelaService';
 import { LibroService } from '../services/LibroService';
 import { ParametroEstudioService } from '../services/ParametroEstudioService';
 import { ResultadoService } from '../services/ResultadoService';
 import { Alumno } from '../types/Alumno';
-import { Curso } from '../types/Curso';
 import { Docente } from '../types/Docente';
 import { Escuela } from '../types/Escuela';
 import { Libro } from '../types/Libro';
 import { ParametroEstudio } from '../types/ParametroEstudio';
 import { Resultado } from '../types/Resultado';
+import { Grado } from 'src/types/Grado';
+import { GradoService } from 'src/services/GradoService';
 
 let palabrasClaves: string = sessionStorage.getItem('palabras-claves');
 let archivosEnHTML: string[] = JSON.parse(sessionStorage.getItem('archivosEnHTML'));
@@ -338,7 +338,7 @@ async function crearOpcionesParaGrados(select: HTMLSelectElement, escuelaSelecci
   for (const [escuela, gradosDeEscuela] of grados) {
     if (escuela === escuelaSeleccionada) {
       gradosDeEscuela.forEach(grado => {
-      const option = document.createElement('option');
+        const option = document.createElement('option');
         option.value = `${contador}`;
         option.textContent = grado;
         opciones.push(option);
@@ -508,7 +508,7 @@ document.getElementById('button-guardar-datos').addEventListener('click', () => 
 
   const alumnos: Alumno[] = [];
   const docentes: Docente[] = [];
-  const curso: Curso = new Curso();
+  const grado: Grado = new Grado();
   const escuela: Escuela = new Escuela();
   const parametroEstudio: ParametroEstudio = new ParametroEstudio();
   const resultados: Resultado[] = [];
@@ -518,14 +518,14 @@ document.getElementById('button-guardar-datos').addEventListener('click', () => 
   buscarDatos()
 
   async function buscarDatos() {
-    const [nombreEscuela, divisionCurso, descripcionParametroEstudio] = await Promise.all([
+    const [nombreEscuela, divisionGrado, descripcionParametroEstudio] = await Promise.all([
       EscuelaService.buscarEscuela(),
-      CursoService.buscarCurso(),
+      GradoService.buscarGrado(),
       ParametroEstudioService.buscarParametroEstudio()
     ]);
 
     escuela.nombre = nombreEscuela;
-    curso.division = divisionCurso;
+    grado.division = divisionGrado;
     parametroEstudio.descripcion = descripcionParametroEstudio;
 
     await Promise.all([
@@ -551,23 +551,25 @@ document.getElementById('button-guardar-datos').addEventListener('click', () => 
     if (escuela.nombre && escuela.nombre.length > 1)
       escuela.id = await EscuelaService.verificarExistenciaOCrearEscuela(escuela.nombre);
 
-    if (curso.division && curso.division.length > 1 && escuela.id > 0)
-      curso.id = await CursoService.verificarExistenciaOCrearCurso(curso.division, escuela.id);
+    if (grado.division && grado.division.length > 1 && escuela.id > 0)
+      grado.id = await GradoService.verificarExistenciaOCrearGrado(grado.division, escuela.id);
 
     for (const alumno of Array.from(alumnos)) {
       if (alumno.dni && alumno.dni.length > 1)
         alumno.id = await AlumnoService.verificarExistenciaOCrearAlumnos(alumno);
 
-      if (curso.id && curso.id > 0 && alumno.id && alumno.id > 0 && fechas.length > 0)
-        await AlumnoService.relacionarCursoAlumnos(curso.id, alumno.id, fechas[0].split('/')[2]);
+      if (grado.id && grado.id > 0 && alumno.id && alumno.id > 0 && fechas.length > 0) {
+        alumno.idGrado = grado.id;
+        await AlumnoService.relacionarGradoAlumnos(grado.id, alumno.id, fechas[0].split('/')[2]);
+      }
     }
 
     for (const docente of Array.from(docentes)) {
       if (docente.cuil)
         docente.id = await DocenteService.verificarExistenciaOCrearDocente(docente);
 
-      if (docente.id && docente.id > 0 && curso.id && curso.id > 0 && fechas.length > 0)
-        await DocenteService.relacionarCursoDocente(curso.id, docente.id, fechas);
+      if (docente.id && docente.id > 0 && grado.id && grado.id > 0 && fechas.length > 0)
+        await DocenteService.relacionarGradoDocente(grado.id, docente.id, fechas);
     }
 
     if (parametroEstudio.descripcion && parametroEstudio.descripcion.length > 1)
@@ -582,18 +584,24 @@ document.getElementById('button-guardar-datos').addEventListener('click', () => 
         await LibroService.relacionarLibroEstudio(libro.id, parametroEstudio.id, fechas);
     }
 
-    if (parametroEstudio.id && parametroEstudio.id > 0 && curso.id && curso.id > 0 && fechas.length > 0)
-      await ParametroEstudioService.relacionarEstudioCurso(parametroEstudio.id, curso.id, fechas);
+    if (parametroEstudio.id && parametroEstudio.id > 0 && grado.id && grado.id > 0 && fechas.length > 0)
+      await ParametroEstudioService.relacionarEstudioGrado(parametroEstudio.id, grado.id, fechas);
+
+    const dates: Date[] = fechas.map(fecha => {
+      const [day, month, year] = fecha.split('/');
+      return new Date(`${year}-${month}-${day}`);
+    });
 
     if ((alumnos.length > 0 && resultados.length > 0 && fechas.length > 0) && alumnos.length === resultados.length && alumnos.length === fechas.length) {
       for (let i = 0; i < resultados.length; i++) {
-        if (resultados[i].fecha.length > 0 && resultados[i].idAlumno > 0 && resultados[i].idEstudio > 0 && resultados[i].idLibro > 0) {
+        if (resultados[i].fecha.getDay && resultados[i].idAlumno > 0 && resultados[i].idEstudio > 0 && resultados[i].idLibro > 0) {
           const resultado = resultados[i];
           resultado.idAlumno = alumnos[i].id;
+          resultado.idGrado = alumnos[i].idGrado;
           resultado.idEstudio = parametroEstudio.id;
           if (libros[i].id && libros[i].id > 0)
             resultado.idLibro = libros[i].id;
-          resultado.fecha = fechas[i];
+          resultado.fecha = dates[i];
 
           await ResultadoService.verificarExistenciaOCrearResultado(resultado);
         }

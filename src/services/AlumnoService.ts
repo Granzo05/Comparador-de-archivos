@@ -44,14 +44,14 @@ export const AlumnoService = {
         }
     },
 
-    relacionarCursoAlumnos: async (idCurso: number, idAlumno: number, año: string) => {
+    relacionarGradoAlumnos: async (idGrado: number, idAlumno: number, año: string) => {
         try {
-            const querySelect = `SELECT id_curso_alumno FROM cursos_alumnos WHERE id_curso = ${idCurso} AND id_alumno = ${idAlumno} AND año = '${año}'`;
+            const querySelect = `SELECT id_grado_alumno FROM grados_alumnos WHERE id_grado = ${idGrado} AND id_alumno = ${idAlumno} AND año = '${año}'`;
             const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
 
             if (resultSelect.rows.length === 0) {
-                const queryInsert = `INSERT INTO cursos_alumnos (id_curso, id_alumno, año) VALUES (:id_curso, :id_alumno, :año)`;
-                const params = { id_curso: idCurso, id_alumno: idAlumno, año: año };
+                const queryInsert = `INSERT INTO grados_alumnos (id_grado, id_alumno, año) VALUES (:id_grado, :id_alumno, :año)`;
+                const params = { id_grado: idGrado, id_alumno: idAlumno, año: año };
                 await window.electronAPI.insertDatabase(queryInsert, params, '');
             }
         } catch (e) {

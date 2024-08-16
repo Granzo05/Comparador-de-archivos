@@ -37,7 +37,7 @@ export const DocenteService = {
         }
     },
 
-    relacionarCursoDocente: async (idCurso: number, idDocente: number, fechas: string[]) => {
+    relacionarGradoDocente: async (idGrado: number, idDocente: number, fechas: string[]) => {
         const mesesYAñosSet = new Set<string>();
 
         for (const fecha of fechas) {
@@ -47,13 +47,13 @@ export const DocenteService = {
                 mesesYAñosSet.add(mesYAño);
 
                 try {
-                    const querySelect = `SELECT id_curso_docente FROM cursos_docentes WHERE id_curso = ${idCurso} AND id_docente = ${idDocente} AND mes_y_año = '${mesYAño}'`;
+                    const querySelect = `SELECT id_grado_docente FROM grados_docentes WHERE id_grado = ${idGrado} AND id_docente = ${idDocente} AND mes_y_año = '${mesYAño}'`;
                     const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
 
                     if (resultSelect.rows.length === 0) {
-                        const queryInsert = `INSERT INTO cursos_docentes (id_curso, id_docente, mes_y_año) 
-                                     VALUES (:id_curso, :id_docente, :mes_y_año)`;
-                        const params = { id_curso: idCurso, id_docente: idDocente, mes_y_año: mesYAño };
+                        const queryInsert = `INSERT INTO grados_docentes (id_grado, id_docente, mes_y_año) 
+                                     VALUES (:id_grado, :id_docente, :mes_y_año)`;
+                        const params = { id_grado: idGrado, id_docente: idDocente, mes_y_año: mesYAño };
                         await window.electronAPI.insertDatabase(queryInsert, params, '');
                     }
                 } catch (e) {
