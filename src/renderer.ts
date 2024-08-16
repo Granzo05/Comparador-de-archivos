@@ -17,5 +17,6 @@ try {
         document.getElementById('buscar-datos').style.display = 'none';
         document.getElementById('agregar-user').style.display = 'none';
         document.getElementById('cerrar-sesion').style.display = 'none';
+        document.getElementById('cargar-archivos').innerText = 'Resumir archivos';
     }
 } catch (error) { }
