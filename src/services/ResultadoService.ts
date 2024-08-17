@@ -20,24 +20,42 @@ export const ResultadoService = {
     },
 
     verificarExistenciaOCrearResultado: async (resultado: Resultado) => {
+        const formattedDate = resultado.fecha.toISOString().substring(0, 10);
+    
         try {
-            const querySelect = `SELECT id_resultados_estudios FROM resultados_estudios WHERE id_alumno = ${resultado.idAlumno} AND id_estudio = ${resultado.idEstudio}
-          AND id_libro = ${resultado.idLibro} AND id_grado = ${resultado.idGrado} AND fecha = '${resultado.fecha}' AND puntuacion = ${resultado.puntuacion}`;
+            const querySelect = `SELECT id_resultados_estudios 
+                                 FROM resultados_estudios 
+                                 WHERE id_alumno = ${resultado.idAlumno} 
+                                 AND id_estudio = ${resultado.idEstudio} 
+                                 AND id_libro = ${resultado.idLibro} 
+                                 AND id_grado = ${resultado.idGrado} 
+                                 AND fecha = TO_DATE('${formattedDate}', 'YYYY-MM-DD') 
+                                 AND puntuacion = ${resultado.puntuacion}`;
+    
             const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
-
+    
             if (resultSelect.rows.length === 0) {
-                const queryInsert = `INSERT INTO resultados_estudios (id_alumno, id_estudio, id_libro, id_grado, fecha, puntuacion) 
-                VALUES (:id_alumno, :id_estudio, :id_libro, :id_grado, :fecha, :puntuacion)`;
+                const queryInsert = `INSERT INTO resultados_estudios 
+                                    (id_alumno, id_estudio, id_libro, id_grado, fecha, puntuacion) 
+                                    VALUES (:id_alumno, :id_estudio, :id_libro, :id_grado, TO_DATE(:fecha, 'YYYY-MM-DD'), :puntuacion)`;
+                
                 const params = {
-                    id_alumno: resultado.idAlumno, id_estudio: resultado.idEstudio,
-                    id_libro: resultado.idLibro, id_grado: resultado.idGrado,
-                    fecha: resultado.fecha, puntuacion: resultado.puntuacion
+                    id_alumno: resultado.idAlumno,
+                    id_estudio: resultado.idEstudio,
+                    id_libro: resultado.idLibro,
+                    id_grado: resultado.idGrado,
+                    fecha: formattedDate,
+                    puntuacion: resultado.puntuacion
                 };
+                
                 await window.electronAPI.insertDatabase(queryInsert, params, '');
+    
+                return true;
             }
         } catch (e) {
             console.error(e);
-            return 0;
+            return false;
         }
     }
+    
 }

@@ -11,8 +11,9 @@ import { Escuela } from '../types/Escuela';
 import { Libro } from '../types/Libro';
 import { ParametroEstudio } from '../types/ParametroEstudio';
 import { Resultado } from '../types/Resultado';
-import { Grado } from 'src/types/Grado';
-import { GradoService } from 'src/services/GradoService';
+import { Grado } from '../types/Grado';
+import { GradoService } from '../services/GradoService';
+import { c } from 'vite/dist/node/types.d-aGj9QkWt';
 
 let palabrasClaves: string = sessionStorage.getItem('palabras-claves');
 let archivosEnHTML: string[] = JSON.parse(sessionStorage.getItem('archivosEnHTML'));
@@ -536,7 +537,19 @@ document.getElementById('button-guardar-datos').addEventListener('click', () => 
       LibroService.buscarMaterialDeLectura(libros, tablas)
     ]);
 
-    const cargaExitosa: boolean = await guardarDatos();
+    let cargaExitosa: boolean = false;
+
+    if (alumnos.length === 0) {
+      modificarMensajeModal('Error', 'No se encontraron datos de alumnos, revise si cada alumno tiene un nombre y un DNI asignado');
+    } else if (docentes.length === 0) {
+      modificarMensajeModal('Error', 'No se encontraron datos de docentes, revise si cada docente tiene un nombre y un CUIL asignado');
+    } else if (resultados.length === 0) {
+      modificarMensajeModal('Error', 'No se encontraron resultados para cargar, revise si la columna de palabras por minuto está cargada');
+    } else if (libros.length === 0) {
+      modificarMensajeModal('Error', 'No se encontraron libros para cargar, revise si la columna de material de lectura está cargada');
+    } else {
+      cargaExitosa = await guardarDatos();
+    }
 
     if (cargaExitosa) {
       mostrarCargaExitosa();
@@ -546,7 +559,7 @@ document.getElementById('button-guardar-datos').addEventListener('click', () => 
   }
 
   async function guardarDatos(): Promise<boolean> {
-    let estadoCorrectoDeCarga = false;
+    let estadoCorrectoDeCarga = true;
 
     if (escuela.nombre && escuela.nombre.length > 1)
       escuela.id = await EscuelaService.verificarExistenciaOCrearEscuela(escuela.nombre);
@@ -587,30 +600,26 @@ document.getElementById('button-guardar-datos').addEventListener('click', () => 
     if (parametroEstudio.id && parametroEstudio.id > 0 && grado.id && grado.id > 0 && fechas.length > 0)
       await ParametroEstudioService.relacionarEstudioGrado(parametroEstudio.id, grado.id, fechas);
 
-    const dates: Date[] = fechas.map(fecha => {
+    const dates: string[] = fechas.map(fecha => {
       const [day, month, year] = fecha.split('/');
-      return new Date(`${year}-${month}-${day}`);
+      return `${year}-${month}-${day}`;
     });
 
-    if ((alumnos.length > 0 && resultados.length > 0 && fechas.length > 0) && alumnos.length === resultados.length && alumnos.length === fechas.length) {
+    if ((alumnos.length > 0 && resultados.length > 0 && dates.length > 0) && alumnos.length === resultados.length && alumnos.length === dates.length) {
       for (let i = 0; i < resultados.length; i++) {
-        if (resultados[i].fecha.getDay && resultados[i].idAlumno > 0 && resultados[i].idEstudio > 0 && resultados[i].idLibro > 0) {
-          const resultado = resultados[i];
-          resultado.idAlumno = alumnos[i].id;
-          resultado.idGrado = alumnos[i].idGrado;
-          resultado.idEstudio = parametroEstudio.id;
-          if (libros[i].id && libros[i].id > 0)
-            resultado.idLibro = libros[i].id;
-          resultado.fecha = dates[i];
+        const resultado = resultados[i];
+        resultado.idAlumno = alumnos[i].id;
+        resultado.idGrado = alumnos[i].idGrado;
+        resultado.idEstudio = parametroEstudio.id;
+        resultado.idLibro = libros[i].id;
+        resultado.fecha = new Date(dates[i]);
 
-          await ResultadoService.verificarExistenciaOCrearResultado(resultado);
-        }
+        estadoCorrectoDeCarga = await ResultadoService.verificarExistenciaOCrearResultado(resultado);
       }
     } else {
       modificarMensajeModal('Error', 'Los datos recopilados no coinciden en cantidad, por favor revisar. Hay ' + alumnos.length + ' alumnos, ' + resultados.length + ' resultados y ' + fechas.length + ' fechas');
       estadoCorrectoDeCarga = false;
     }
-
     return estadoCorrectoDeCarga;
   }
 });

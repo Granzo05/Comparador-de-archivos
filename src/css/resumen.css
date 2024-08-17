@@ -192,3 +192,11 @@ tbody tr:hover {
   margin-bottom: -50px;
   cursor: pointer;
 }
+
+#error-icon {
+  display: none;
+}
+
+#success-icon {
+  display: none;
+}

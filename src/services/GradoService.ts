@@ -3,7 +3,7 @@ import { buscarPalabrasEnArchivo } from "../ts/resumen";
 export const GradoService = {
 
     buscarGrado: async () => {
-        const posiblesPalabras = ['divisionDelGrado', 'division', 'división'];
+        const posiblesPalabras = ['grado', 'grados'];
 
         let palabraEncontrada = buscarPalabrasEnArchivo(posiblesPalabras);
 
@@ -17,7 +17,7 @@ export const GradoService = {
             const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
 
             if (resultSelect.rows.length > 0) {
-                return resultSelect.rows[0].ID_CURSO;
+                return resultSelect.rows[0].ID_GRADO;
             } else {
                 const queryInsert = `INSERT INTO grados (division, id_escuela) VALUES (:division, :id_escuela)`;
                 const params = { division: division, id_escuela: idEscuela };
