@@ -169,11 +169,15 @@ function rellenarDivResultados(alumnos: any, input: HTMLInputElement) {
     });
 }
 
+document.getElementById('buscar-datos').addEventListener('click', async function () {
+    await buscarParametrosEstudio();
+});
+
 async function buscarParametrosEstudio() {
-    const escuela = (document.getElementById('escuela') as HTMLInputElement).value;
+    const escuela = (document.getElementById('escuelas') as HTMLInputElement).value;
     const alumno = (document.getElementById('alumno') as HTMLInputElement).value;
     const grado = (document.getElementById('grados') as HTMLInputElement).value;
-    const parametro = (document.getElementById('parametro') as HTMLInputElement).value;
+    const parametro = (document.getElementById('estudios') as HTMLInputElement).value;
     const desde = (document.getElementById('desde') as HTMLInputElement).value;
     const hasta = (document.getElementById('hasta') as HTMLInputElement).value;
 
@@ -186,10 +190,6 @@ async function buscarParametrosEstudio() {
 
     if (alumno.length > 0) {
         query += ` WHERE alumno = ${alumno}`;
-    }
-
-    if (grado.length > 0) {
-        let query = 'SELECT * FROM resultados_estudios';
     }
 
     if (alumno.length > 0 || grado.length > 0) {
@@ -205,15 +205,23 @@ async function buscarParametrosEstudio() {
     }
 
     if ((alumno.length > 0 || grado.length > 0 || parametro.length > 0) && desde.length > 0 && hasta.length > 0) {
-        query += ` AND fecha_desde and FECHA_HASTA BETWEEN (${desde}, ${hasta})`;
+        query += ` AND fecha BETWEEN (${desde}, ${hasta})`;
     } else if ((alumno.length > 0 || grado.length > 0 || parametro.length > 0) && desde.length > 0) {
-        query += ` AND fecha_desde AFTER = ${desde}`;
+        query += ` AND fecha AFTER = ${desde}`;
     } else if (desde.length > 0 && hasta.length > 0) {
-        query += ` WHERE fecha_desde and FECHA_HASTA BETWEEN (${desde}, ${hasta})`;
+        query += ` WHERE fecha BETWEEN (${desde}, ${hasta})`;
     } else if (desde.length > 0) {
-        query += ` WHERE fecha_desde AFTER = ${desde}`;
+        query += ` WHERE fecha AFTER = ${desde}`;
     } else if (hasta.length > 0) {
-        query += ` WHERE fecha_hasta AFTER = ${desde}`;
+        query += ` WHERE fecha AFTER = ${desde}`;
+    }
+
+    const result = await ejecutarSelect(query);
+
+    if(result.length > 0) {
+        console.log(result);
+    } else {
+        alert('No se encontraron resultados');
     }
 }
 
