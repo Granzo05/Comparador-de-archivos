@@ -73,7 +73,9 @@ async function buscarGrados(idEscuela: string): Promise<Grado[]> {
 function rellenarSelectGrados(grados: Grado[]) {
     const gradosSelect = document.getElementById('grados') as HTMLSelectElement;
     gradosSelect.innerHTML = '';
-    console.log(grados);
+
+    gradosSelect.innerHTML = '<option value="0">Todos</option>';
+
     grados.forEach((grado) => {
         const option = document.createElement('option');
         option.value = grado.id.toString();
@@ -148,7 +150,6 @@ async function getRecomendacionesAlumnos(input: HTMLElement) {
 }
 
 function rellenarDivResultados(alumnos: any, input: HTMLInputElement) {
-    console.log(alumnos)
     const divConDatos = input.nextElementSibling as HTMLElement;
     divConDatos.innerHTML = '';
     divConDatos.style.display = 'block';
@@ -178,57 +179,78 @@ async function buscarParametrosEstudio() {
     const alumno = (document.getElementById('alumno') as HTMLInputElement).value;
     const grado = (document.getElementById('grados') as HTMLInputElement).value;
     const estudio = (document.getElementById('estudios') as HTMLInputElement).value;
-    const desde = (document.getElementById('desde') as HTMLInputElement).value;
-    const hasta = (document.getElementById('hasta') as HTMLInputElement).value;
+    let desde = (document.getElementById('desde') as HTMLInputElement).value;
+    let hasta = (document.getElementById('hasta') as HTMLInputElement).value;
+
+    const desdeDate = new Date(desde);
+    const hastaDate = new Date(hasta);
+    const todayDate = new Date();
 
     if (escuela.length === 0) {
         alert('Necesitamos una escuela para buscar la información');
         return;
     }
 
-    let query = 'SELECT * FROM resultados_estudios WHERE 1=1';
+    let query = `
+    SELECT re.* FROM resultados_estudios re
+    JOIN grados g ON re.id_grado = g.id_grado
+    WHERE 1=1`;
 
     const conditions: string[] = [];
 
+    if (escuela.length > 0) {
+        conditions.push(`g.id_escuela = ${escuela}`);
+    }
+
     if (alumno.length > 0) {
-        conditions.push(`id_alumno = ${alumno}`);
+        conditions.push(`re.id_alumno = ${alumno}`);
     }
-    
+
     if (grado.length > 0) {
-        conditions.push(`id_grado = ${grado}`);
+        if (parseInt(grado) > 0)
+            conditions.push(`re.id_grado = ${grado}`);
     }
-    
+
     if (estudio.length > 0) {
-        conditions.push(`id_estudio = ${estudio}`);
+        conditions.push(`re.id_estudio = ${estudio}`);
+    }
+
+    if (desdeDate > hastaDate) {
+        alert('La fecha de inicio no puede ser mayor a la fecha de fin');
+        return;
+    } else if (hastaDate > todayDate) {
+        alert('La fecha de fin no puede ser mayor a la fecha actual');
+        (document.getElementById('hasta') as HTMLInputElement).value = todayDate.toISOString().substring(0, 10);
+        hasta = todayDate.toISOString().substring(0, 10);
+        return;
     }
 
     if (desde.length > 0 && hasta.length > 0) {
-        conditions.push(`fecha BETWEEN TO_DATE('${desde}', 'YYYY-MM-DD') AND TO_DATE('${hasta}', 'YYYY-MM-DD')`);
+        conditions.push(`re.fecha BETWEEN TO_DATE('${desde}', 'YYYY-MM-DD') AND TO_DATE('${hasta}', 'YYYY-MM-DD')`);
     } else if (desde.length > 0) {
-        conditions.push(`fecha >= TO_DATE('${desde}', 'YYYY-MM-DD')`);
+        conditions.push(`re.fecha >= TO_DATE('${desde}', 'YYYY-MM-DD')`);
     } else if (hasta.length > 0) {
-        conditions.push(`fecha <= TO_DATE('${hasta}', 'YYYY-MM-DD')`);
+        conditions.push(`re.fecha <= TO_DATE('${hasta}', 'YYYY-MM-DD')`);
     }
 
     if (conditions.length > 0) {
         query += ' AND ' + conditions.join(' AND ');
     }
 
-    console.log(query);
-    
     const result = await ejecutarSelect(query);
-
+    console.log(result)
     if (result.length > 0) {
-        console.log(result);
+        sessionStorage.setItem('resultados', JSON.stringify(result));
+        //window.location.href = 'resumen_datos.html';
     } else {
         alert('No se encontraron resultados');
-    }    
+        return;
+    }
 }
 
 async function ejecutarSelect(query: string): Promise<any[]> {
     try {
         const result: any = await window.electronAPI.selectDatabase(query);
-        console.log(result.rows);
 
         if (result.error) {
             console.error('Error en la consulta:', result.error);

@@ -47,9 +47,10 @@ export const ResultadoService = {
                 };
 
                 await window.electronAPI.insertDatabase(queryInsert, params, '');
-
-                return true;
             }
+
+            return true;
+
         } catch (e) {
             console.error(e);
             return false;
