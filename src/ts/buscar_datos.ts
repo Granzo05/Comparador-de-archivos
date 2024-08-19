@@ -1,4 +1,4 @@
-import { ParametroEstudio } from "../types/Estudio";
+import { Estudio } from "../types/Estudio";
 import { Escuela } from "../types/Escuela";
 import { Grado } from "../types/Grado";
 
@@ -83,14 +83,14 @@ function rellenarSelectGrados(grados: Grado[]) {
     });
 }
 
-async function buscarParametrosDeEstudio(): Promise<ParametroEstudio[]> {
+async function buscarParametrosDeEstudio(): Promise<Estudio[]> {
     const query = 'SELECT * FROM estudios';
     const result = await ejecutarSelect(query);
 
-    const estudios: ParametroEstudio[] = [];
+    const estudios: Estudio[] = [];
 
     result.forEach((estudioDB: any) => {
-        const estudio: ParametroEstudio = new ParametroEstudio();
+        const estudio: Estudio = new Estudio();
         estudio.id = estudioDB.ID_ESTUDIO;
         estudio.descripcion = estudioDB.DESCRIPCION;
 
@@ -100,7 +100,7 @@ async function buscarParametrosDeEstudio(): Promise<ParametroEstudio[]> {
     return estudios;
 }
 
-function rellenarSelectEstudios(estudios: ParametroEstudio[]) {
+function rellenarSelectEstudios(estudios: Estudio[]) {
     const estudiosSelect = document.getElementById('estudios') as HTMLSelectElement;
     estudiosSelect.innerHTML = '';
 
@@ -159,7 +159,7 @@ function rellenarDivResultados(alumnos: any, input: HTMLInputElement) {
         div.style.cursor = 'pointer';
 
         div.addEventListener('click', () => {
-            input.value = alumno.DNI;
+            input.value = alumno.ID_ALUMNO;
             input.textContent = alumno.DNI;
             divConDatos.innerHTML = '';
             divConDatos.style.display = 'none';
@@ -177,7 +177,7 @@ async function buscarParametrosEstudio() {
     const escuela = (document.getElementById('escuelas') as HTMLInputElement).value;
     const alumno = (document.getElementById('alumno') as HTMLInputElement).value;
     const grado = (document.getElementById('grados') as HTMLInputElement).value;
-    const parametro = (document.getElementById('estudios') as HTMLInputElement).value;
+    const estudio = (document.getElementById('estudios') as HTMLInputElement).value;
     const desde = (document.getElementById('desde') as HTMLInputElement).value;
     const hasta = (document.getElementById('hasta') as HTMLInputElement).value;
 
@@ -186,55 +186,55 @@ async function buscarParametrosEstudio() {
         return;
     }
 
-    let query = 'SELECT * FROM resultados_estudios';
+    let query = 'SELECT * FROM resultados_estudios WHERE 1=1';
+
+    const conditions: string[] = [];
 
     if (alumno.length > 0) {
-        query += ` WHERE alumno = ${alumno}`;
+        conditions.push(`id_alumno = ${alumno}`);
+    }
+    
+    if (grado.length > 0) {
+        conditions.push(`id_grado = ${grado}`);
+    }
+    
+    if (estudio.length > 0) {
+        conditions.push(`id_estudio = ${estudio}`);
     }
 
-    if (alumno.length > 0 || grado.length > 0) {
-        query += ` AND grado = ${grado}`;
-    } else if (grado.length > 0) {
-        query += ` WHERE grado = ${grado}`;
-    }
-
-    if ((alumno.length > 0 || grado.length > 0) && parametro.length > 0) {
-        query += ` AND parametro = ${parametro}`;
-    } else if (parametro.length > 0) {
-        query += ` WHERE parametro = ${parametro}`;
-    }
-
-    if ((alumno.length > 0 || grado.length > 0 || parametro.length > 0) && desde.length > 0 && hasta.length > 0) {
-        query += ` AND fecha BETWEEN (${desde}, ${hasta})`;
-    } else if ((alumno.length > 0 || grado.length > 0 || parametro.length > 0) && desde.length > 0) {
-        query += ` AND fecha AFTER = ${desde}`;
-    } else if (desde.length > 0 && hasta.length > 0) {
-        query += ` WHERE fecha BETWEEN (${desde}, ${hasta})`;
+    if (desde.length > 0 && hasta.length > 0) {
+        conditions.push(`fecha BETWEEN TO_DATE('${desde}', 'YYYY-MM-DD') AND TO_DATE('${hasta}', 'YYYY-MM-DD')`);
     } else if (desde.length > 0) {
-        query += ` WHERE fecha AFTER = ${desde}`;
+        conditions.push(`fecha >= TO_DATE('${desde}', 'YYYY-MM-DD')`);
     } else if (hasta.length > 0) {
-        query += ` WHERE fecha AFTER = ${desde}`;
+        conditions.push(`fecha <= TO_DATE('${hasta}', 'YYYY-MM-DD')`);
     }
 
+    if (conditions.length > 0) {
+        query += ' AND ' + conditions.join(' AND ');
+    }
+
+    console.log(query);
+    
     const result = await ejecutarSelect(query);
 
-    if(result.length > 0) {
+    if (result.length > 0) {
         console.log(result);
     } else {
         alert('No se encontraron resultados');
-    }
+    }    
 }
 
 async function ejecutarSelect(query: string): Promise<any[]> {
     try {
         const result: any = await window.electronAPI.selectDatabase(query);
+        console.log(result.rows);
 
         if (result.error) {
             console.error('Error en la consulta:', result.error);
             return null;
         } else {
             if (result.rows && result.rows.length > 0) {
-                console.log(result.rows);
 
                 return result.rows;
             }
