@@ -2,10 +2,10 @@ import { buscarPalabrasEnArchivo } from "../ts/resumen";
 
 export const GradoService = {
 
-    buscarGrado: async () => {
+    buscarGrado: async (index: number) => {
         const posiblesPalabras = ['grado', 'grados'];
 
-        let palabraEncontrada = buscarPalabrasEnArchivo(posiblesPalabras);
+        let palabraEncontrada = buscarPalabrasEnArchivo(posiblesPalabras, index);
 
         if (palabraEncontrada)
             return palabraEncontrada;

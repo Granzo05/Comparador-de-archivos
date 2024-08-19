@@ -3,17 +3,13 @@ import { AlumnoService } from '../services/AlumnoService';
 import { DocenteService } from '../services/DocenteService';
 import { EscuelaService } from '../services/EscuelaService';
 import { LibroService } from '../services/LibroService';
-import { ParametroEstudioService } from '../services/ParametroEstudioService';
+import { EstudioService } from '../services/EstudioService';
 import { ResultadoService } from '../services/ResultadoService';
-import { Alumno } from '../types/Alumno';
-import { Docente } from '../types/Docente';
 import { Escuela } from '../types/Escuela';
-import { Libro } from '../types/Libro';
-import { ParametroEstudio } from '../types/ParametroEstudio';
-import { Resultado } from '../types/Resultado';
+import { Estudio } from '../types/Estudio';
 import { Grado } from '../types/Grado';
 import { GradoService } from '../services/GradoService';
-import { c } from 'vite/dist/node/types.d-aGj9QkWt';
+import { Resultado } from 'src/types/Resultado';
 
 let palabrasClaves: string = sessionStorage.getItem('palabras-claves');
 let archivosEnHTML: string[] = JSON.parse(sessionStorage.getItem('archivosEnHTML'));
@@ -24,12 +20,12 @@ let colorCasillas: string;
 let tipoGrafico: keyof ChartTypeRegistry;
 const divDelResumen = document.getElementById('contenedor-resumen');
 const palabrasIdentificadoras = ['Escuela', 'Grado'];
+const parser = new DOMParser();
 
 const escuelas: Set<string> = new Set();
 const grados: Map<string, Set<string>> = new Map();
 let valueSelectEscuela: string = '0';
 let valueSelectGrado: string = '0';
-
 document.addEventListener('DOMContentLoaded', async () => {
   // Creamos el resumen con el primer archivo ingresado para tener una plantilla...
   await buscarContenidoAsociadoAPalabrasClaves(0);
@@ -327,6 +323,8 @@ async function crearOpcionesParaGrados(select: HTMLSelectElement, escuelaSelecci
   select.innerHTML = '';
 
   select.addEventListener('change', async function () {
+    valueSelectGrado = this.value;
+
     const option = Array.from(select.options).find(opt => opt.value === this.value);
     if (option) {
       await buscarResumenMediantePalabraIdentificadora(option.textContent || '');
@@ -505,51 +503,66 @@ document.getElementById('button-guardar-datos').addEventListener('click', () => 
 
   mostrarModalCarga();
 
-  const tablas = document.getElementsByClassName('tabla') as HTMLCollectionOf<HTMLTableElement>;
-
-  const alumnos: Alumno[] = [];
-  const docentes: Docente[] = [];
-  const grado: Grado = new Grado();
-  const escuela: Escuela = new Escuela();
-  const parametroEstudio: ParametroEstudio = new ParametroEstudio();
-  const resultados: Resultado[] = [];
-  const fechas: string[] = [];
-  const libros: Libro[] = [];
+  const escuelas: Set<Escuela> = new Set();
 
   buscarDatos()
 
   async function buscarDatos() {
-    const [nombreEscuela, divisionGrado, descripcionParametroEstudio] = await Promise.all([
-      EscuelaService.buscarEscuela(),
-      GradoService.buscarGrado(),
-      ParametroEstudioService.buscarParametroEstudio()
-    ]);
+    for (let i = 0; i < archivosEnHTML.length; i++) {
+      try {
+        const documento = parser.parseFromString(archivosEnHTML[i], 'text/html');
+        const tablas = documento.getElementsByTagName('table') as HTMLCollectionOf<HTMLTableElement>;
 
-    escuela.nombre = nombreEscuela;
-    grado.division = divisionGrado;
-    parametroEstudio.descripcion = descripcionParametroEstudio;
+        const [nombreEscuela, divisionGrado, descripcionParametroEstudio] = await Promise.all([
+          EscuelaService.buscarEscuela(i),
+          GradoService.buscarGrado(i),
+          EstudioService.buscarParametroEstudio(i)
+        ]);
 
-    await Promise.all([
-      AlumnoService.buscarDatosAlumnos(alumnos, tablas),
-      DocenteService.buscarDatosDocente(docentes),
-      ResultadoService.buscarResultados(resultados, tablas),
-      buscarColumnaDeFecha(fechas, tablas),
-      LibroService.buscarMaterialDeLectura(libros, tablas)
-    ]);
+        let escuela = Array.from(escuelas).find(e => e.nombre === nombreEscuela);
+        if (!escuela) {
+          escuela = new Escuela();
+          escuela.nombre = nombreEscuela;
+          escuelas.add(escuela);
+        }
+
+        const estudio: Estudio = new Estudio();
+        estudio.descripcion = descripcionParametroEstudio;
+
+        const grado: Grado = new Grado();
+        grado.division = divisionGrado;
+        grado.escuela = escuela;
+
+        await Promise.all([
+          AlumnoService.buscarDatosAlumnos(grado.alumnos, tablas),
+          DocenteService.buscarDatosDocente(grado.docente, i),
+          LibroService.buscarMaterialDeLectura(estudio.libros, tablas)
+        ]);
+
+        grado.estudios.push(estudio);
+
+        for (let index = 0; index < grado.estudios.length; index++) {
+          await ResultadoService.buscarResultados(grado.estudios[index].resultados, tablas);
+        }
+
+        for (let index = 0; index < grado.estudios.length; index++) {
+          for (let j = 0; j < grado.estudios[index].resultados.length; j++) {
+            grado.estudios[index].resultados[j].fecha = new Date(await buscarColumnaDeFecha(tablas));
+          }
+        }
+
+        escuela.grados.push(grado);
+
+        escuelas.add(escuela);
+      } catch (error) {
+        console.error(`Error procesando el archivo ${i}:`, error);
+      }
+    }
+
 
     let cargaExitosa: boolean = false;
 
-    if (alumnos.length === 0) {
-      modificarMensajeModal('Error', 'No se encontraron datos de alumnos, revise si cada alumno tiene un nombre y un DNI asignado');
-    } else if (docentes.length === 0) {
-      modificarMensajeModal('Error', 'No se encontraron datos de docentes, revise si cada docente tiene un nombre y un CUIL asignado');
-    } else if (resultados.length === 0) {
-      modificarMensajeModal('Error', 'No se encontraron resultados para cargar, revise si la columna de palabras por minuto está cargada');
-    } else if (libros.length === 0) {
-      modificarMensajeModal('Error', 'No se encontraron libros para cargar, revise si la columna de material de lectura está cargada');
-    } else {
-      cargaExitosa = await guardarDatos();
-    }
+    cargaExitosa = await guardarDatos();
 
     if (cargaExitosa) {
       mostrarCargaExitosa();
@@ -561,64 +574,68 @@ document.getElementById('button-guardar-datos').addEventListener('click', () => 
   async function guardarDatos(): Promise<boolean> {
     let estadoCorrectoDeCarga = true;
 
-    if (escuela.nombre && escuela.nombre.length > 1)
-      escuela.id = await EscuelaService.verificarExistenciaOCrearEscuela(escuela.nombre);
-
-    if (grado.division && grado.division.length > 1 && escuela.id > 0)
-      grado.id = await GradoService.verificarExistenciaOCrearGrado(grado.division, escuela.id);
-
-    for (const alumno of Array.from(alumnos)) {
-      if (alumno.dni && alumno.dni.length > 1)
-        alumno.id = await AlumnoService.verificarExistenciaOCrearAlumnos(alumno);
-
-      if (grado.id && grado.id > 0 && alumno.id && alumno.id > 0 && fechas.length > 0) {
-        alumno.idGrado = grado.id;
-        await AlumnoService.relacionarGradoAlumnos(grado.id, alumno.id, fechas[0].split('/')[2]);
-      }
-    }
-
-    for (const docente of Array.from(docentes)) {
-      if (docente.cuil)
-        docente.id = await DocenteService.verificarExistenciaOCrearDocente(docente);
-
-      if (docente.id && docente.id > 0 && grado.id && grado.id > 0 && fechas.length > 0)
-        await DocenteService.relacionarGradoDocente(grado.id, docente.id, fechas);
-    }
-
-    if (parametroEstudio.descripcion && parametroEstudio.descripcion.length > 1)
-      parametroEstudio.id = await ParametroEstudioService.verificarExistenciaOCrearEstudio(parametroEstudio.descripcion);
-
-    for (const libro of Array.from(libros)) {
-      if (libro.nombre && libro.nombre.length > 1) {
-        libro.id = await LibroService.verificarExistenciaOCrearLibro(libro.nombre);
+    for (const escuela of escuelas) {
+      if (escuela.nombre && escuela.nombre.length > 1) {
+        escuela.id = await EscuelaService.verificarExistenciaOCrearEscuela(escuela.nombre);
       }
 
-      if (libro.id && libro.id > 0 && parametroEstudio.id > 0 && fechas.length > 0)
-        await LibroService.relacionarLibroEstudio(libro.id, parametroEstudio.id, fechas);
-    }
+      for (const grado of escuela.grados) {
+        const fechas = grado.estudios.flatMap(estudio => estudio.resultados.map((resultado: Resultado) => resultado.fecha.toISOString().substring(0, 10)));
 
-    if (parametroEstudio.id && parametroEstudio.id > 0 && grado.id && grado.id > 0 && fechas.length > 0)
-      await ParametroEstudioService.relacionarEstudioGrado(parametroEstudio.id, grado.id, fechas);
+        if (grado.division && grado.division.length > 1 && escuela.id > 0) {
+          grado.id = await GradoService.verificarExistenciaOCrearGrado(grado.division, escuela.id);
+        }
 
-    const dates: string[] = fechas.map(fecha => {
-      const [day, month, year] = fecha.split('/');
-      return `${year}-${month}-${day}`;
-    });
+        for (const alumno of grado.alumnos) {
+          if (alumno.dni && alumno.dni.length > 1) {
+            alumno.id = await AlumnoService.verificarExistenciaOCrearAlumnos(alumno);
+          }
 
-    if ((alumnos.length > 0 && resultados.length > 0 && dates.length > 0) && alumnos.length === resultados.length && alumnos.length === dates.length) {
-      for (let i = 0; i < resultados.length; i++) {
-        const resultado = resultados[i];
-        resultado.idAlumno = alumnos[i].id;
-        resultado.idGrado = alumnos[i].idGrado;
-        resultado.idEstudio = parametroEstudio.id;
-        resultado.idLibro = libros[i].id;
-        resultado.fecha = new Date(dates[i]);
+          if (grado.id && grado.id > 0 && alumno.id && alumno.id > 0 && fechas.length > 0) {
+            alumno.grado = grado;
+            await AlumnoService.relacionarGradoAlumnos(grado.id, alumno.id, fechas[0].split('-')[0]);
+          }
+        }
 
-        estadoCorrectoDeCarga = await ResultadoService.verificarExistenciaOCrearResultado(resultado);
+        if (grado.docente.cuil) {
+          grado.docente.id = await DocenteService.verificarExistenciaOCrearDocente(grado.docente);
+        }
+
+        if (grado.docente.id && grado.docente.id > 0 && grado.id && grado.id > 0 && fechas.length > 0) {
+          await DocenteService.relacionarGradoDocente(grado.id, grado.docente.id, fechas);
+        }
+
+        for (const estudio of grado.estudios) {
+          if (estudio.descripcion && estudio.descripcion.length > 1) {
+            estudio.id = await EstudioService.verificarExistenciaOCrearEstudio(estudio.descripcion);
+          }
+
+          for (const libro of estudio.libros) {
+            if (libro.nombre && libro.nombre.length > 1) {
+              libro.id = await LibroService.verificarExistenciaOCrearLibro(libro.nombre);
+            }
+
+            if (libro.id && libro.id > 0 && estudio.id > 0 && fechas.length > 0) {
+              await LibroService.relacionarLibroEstudio(libro.id, estudio.id, fechas);
+            }
+          }
+
+          if (estudio.id && grado.id && fechas.length > 0) {
+            await EstudioService.relacionarEstudioGrado(estudio.id, grado.id, fechas);
+          }
+
+
+          for (let index = 0; index < grado.alumnos.length; index++) {
+            const resultado = estudio.resultados[index];
+            resultado.alumno = grado.alumnos[index];
+            resultado.estudio = estudio;
+            resultado.libro = estudio.libros[0];
+            resultado.grado = grado;
+
+            estadoCorrectoDeCarga = await ResultadoService.verificarExistenciaOCrearResultado(resultado);            
+          }
+        }
       }
-    } else {
-      modificarMensajeModal('Error', 'Los datos recopilados no coinciden en cantidad, por favor revisar. Hay ' + alumnos.length + ' alumnos, ' + resultados.length + ' resultados y ' + fechas.length + ' fechas');
-      estadoCorrectoDeCarga = false;
     }
     return estadoCorrectoDeCarga;
   }
@@ -658,7 +675,7 @@ document.getElementById('button-modal').addEventListener('click', () => {
   document.getElementById('loader-container').style.display = 'none';
 });
 
-async function buscarColumnaDeFecha(fechas: string[], tablas: HTMLCollectionOf<HTMLTableElement>) {
+async function buscarColumnaDeFecha(tablas: HTMLCollectionOf<HTMLTableElement>) {
   for (const tabla of Array.from(tablas)) {
     const filas = tabla.rows;
     const posiblesPalabras = ['fecha', 'dia'];
@@ -667,7 +684,7 @@ async function buscarColumnaDeFecha(fechas: string[], tablas: HTMLCollectionOf<H
 
     if (indexColumna !== -1) {
       for (let i = 1; i < filas.length; i++) {
-        fechas.push(filas[i].cells[indexColumna].innerHTML.trim());
+        return filas[i].cells[indexColumna].innerHTML.trim().replace(/<[^>]*>?/gm, '');
       }
     }
   }
@@ -683,14 +700,13 @@ export async function buscarPalabrasEnElHeader(filas: HTMLCollectionOf<HTMLTable
   return -1;
 }
 
-export async function buscarPalabrasEnArchivo(palabrasBuscadas: string[]) {
-  for (let i = 0; i < archivosEnHTML.length; i++) {
-    for (let palabra of palabrasBuscadas) {
-      const regex = new RegExp(`${palabra}:\\s*([^<]*)`, 'i');
-      const match = archivosEnHTML[i].match(regex);
-      if (match) {
-        return match[1].trim();
-      }
+export async function buscarPalabrasEnArchivo(palabrasBuscadas: string[], indexArchivo: number) {
+  for (let palabra of palabrasBuscadas) {
+    const regex = new RegExp(`${palabra}:\\s*([^<]*)`, 'i');
+    const match = archivosEnHTML[indexArchivo].match(regex);
+
+    if (match) {
+      return match[1].trim().replace(/<[^>]*>?/gm, '');
     }
   }
   return null;

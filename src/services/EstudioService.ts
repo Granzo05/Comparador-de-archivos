@@ -1,10 +1,10 @@
 import { buscarPalabrasEnArchivo } from "../ts/resumen";
 
-export const ParametroEstudioService = {
-    buscarParametroEstudio: async () => {
+export const EstudioService = {
+    buscarParametroEstudio: async (index: number) => {
         const posiblesPalabras = ['parametro de estudio', 'metodo de estudio', 'método de estudio', 'metodología de estudio', 'metodologia de estudio', 'palabras por minuto', 'palabras por minutos', 'palabra en minutos'];
 
-        let palabraEncontrada = buscarPalabrasEnArchivo(posiblesPalabras);
+        let palabraEncontrada = buscarPalabrasEnArchivo(posiblesPalabras, index);
 
         if (palabraEncontrada)
             return palabraEncontrada;

@@ -1,4 +1,4 @@
-import { ParametroEstudio } from "../types/ParametroEstudio";
+import { ParametroEstudio } from "../types/Estudio";
 import { Escuela } from "../types/Escuela";
 import { Grado } from "../types/Grado";
 

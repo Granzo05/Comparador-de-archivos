@@ -12,7 +12,7 @@ export const LibroService = {
             if (indexColumna !== -1) {
                 for (let i = 1; i < filas.length; i++) {
                     const newLibro: Libro = new Libro();
-                    newLibro.nombre = filas[i].cells[indexColumna].innerHTML.trim();
+                    newLibro.nombre = filas[i].cells[indexColumna].innerHTML.trim().replace(/<[^>]*>?/gm, '').trim();
                     nombresLibros.push(newLibro);
                 }
             }

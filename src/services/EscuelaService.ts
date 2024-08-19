@@ -1,10 +1,10 @@
 import { buscarPalabrasEnArchivo } from "../ts/resumen";
 
 export const EscuelaService = {
-    buscarEscuela: async () => {
+    buscarEscuela: async (index: number) => {
         const posiblesPalabras = ['establecimiento', 'escuela'];
 
-        let palabraEncontrada = buscarPalabrasEnArchivo(posiblesPalabras);
+        let palabraEncontrada = buscarPalabrasEnArchivo(posiblesPalabras, index);
 
         if (palabraEncontrada)
             return palabraEncontrada;

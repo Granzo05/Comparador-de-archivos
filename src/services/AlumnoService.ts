@@ -14,8 +14,8 @@ export const AlumnoService = {
             if (indexColumnaNombre !== -1 && indexColumnaDNI !== -1) {
                 for (let i = 1; i < filas.length; i++) {
                     const alumno: Alumno = new Alumno();
-                    alumno.nombre = filas[i].cells[indexColumnaNombre].innerHTML.trim();
-                    alumno.dni = filas[i].cells[indexColumnaDNI].innerHTML.trim();
+                    alumno.nombre = filas[i].cells[indexColumnaNombre].innerHTML.trim().replace(/<[^>]*>?/gm, '').trim();
+                    alumno.dni = filas[i].cells[indexColumnaDNI].innerHTML.trim().replace(/<[^>]*>?/gm, '').trim();
                     alumnos.push(alumno);
                 }
             }

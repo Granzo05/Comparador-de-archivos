@@ -2,18 +2,16 @@ import { buscarPalabrasEnArchivo } from "../ts/resumen";
 import { Docente } from "../types/Docente";
 
 export const DocenteService = {
-    buscarDatosDocente: async (docentes: Docente[]) => {
+    buscarDatosDocente: async (docente: Docente, index: number) => {
         const posiblesPalabrasNombre = ['docente', 'maestra', 'maestro'];
         const posiblesPalabrasCuil = ['cuil', 'cuil de docente'];
 
-        const palabraEncontradaNombreDocente = await buscarPalabrasEnArchivo(posiblesPalabrasNombre);
-        const palabraEncontradaCUIL = await buscarPalabrasEnArchivo(posiblesPalabrasCuil);
+        const palabraEncontradaNombreDocente = await buscarPalabrasEnArchivo(posiblesPalabrasNombre, index);
+        const palabraEncontradaCUIL = await buscarPalabrasEnArchivo(posiblesPalabrasCuil, index);
 
         if (palabraEncontradaNombreDocente?.length > 0 && palabraEncontradaCUIL?.length > 0) {
-            const newDocente: Docente = new Docente();
-            newDocente.nombre = palabraEncontradaNombreDocente;
-            newDocente.cuil = palabraEncontradaCUIL;
-            docentes.push(newDocente);
+            docente.nombre = palabraEncontradaNombreDocente.trim();
+            docente.cuil = palabraEncontradaCUIL.trim();
         }
     },
 
