@@ -4,6 +4,9 @@ let resultados: any = JSON.parse(localStorage.getItem('resultados'));
 let colorCasillas: string;
 let tipoGrafico: keyof ChartTypeRegistry;
 
+const tabla = document.getElementById('tabla-resultado') as HTMLTableElement;
+const rows = tabla.rows;
+
 document.addEventListener('DOMContentLoaded', async () => {
   await cargarElementos();
 });
@@ -51,7 +54,7 @@ function asignarGrados() {
 }
 
 document.getElementById('grado-main-resumen').addEventListener('change', async () => {
-  filtrarTabla((document.getElementById('grado-main-resumen') as HTMLSelectElement).selectedOptions[0].textContent);
+  filtrarGradoTabla((document.getElementById('grado-main-resumen') as HTMLSelectElement).selectedOptions[0].textContent);
 });
 
 function llenarTabla() {
@@ -101,10 +104,7 @@ function formatearFecha(fecha: string) {
   return `${dia}/${mes}/${año}`;
 }
 
-function filtrarTabla(division: string) {
-  const tabla = document.getElementById('tabla-resultado') as HTMLTableElement;
-  const rows = tabla.rows;
-
+function filtrarGradoTabla(division: string) {
   if (division === 'Mostrar todos') {
     for (let i = 0; i < rows.length; i++) {
       rows[i].hidden = false;
@@ -118,7 +118,6 @@ function filtrarTabla(division: string) {
       }
     }
   }
-
 }
 
 
@@ -307,3 +306,70 @@ document.getElementById('button-desactivar-filtros').addEventListener('click', (
   document.getElementById('button-activar-filtros').style.display = 'flex';
   document.getElementById('button-desactivar-filtros').style.display = 'none';
 });
+
+document.getElementById('filtro-fecha-desde').addEventListener('input', (e) => {
+  filtrarFechaTabla();
+});
+
+document.getElementById('filtro-fecha-hasta').addEventListener('input', () => {
+  filtrarFechaTabla();
+});
+
+document.getElementById('filtro-nombre').addEventListener('input', () => {
+
+});
+
+document.getElementById('filtro-parametro').addEventListener('input', () => {
+
+});
+
+document.getElementById('filtro-libro').addEventListener('input', () => {
+
+});
+
+document.getElementById('filtro-puntuacion').addEventListener('input', () => {
+
+});
+
+document.getElementById('medida-puntuacion').addEventListener('input', () => {
+
+});
+
+function filtrarFechaTabla() {
+  const fechaDesde = new Date((document.getElementById('filtro-fecha-desde') as HTMLInputElement).value);
+  const fechaHasta = new Date((document.getElementById('filtro-fecha-hasta') as HTMLInputElement).value);
+
+  fechaDesde.setDate(fechaDesde.getDate() + 1);
+  fechaHasta.setDate(fechaHasta.getDate() + 1);
+
+  if (fechaDesde && fechaHasta.toString() === 'Invalid Date') {
+    for (let i = 0; i < rows.length; i++) {
+      if (new Date(parsearFecha(rows[i].cells[0].textContent)) >= fechaDesde) {
+        rows[i].hidden = false;
+      } else {
+        rows[i].hidden = true;
+      }
+    }
+  } else if (fechaDesde.toString() === 'Invalid Date' && fechaHasta) {   
+    for (let i = 0; i < rows.length; i++) {
+      if (new Date(parsearFecha(rows[i].cells[0].textContent)) <= fechaHasta) {
+        rows[i].hidden = false;
+      } else {
+        rows[i].hidden = true;
+      }
+    }
+  } else {
+    for (let i = 0; i < rows.length; i++) {
+      if (new Date(parsearFecha(rows[i].cells[0].textContent)) >= fechaDesde && new Date(parsearFecha(rows[i].cells[0].textContent)) <= fechaHasta) {
+        rows[i].hidden = false;
+      } else {
+        rows[i].hidden = true;
+      }
+    }
+  }
+}
+
+function parsearFecha(fecha: string) {
+  const [dia, mes, año] = fecha.split('/');
+  return `${mes}/${dia}/${año}`;
+}
