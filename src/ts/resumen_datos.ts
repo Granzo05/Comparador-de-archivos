@@ -20,7 +20,7 @@ async function cargarElementos() {
 
 function asignarEscuela() {
   const escuela = document.getElementById('escuela') as HTMLElement;
-  escuela.textContent = JSON.parse(localStorage.getItem('escuela'));
+  escuela.innerHTML = `Escuela: <strong>${JSON.parse(localStorage.getItem('escuela'))}</strong>`;
 }
 
 function asignarGrados() {
@@ -295,3 +295,15 @@ function cambiarPaso() {
   }
 
 }
+
+document.getElementById('button-activar-filtros').addEventListener('click', () => {
+  document.getElementById('inputs-filter').style.display = 'flex';
+  document.getElementById('button-activar-filtros').style.display = 'none';
+  document.getElementById('button-desactivar-filtros').style.display = 'flex';
+});
+
+document.getElementById('button-desactivar-filtros').addEventListener('click', () => {
+  document.getElementById('inputs-filter').style.display = 'none';
+  document.getElementById('button-activar-filtros').style.display = 'flex';
+  document.getElementById('button-desactivar-filtros').style.display = 'none';
+});

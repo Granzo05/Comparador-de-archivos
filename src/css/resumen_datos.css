@@ -1,0 +1,92 @@
+.comparativa {
+    width: 90%;
+}
+
+.nav-buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+    font-size: 25px;
+}
+
+.volver-button {
+    cursor: pointer;
+    padding: 10px;
+}
+
+.close-button {
+    cursor: pointer;
+    padding: 10px;
+    font-size: 30px;
+}
+
+#volver-button {
+    color: white;
+    cursor: default;
+}
+
+.modal-input {
+    padding: 10px;
+    width: 100%;
+}
+
+.button-comparar {
+    padding: 10px;
+    background-color: black;
+    color: white;
+    width: 200px;
+    display: flex;
+    position: relative;
+    margin-left: auto;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.comparar {
+    margin-left: auto;
+    margin-top: 30px;
+}
+
+.inputs-filter {
+    display: none;
+    flex-direction: row;
+    width: 100%;
+    align-content: center;
+    align-items: center;
+    padding: 25px;
+}
+
+.inputs-filter span {
+    margin-left: 25px;
+}
+
+.filtro-input {
+    display: flex;
+    margin-right: 20px;
+    align-content: center;
+    align-items: center;
+    margin-top: 30px;
+}
+
+.filtro-input input {
+    padding: 10px;
+}
+
+.filtro-fecha input {
+    padding: 10px;
+}
+
+.select-puntuacion {
+    width: 150px;
+    margin-left: 10px;
+    margin-top: 12px;
+}
+
+.filtro-fecha {
+    margin-right: 15px;
+}
+
+#filtro-puntuacion {
+    margin-left: 25px;
+}
