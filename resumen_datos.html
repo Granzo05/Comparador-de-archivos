@@ -34,9 +34,24 @@
     </div>
 
     <div class="comparar">
-      <button style="cursor: pointer;" id="comparar-button">Comparar...</button>
+      <button style="cursor: pointer;" class="button-comparar" id="comparar-button">Comparar...</button>
     </div>
-
+    <div class="inputs-filter">
+      <input type="date" id="filtro-fecha">
+      <input type="text" id="filtro-nombre" placeholder="Nombre del alumno">
+      <input type="text" id="filtro-parametro" placeholder="Parámetro de estudio">
+      <input type="text" id="filtro-libro" placeholder="Libro utilizado">
+      <div>
+        <input type="text" id="filtro-puntuacion" placeholder="puntuacion">
+        <select name="medida-puntuacion" id="medida-puntuacion">
+          <option value="=">=</option>
+          <option value=">=">&gt;=</option>
+          <option value="<=">&lt;=</option>
+          <option value=">">&gt;</option>
+          <option value="<">&lt;</option>
+        </select>
+      </div>
+    </div>
     <table>
       <thead>
         <th>
@@ -62,27 +77,30 @@
     </table>
   </div>
 
-  <div class="modal-background" id="modalBackground">
-    <div class="modal">
-      <span class="volver-button" id="volver-button">&larr;</span>
-      <span class="close-button" id="cerrar-button">&times;</span>
+  <div id="modal-carga" class="modal">
+    <div class="modal-content">
+      <div class="nav-buttons">
+        <span class="volver-button" id="volver-button">&larr;</span>
+        <span class="close-button" id="cerrar-button">&times;</span>
+      </div>
       <div class="paso-1" id="paso-1">
         <p>¿Que tipo de comparativa buscas?</p>
         <select name="tipo-comparativa" class="select-modal" id="tipo-comparativa">
+          <option value="1">Elegir el tipo de comparativa</option>
           <option value="2">Entre alumnos de una misma escuela</option>
           <option value="3">Entre alumnos de distintas escuelas</option>
           <option value="5">Entre cursos de una misma escuela</option>
           <option value="4">Entre cursos de distintas escuela</option>
         </select>
-
-        <button class="button-black-modal" id="siguiente-button">Siguiente</button>
+        <button class="button-black" id="siguiente-button"
+          style="margin-top: 50px; margin-bottom: 25px;">Siguiente</button>
       </div>
 
       <div class="form-login-1" id="paso-2" hidden>
         <p>Opción 1</p>
         <div>
           <p>Nombre o número de la escuela (obligatorio)</p>
-          <input type="text" name="escuela" id="escuela" placeholder="Ingresar el dato de la escuela">
+          <input type="text" class="modal-input" name="escuela" id="escuela" placeholder="Ingresar el dato de la escuela">
         </div>
         <div>
           <p>Grado del alumno 1</p>
@@ -91,7 +109,7 @@
         </div>
         <div>
           <p>Nombre del alumno 1</p>
-          <input type="text" name="docente" id="docente" placeholder="Ingresar el nombre del primer alumno">
+          <input type="text" name="docente" class="modal-input" id="docente" placeholder="Ingresar el nombre del primer alumno">
         </div>
         <div class="line"></div>
         <div>
@@ -101,7 +119,7 @@
         </div>
         <div>
           <p>Nombre del alumno 2</p>
-          <input type="text" name="alumno1" id="alumno1" placeholder="Ingresar el nombre del segundo alumno">
+          <input type="text" name="alumno1" class="modal-input" id="alumno1" placeholder="Ingresar el nombre del segundo alumno">
         </div>
         <div class="line"></div>
         <div>
@@ -112,13 +130,14 @@
         </div>
         <div>
           <p>Desde</p>
-          <input type="date" name="desde" id="desde-paso2">
+          <input type="date" class="modal-input" name="desde" id="desde-paso2">
         </div>
         <div>
           <p>Hasta</p>
-          <input type="date" name="hasta" id="hasta-paso2">
+          <input type="date" class="modal-input" name="hasta" id="hasta-paso2">
         </div>
-        <button class="button-black" id="datos-button">Siguiente</button>
+        <button class="button-black" id="buscar-button-paso-2"
+          style="margin-top: 50px; margin-bottom: 25px;">Buscar</button>
       </div>
 
 
@@ -126,7 +145,7 @@
         <p>Opción 2</p>
         <div>
           <p>Nombre o número de la escuela 1 (obligatorio)</p>
-          <input type="text" name="escuela" id="escuela-1-paso-3" placeholder="Ingresar el dato de la escuela">
+          <input type="text" class="modal-input" name="escuela" id="escuela-1-paso-3" placeholder="Ingresar el dato de la escuela">
         </div>
         <div>
           <p>Grado del alumno 1</p>
@@ -135,12 +154,12 @@
         </div>
         <div>
           <p>Nombre del alumno 1</p>
-          <input type="text" name="docente" id="docente" placeholder="Ingresar el nombre del primer alumno">
+          <input type="text" class="modal-input" name="docente" id="docente" placeholder="Ingresar el nombre del primer alumno">
         </div>
         <div class="line"></div>
         <div>
           <p>Nombre o número de la escuela 2 (obligatorio)</p>
-          <input type="text" name="escuela2" id="escuela-2-paso-3" placeholder="Ingresar el dato de la escuela">
+          <input type="text" class="modal-input" name="escuela2" id="escuela-2-paso-3" placeholder="Ingresar el dato de la escuela">
         </div>
         <div>
           <p>Grado del alumno 2</p>
@@ -149,7 +168,7 @@
         </div>
         <div>
           <p>Nombre del alumno 2</p>
-          <input type="text" name="alumno1" id="alumno1" placeholder="Ingresar el nombre del segundo alumno">
+          <input type="text" class="modal-input" name="alumno1" id="alumno1" placeholder="Ingresar el nombre del segundo alumno">
         </div>
         <div class="line"></div>
         <div>
@@ -160,13 +179,14 @@
         </div>
         <div>
           <p>Desde</p>
-          <input type="date" name="desde" id="desde-paso3">
+          <input type="date" class="modal-input" name="desde" id="desde-paso3">
         </div>
         <div>
           <p>Hasta</p>
-          <input type="date" name="hasta" id="hasta-paso3">
+          <input type="date" class="modal-input" name="hasta" id="hasta-paso3">
         </div>
-        <button class="button-black" id="datos-button">Siguiente</button>
+        <button class="button-black" id="buscar-button-paso-3"
+          style="margin-top: 50px; margin-bottom: 25px;">Buscar</button>
       </div>
 
 
@@ -174,7 +194,7 @@
         <p>Opción 4</p>
         <div>
           <p>Nombre o número de la escuela 1 (obligatorio)</p>
-          <input type="text" name="escuela" id="escuela-1-paso-4" placeholder="Ingresar el dato de la escuela">
+          <input type="text" class="modal-input" name="escuela" id="escuela-1-paso-4" placeholder="Ingresar el dato de la escuela">
         </div>
         <div>
           <p>Grado del curso</p>
@@ -184,7 +204,7 @@
         <div class="line"></div>
         <div>
           <p>Nombre o número de la escuela 2 (obligatorio)</p>
-          <input type="text" name="escuela2" id="escuela-2-paso-4" placeholder="Ingresar el dato de la escuela">
+          <input type="text" class="modal-input" name="escuela2" id="escuela-2-paso-4" placeholder="Ingresar el dato de la escuela">
         </div>
         <div>
           <p>Grado del curso</p>
@@ -194,13 +214,14 @@
         <div class="line"></div>
         <div>
           <p>Desde</p>
-          <input type="date" name="desde" id="desde-paso4">
+          <input type="date" class="modal-input" name="desde" id="desde-paso4">
         </div>
         <div>
           <p>Hasta</p>
-          <input type="date" name="hasta" id="hasta-paso4">
+          <input type="date" class="modal-input" name="hasta" id="hasta-paso4">
         </div>
-        <button class="button-black" id="datos-button">Siguiente</button>
+        <button class="button-black" id="buscar-button-paso-4"
+          style="margin-top: 50px; margin-bottom: 25px;">Buscar</button>
       </div>
 
 
@@ -208,7 +229,7 @@
         <p>Opción 3</p>
         <div>
           <p>Nombre o número de la escuela (obligatorio)</p>
-          <input type="text" name="escuela" id="escuela-1-paso-5" placeholder="Ingresar el dato de la escuela">
+          <input type="text" class="modal-input" name="escuela" id="escuela-1-paso-5" placeholder="Ingresar el dato de la escuela">
         </div>
         <div class="line"></div>
         <div>
@@ -225,13 +246,14 @@
         <div class="line"></div>
         <div>
           <p>Desde</p>
-          <input type="date" name="desde" id="desde-paso5">
+          <input type="date" class="modal-input" name="desde" id="desde-paso5">
         </div>
         <div>
           <p>Hasta</p>
-          <input type="date" name="hasta" id="hasta-paso5">
+          <input type="date" class="modal-input" name="hasta" id="hasta-paso5">
         </div>
-        <button class="button-black" id="datos-button">Siguiente</button>
+        <button class="button-black" id="buscar-button-paso-5"
+          style="margin-top: 50px; margin-bottom: 25px;">Buscar</button>
       </div>
     </div>
   </div>

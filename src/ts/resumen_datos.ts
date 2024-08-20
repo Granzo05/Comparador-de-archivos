@@ -31,6 +31,13 @@ function asignarGrados() {
 
     gradosSelect.innerHTML = '';
 
+    if (grados.length > 1) {
+      const option = document.createElement('option');
+      option.value = '0';
+      option.textContent = 'Mostrar todos';
+
+      gradosSelect.appendChild(option);
+    }
     grados.forEach((grado: any) => {
       const option = document.createElement('option');
       option.value = grado.id;
@@ -42,6 +49,10 @@ function asignarGrados() {
     console.log('No hay grados disponibles en sessionStorage.');
   }
 }
+
+document.getElementById('grado-main-resumen').addEventListener('change', async () => {
+  filtrarTabla((document.getElementById('grado-main-resumen') as HTMLSelectElement).selectedOptions[0].textContent);
+});
 
 function llenarTabla() {
   const tabla = document.getElementById('tabla-resultado') as HTMLTableElement;
@@ -88,6 +99,26 @@ function llenarTabla() {
 function formatearFecha(fecha: string) {
   const [año, mes, dia] = fecha.split('-');
   return `${dia}/${mes}/${año}`;
+}
+
+function filtrarTabla(division: string) {
+  const tabla = document.getElementById('tabla-resultado') as HTMLTableElement;
+  const rows = tabla.rows;
+
+  if (division === 'Mostrar todos') {
+    for (let i = 0; i < rows.length; i++) {
+      rows[i].hidden = false;
+    }
+  } else {
+    for (let i = 0; i < rows.length; i++) {
+      if (rows[i].cells[2].textContent !== division) {
+        rows[i].hidden = true;
+      } else {
+        rows[i].hidden = false;
+      }
+    }
+  }
+
 }
 
 
@@ -176,34 +207,91 @@ function dibujarGrafico(labels: any, datasets: any) {
   });
 }
 
-document.getElementById('cerrar-button').addEventListener('click', () => {
-  cerrarModal();
-  colorCasillas = 'casilla-gray';
-  tipoGrafico = undefined;
+let pasoActual = '1';
+
+document.getElementById('tipo-comparativa').addEventListener('change', () => {
+  pasoActual = (document.getElementById('tipo-comparativa') as HTMLSelectElement).value;
 });
 
-function abrirModal(idTabla: string) {
-  const modal = document.getElementById('modal-grafico');
+document.getElementById('cerrar-button').addEventListener('click', () => {
+  cerrarModal();
+});
+
+document.getElementById('comparar-button').addEventListener('click', () => {
+  abrirModal();
+});
+
+document.getElementById('siguiente-button').addEventListener('click', () => {
+  if (pasoActual === '1') {
+    alert('Seleccione un tipo de comparativa');
+    return;
+  }
+  cambiarPaso();
+});
+
+document.getElementById('volver-button').addEventListener('click', () => {
+  pasoActual = '1';
+  cambiarPaso();
+});
+
+function abrirModal() {
+  const modal = document.getElementById('modal-carga');
   modal.style.display = 'flex';
 }
 
-function ocultarModal() {
-  const modal = document.getElementById('modal-grafico');
+function cerrarModal() {
+  const modal = document.getElementById('modal-carga');
   modal.style.display = 'none';
+  pasoActual = '1';
 }
 
-function cerrarModal() {
-  const modal = document.getElementById('modal-grafico');
-  modal.style.display = 'none';
+function cambiarPaso() {
+  switch (pasoActual) {
+    case '1':
+      document.getElementById('volver-button').style.color = 'white';
+      document.getElementById('volver-button').style.cursor = 'default';
+      document.getElementById('paso-1').style.display = 'block';
+      document.getElementById('paso-2').style.display = 'none';
+      document.getElementById('paso-3').style.display = 'none';
+      document.getElementById('paso-4').style.display = 'none';
+      document.getElementById('paso-5').style.display = 'none';
+      break;
+    case '2':
+      document.getElementById('volver-button').style.color = 'black';
+      document.getElementById('volver-button').style.cursor = 'pointer';
+      document.getElementById('paso-1').style.display = 'none';
+      document.getElementById('paso-2').style.display = 'block';
+      document.getElementById('paso-3').style.display = 'none';
+      document.getElementById('paso-4').style.display = 'none';
+      document.getElementById('paso-5').style.display = 'none';
+      break;
+    case '3':
+      document.getElementById('volver-button').style.color = 'black';
+      document.getElementById('volver-button').style.cursor = 'pointer';
+      document.getElementById('paso-1').style.display = 'none';
+      document.getElementById('paso-2').style.display = 'none';
+      document.getElementById('paso-3').style.display = 'block';
+      document.getElementById('paso-4').style.display = 'none';
+      document.getElementById('paso-5').style.display = 'none';
+      break;
+    case '4':
+      document.getElementById('volver-button').style.color = 'black';
+      document.getElementById('volver-button').style.cursor = 'pointer';
+      document.getElementById('paso-1').style.display = 'none';
+      document.getElementById('paso-2').style.display = 'none';
+      document.getElementById('paso-3').style.display = 'none';
+      document.getElementById('paso-4').style.display = 'block';
+      document.getElementById('paso-5').style.display = 'none';
+      break;
+    case '5':
+      document.getElementById('volver-button').style.color = 'black';
+      document.getElementById('volver-button').style.cursor = 'pointer';
+      document.getElementById('paso-1').style.display = 'none';
+      document.getElementById('paso-2').style.display = 'none';
+      document.getElementById('paso-3').style.display = 'none';
+      document.getElementById('paso-4').style.display = 'none';
+      document.getElementById('paso-5').style.display = 'block';
+      break;
+  }
 
-  const labels = document.getElementsByClassName('casilla-gray');
-  const data = document.getElementsByClassName('casilla-yellow');
-
-  Array.from(labels).forEach(element => {
-    element.classList.remove('casilla-gray');
-  });
-
-  Array.from(data).forEach(element => {
-    element.classList.remove('casilla-yellow');
-  });
 }
