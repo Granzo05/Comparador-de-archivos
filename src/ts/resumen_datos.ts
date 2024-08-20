@@ -316,23 +316,26 @@ document.getElementById('filtro-fecha-hasta').addEventListener('input', () => {
 });
 
 document.getElementById('filtro-nombre').addEventListener('input', () => {
-
+  const filtro = (document.getElementById('filtro-nombre') as HTMLInputElement).value;
+  filtrarDatoTabla(1, filtro);
 });
 
 document.getElementById('filtro-parametro').addEventListener('input', () => {
-
+  const filtro = (document.getElementById('filtro-parametro') as HTMLInputElement).value;
+  filtrarDatoTabla(3, filtro);
 });
 
 document.getElementById('filtro-libro').addEventListener('input', () => {
-
+  const filtro = (document.getElementById('filtro-libro') as HTMLInputElement).value;
+  filtrarDatoTabla(4, filtro);
 });
 
 document.getElementById('filtro-puntuacion').addEventListener('input', () => {
-
+  filtrarPuntuacion();
 });
 
 document.getElementById('medida-puntuacion').addEventListener('input', () => {
-
+  filtrarPuntuacion();
 });
 
 function filtrarFechaTabla() {
@@ -350,7 +353,7 @@ function filtrarFechaTabla() {
         rows[i].hidden = true;
       }
     }
-  } else if (fechaDesde.toString() === 'Invalid Date' && fechaHasta) {   
+  } else if (fechaDesde.toString() === 'Invalid Date' && fechaHasta) {
     for (let i = 0; i < rows.length; i++) {
       if (new Date(parsearFecha(rows[i].cells[0].textContent)) <= fechaHasta) {
         rows[i].hidden = false;
@@ -372,4 +375,71 @@ function filtrarFechaTabla() {
 function parsearFecha(fecha: string) {
   const [dia, mes, año] = fecha.split('/');
   return `${mes}/${dia}/${año}`;
+}
+
+function filtrarDatoTabla(columna: number, filtro: string) {
+  if (filtro.length > 0) {
+    for (let i = 0; i < rows.length; i++) {
+      if (rows[i].cells[columna].textContent.includes(filtro)) {
+        rows[i].hidden = false;
+      } else {
+        rows[i].hidden = true;
+      }
+    }
+  } else {
+    for (let i = 0; i < rows.length; i++) {
+      rows[i].hidden = false;
+    }
+  }
+}
+
+function filtrarPuntuacion() {
+  const puntuacion = (document.getElementById('filtro-puntuacion') as HTMLInputElement).value;
+  const signo = (document.getElementById('medida-puntuacion') as HTMLInputElement).value;
+
+  console.log(puntuacion)
+  console.log(signo)
+  console.log(parseFloat(rows[0].cells[5].textContent) )
+  
+  if (signo === '>') {
+    for (let i = 0; i < rows.length; i++) {
+      if (parseFloat(rows[i].cells[5].textContent) > parseFloat(puntuacion)) {
+        rows[i].hidden = false;
+      } else {
+        rows[i].hidden = true;
+      }
+    }
+  } else if (signo === '<') {
+    for (let i = 0; i < rows.length; i++) {
+      if (parseFloat(rows[i].cells[5].textContent) < parseFloat(puntuacion)) {
+        rows[i].hidden = false;
+      } else {
+        rows[i].hidden = true;
+      }
+    }
+  } else if (signo === '>=') {
+    for (let i = 0; i < rows.length; i++) {
+      if (parseFloat(rows[i].cells[5].textContent) >= parseFloat(puntuacion)) {
+        rows[i].hidden = false;
+      } else {
+        rows[i].hidden = true;
+      }
+    }
+  } else if (signo === '<=') {
+    for (let i = 0; i < rows.length; i++) {
+      if (parseFloat(rows[i].cells[5].textContent) <= parseFloat(puntuacion)) {
+        rows[i].hidden = false;
+      } else {
+        rows[i].hidden = true;
+      }
+    }
+  } else {
+    for (let i = 0; i < rows.length; i++) {
+      if (parseFloat(rows[i].cells[5].textContent) === parseFloat(puntuacion)) {
+        rows[i].hidden = false;
+      } else {
+        rows[i].hidden = true;
+      }
+    }
+  }
 }
