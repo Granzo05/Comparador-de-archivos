@@ -9,7 +9,7 @@
 
 <body>
   <header>
-    <div class="cerrar" onclick="navigateTo('menu_principal.html')">
+    <div class="cerrar" onclick="navigateTo('buscar_datos.html')">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-left"
         viewBox="0 0 16 16">
         <path fill-rule="evenodd"
@@ -23,13 +23,9 @@
       <p id="user-name">Invitado</p>
     </div>
   </header>
-  <hr>
   <div class="comparativa">
     <div class="selects">
-      <div class="div-escuela">
-        <label for="escuelas">Escuela</label>
-        <select class="select-resumen" name="escuelas" id="escuelas"></select>
-      </div>
+      <p id="escuela"></p>
       <div class="div-escuela">
         <label for="grado-main-resumen">Grado</label>
         <select class="select-resumen" name="grados" id="grado-main-resumen">
@@ -40,6 +36,30 @@
     <div class="comparar">
       <button style="cursor: pointer;" id="comparar-button">Comparar...</button>
     </div>
+
+    <table>
+      <thead>
+        <th>
+          Fecha
+        </th>
+        <th>
+          Nombre del alumno
+        </th>
+        <th>
+          Grado
+        </th>
+        <th>
+          Parámetro de estudio
+        </th>
+        <th>
+          Libro utilizado
+        </th>
+        <th>
+          Puntuación
+        </th>
+      </thead>
+      <tbody id="tabla-resultado"></tbody>
+    </table>
   </div>
 
   <div class="modal-background" id="modalBackground">

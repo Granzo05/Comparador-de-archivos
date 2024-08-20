@@ -175,7 +175,7 @@ document.getElementById('buscar-datos').addEventListener('click', async function
 });
 
 async function buscarParametrosEstudio() {
-    const escuela = (document.getElementById('escuelas') as HTMLInputElement).value;
+    const escuela = (document.getElementById('escuelas') as HTMLSelectElement).value;
     const alumno = (document.getElementById('alumno') as HTMLInputElement).value;
     const grado = (document.getElementById('grados') as HTMLInputElement).value;
     const estudio = (document.getElementById('estudios') as HTMLInputElement).value;
@@ -192,9 +192,19 @@ async function buscarParametrosEstudio() {
     }
 
     let query = `
-    SELECT re.* FROM resultados_estudios re
+    SELECT 
+    re.*, 
+    a.nombre AS nombre_alumno, 
+    a.dni AS dni_alumno, 
+    l.nombre AS nombre_libro, 
+    e.descripcion AS descripcion_estudio,
+    g.division AS division_grado
+    FROM resultados_estudios re
     JOIN grados g ON re.id_grado = g.id_grado
-    WHERE 1=1`;
+    JOIN alumnos a ON re.id_alumno = a.id_alumno
+    JOIN libros l ON re.id_libro = l.id_libro
+    JOIN estudios e ON re.id_estudio = e.id_estudio
+    WHERE 1=1 `;
 
     const conditions: string[] = [];
 
@@ -207,9 +217,27 @@ async function buscarParametrosEstudio() {
     }
 
     if (grado.length > 0) {
-        if (parseInt(grado) > 0)
+        const grados: Grado[] = [];
+
+        const selectElement = document.getElementById('grados') as HTMLSelectElement;
+
+        if (parseInt(grado) > 0) {
             conditions.push(`re.id_grado = ${grado}`);
+            localStorage.setItem('grados', JSON.stringify(selectElement.selectedOptions[0].textContent));
+        } else {
+            for (let index = 1; index < selectElement.options.length; index++) {
+                const gradoOption = selectElement.options[index];
+                const grado: Grado = new Grado();
+                grado.id = parseInt(gradoOption.value);
+                grado.division = gradoOption.textContent || '';
+
+                grados.push(grado);
+            }
+
+            localStorage.setItem('grados', JSON.stringify(grados));
+        }
     }
+
 
     if (estudio.length > 0) {
         conditions.push(`re.id_estudio = ${estudio}`);
@@ -238,10 +266,14 @@ async function buscarParametrosEstudio() {
     }
 
     const result = await ejecutarSelect(query);
-    console.log(result)
+
+    localStorage.setItem('escuela', JSON.stringify((document.getElementById('escuelas') as HTMLSelectElement)[0].textContent));
+    localStorage.setItem('fechaDesde', JSON.stringify(desde));
+    localStorage.setItem('fechaHasta', JSON.stringify(hasta));
+
     if (result.length > 0) {
-        sessionStorage.setItem('resultados', JSON.stringify(result));
-        //window.location.href = 'resumen_datos.html';
+        localStorage.setItem('resultados', JSON.stringify(result));
+        window.location.href = 'resumen_datos.html';
     } else {
         alert('No se encontraron resultados');
         return;

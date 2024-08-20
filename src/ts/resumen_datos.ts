@@ -1,8 +1,6 @@
 import Chart, { ChartTypeRegistry } from 'chart.js/auto';
 
-let resultados: string[] = JSON.parse(sessionStorage.getItem('resultados'));
-let habilitarEdicion: boolean = false;
-let idTablaGlobal: string;
+let resultados: any = JSON.parse(localStorage.getItem('resultados'));
 let colorCasillas: string;
 let tipoGrafico: keyof ChartTypeRegistry;
 
@@ -11,72 +9,87 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function cargarElementos() {
+  console.log(resultados);
 
+  asignarEscuela();
+
+  asignarGrados();
+
+  llenarTabla();
 }
 
-function insertarHeaderYBody(tabla: HTMLDivElement) {
-  const firstTr = tabla.querySelector('tr');
-  const thead = document.createElement('thead');
-  thead.appendChild(firstTr.cloneNode(true));
-  thead.innerHTML = thead.innerHTML.replace(/<td>/g, '<th>').replace(/<\/td>/g, '</th>');
+function asignarEscuela() {
+  const escuela = document.getElementById('escuela') as HTMLElement;
+  escuela.textContent = JSON.parse(localStorage.getItem('escuela'));
+}
 
-  thead.querySelectorAll('th').forEach((th, index) => {
-    th.addEventListener('click', () => {
-      pintarColumnaSeleccionada(index);
+function asignarGrados() {
+  let grados: any = JSON.parse(localStorage.getItem('grados') || '[]');
+
+  if (grados.length > 0) {
+    const gradosSelect = document.getElementById('grado-main-resumen') as HTMLSelectElement;
+
+    gradosSelect.innerHTML = '';
+
+    grados.forEach((grado: any) => {
+      const option = document.createElement('option');
+      option.value = grado.id;
+      option.textContent = grado.division;
+
+      gradosSelect.appendChild(option);
     });
+  } else {
+    console.log('No hay grados disponibles en sessionStorage.');
+  }
+}
+
+function llenarTabla() {
+  const tabla = document.getElementById('tabla-resultado') as HTMLTableElement;
+
+  resultados.forEach((resultado: any) => {
+    const tr = document.createElement('tr');
+
+    const fecha = formatearFecha(resultado.FECHA.toString().split('T')[0]);
+    const nombreAlumno = resultado.NOMBRE_ALUMNO;
+    const gradoAlumno = resultado.DIVISION_GRADO;
+    const parametroEstudio = resultado.DESCRIPCION_ESTUDIO;
+    const libroUtilizado = resultado.NOMBRE_LIBRO;
+    const puntuacion = resultado.PUNTUACION;
+
+    const tdFecha = document.createElement('td');
+    tdFecha.textContent = fecha;
+
+    const tdNombreAlumno = document.createElement('td');
+    tdNombreAlumno.textContent = nombreAlumno;
+
+    const tdGradoAlumno = document.createElement('td');
+    tdGradoAlumno.textContent = gradoAlumno;
+
+    const tdParametroEstudio = document.createElement('td');
+    tdParametroEstudio.textContent = parametroEstudio;
+
+    const tdLibroUtilizado = document.createElement('td');
+    tdLibroUtilizado.textContent = libroUtilizado;
+
+    const tdPuntuacion = document.createElement('td');
+    tdPuntuacion.textContent = puntuacion;
+
+    tr.appendChild(tdFecha);
+    tr.appendChild(tdNombreAlumno);
+    tr.appendChild(tdGradoAlumno);
+    tr.appendChild(tdParametroEstudio);
+    tr.appendChild(tdLibroUtilizado);
+    tr.appendChild(tdPuntuacion);
+
+    tabla.appendChild(tr);
   });
-
-  firstTr.remove();
-
-  const tbody = document.createElement('tbody');
-
-  while (tabla.firstChild) {
-    tbody.appendChild(tabla.firstChild);
-  }
-
-  tbody.querySelectorAll('td').forEach((td) => {
-    td.addEventListener('click', (event) => {
-      const cell = event.target as HTMLTableCellElement;
-      const row = cell.parentElement as HTMLTableRowElement;
-      const cellIndex = cell.cellIndex;
-      const rowIndex = row.rowIndex;
-      pintarCasillaSeleccionada(rowIndex, cellIndex);
-    });
-  });
-
-  tabla.appendChild(thead);
-
-  tbody.innerHTML = tbody.innerHTML.replace('<tbody>', '').replace('</tbody>', '');
-  tabla.appendChild(tbody);
 }
 
-function pintarColumnaSeleccionada(index: number) {
-  if (habilitarEdicion) {
-    const table = document.querySelector('table');
-    if (table) {
-      const rows = table.rows;
-      for (let i = 0; i < rows.length; i++) {
-        rows[i].cells[index].classList.toggle(colorCasillas);
-      }
-    }
-
-    abrirModal(idTablaGlobal);
-    habilitarEdicion = false;
-  }
+function formatearFecha(fecha: string) {
+  const [año, mes, dia] = fecha.split('-');
+  return `${dia}/${mes}/${año}`;
 }
 
-function pintarCasillaSeleccionada(rowIndex: number, cellIndex: number) {
-  if (habilitarEdicion) {
-    const table = document.querySelector('table');
-    if (table) {
-      const cell = table.rows[rowIndex].cells[cellIndex];
-      cell.classList.toggle(colorCasillas);
-    }
-
-    abrirModal(idTablaGlobal);
-    habilitarEdicion = false;
-  }
-}
 
 let chart: any;
 
@@ -163,48 +176,6 @@ function dibujarGrafico(labels: any, datasets: any) {
   });
 }
 
-
-document.getElementById('seleccionar-referencia').addEventListener('click', () => {
-  ocultarModal();
-  colorCasillas = 'casilla-gray';
-  habilitarEdicion = true;
-});
-
-document.getElementById('seleccionar-numeros').addEventListener('click', () => {
-  ocultarModal();
-  colorCasillas = 'casilla-yellow';
-  habilitarEdicion = true;
-});
-
-(document.getElementById('tipo-grafico') as HTMLSelectElement).addEventListener('change', (event) => {
-  const selectElement = event.target as HTMLSelectElement;
-  tipoGrafico = selectElement.value as keyof ChartTypeRegistry;
-});
-
-document.getElementById('crear-grafico').addEventListener('click', () => {
-  if (tipoGrafico === undefined) {
-    alert('Necesitamos que elijas un tipo de gráfico');
-    return;
-  }
-
-  const labels = document.getElementsByClassName('casilla-gray');
-  const data = document.getElementsByClassName('casilla-yellow');
-
-  if (labels.length === 0) {
-    alert('Necesitamos que elijas los datos que referencian a los números, como por ejemplo: "nombres de personas"');
-    return;
-  }
-
-  if (data.length === 0) {
-    alert('Necesitamos que elijas los datos que contienen números');
-    return;
-  }
-
-  crearGraficoDesdeTabla(idTablaGlobal);
-  document.getElementById('contenedor-grafico').style.display = 'flex';
-  ocultarModal();
-});
-
 document.getElementById('cerrar-button').addEventListener('click', () => {
   cerrarModal();
   colorCasillas = 'casilla-gray';
@@ -212,10 +183,6 @@ document.getElementById('cerrar-button').addEventListener('click', () => {
 });
 
 function abrirModal(idTabla: string) {
-  if (idTabla !== undefined) {
-    idTablaGlobal = idTabla;
-  }
-
   const modal = document.getElementById('modal-grafico');
   modal.style.display = 'flex';
 }
