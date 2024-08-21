@@ -2,7 +2,7 @@ import Chart, { ChartTypeRegistry } from 'chart.js/auto';
 import { Escuela } from '../types/Escuela';
 import { Grado } from '../types/Grado';
 import { Estudio } from '../types/Estudio';
-import { formatearFechaDDMMYYYY, formatearFechaMMDDYYYY } from '../utils/functions';
+import { formatearFechaDDMMYYYY, formatearFechaMMDDYYYY, formatearFechaYYYYMMDD } from '../utils/functions';
 
 let resultados: any = JSON.parse(localStorage.getItem('resultados'));
 let colorCasillas: string;
@@ -286,7 +286,7 @@ async function cambiarOpcion3() {
   if (gradosEscuelaElegida.length === 0) {
     gradosEscuelaElegida = await buscarGrados(escuelaElegida.id.toString());
   }
-  const gradosSelects = [document.getElementById('grado-curso-1-opcion-3') as HTMLSelectElement, document.getElementById('grado-curso-2-opcion-3') as HTMLSelectElement];
+  const gradosSelects = [document.getElementById('grado-1-opcion-3') as HTMLSelectElement, document.getElementById('grado-2-opcion-3') as HTMLSelectElement];
 
   rellenarSelectGrados(gradosEscuelaElegida, gradosSelects);
 }
@@ -303,7 +303,7 @@ async function cambiarOpcion4() {
 
   document.getElementById('escuela-buscada-opcion-4').innerHTML = `<strong>${escuelaElegida.nombre}</strong>`;
 
-  gradosEscuelas.push(document.getElementById('grado-curso-1-opcion-4') as HTMLSelectElement);
+  gradosEscuelas.push(document.getElementById('grado-1-opcion-4') as HTMLSelectElement);
 
   if (gradosEscuelaElegida.length === 0) {
     gradosEscuelaElegida = await buscarGrados(escuelaElegida.id.toString());
@@ -313,7 +313,7 @@ async function cambiarOpcion4() {
 
   const selectEscuela2opcion5 = document.getElementById('escuela-2-opcion-4') as HTMLSelectElement;
 
-  gradosEscuelas.push(document.getElementById('grado-curso-2-opcion-4') as HTMLSelectElement);
+  gradosEscuelas.push(document.getElementById('grado-2-opcion-4') as HTMLSelectElement);
 
   await rellenarSelectEscuelas(selectEscuela2opcion5, gradosEscuelas);
 }
@@ -393,17 +393,11 @@ document.getElementById('alumno-2-opcion-2').addEventListener('input', async fun
 async function getRecomendacionesAlumnos(input: HTMLElement, idEscuela: number, idGrado: number) {
   const inputValue = (input as HTMLInputElement).value.trim();
 
-  let query = `SELECT * FROM alumnos JOIN grados g WHERE g.id_escuela = ${idEscuela} AND a.dni LIKE '%${inputValue}%'`;
-
-  if (idGrado > 0) {
-    query = `
-      SELECT a.*
-      FROM alumnos a
-      JOIN grados_alumnos ga ON a.id_alumno = ga.id_alumno
-      JOIN grados g ON g.id_grado = ga.id_grado
-      WHERE g.id_escuela = ${idEscuela} AND a.dni LIKE '${inputValue}%'
-  `;
-  }
+  let query = `SELECT a.*
+  FROM alumnos a
+  JOIN grados_alumnos ga ON a.id_alumno = ga.id_alumno
+  JOIN grados g ON g.id_grado = ga.id_grado
+  WHERE g.id_escuela = ${idEscuela} AND a.dni LIKE '${inputValue}%' AND g.id_grado = ${idGrado}`;
 
   query += ` ORDER BY dni FETCH FIRST 25 ROWS ONLY`;
 
@@ -546,11 +540,13 @@ async function rellenarSelectEscuelas(escuelaSelect: HTMLSelectElement, gradosSe
   escuelaSelect.innerHTML = '<option value="0" disabled selected>Seleccionar escuela</option>';
 
   escuelas.forEach((escuela: Escuela) => {
-    const option = document.createElement('option');
-    option.value = escuela.id.toString();
-    option.textContent = escuela.nombre;
-
-    escuelaSelect.appendChild(option);
+    if(escuela.nombre !== escuelaElegida.nombre) {
+      const option = document.createElement('option');
+      option.value = escuela.id.toString();
+      option.textContent = escuela.nombre;
+  
+      escuelaSelect.appendChild(option);
+    }
   });
 
   escuelaSelect.addEventListener('change', async () => {
@@ -610,12 +606,9 @@ async function ejecutarSelect(query: string): Promise<any[]> {
 
     if (result.error) {
       console.error('Error en la consulta:', result.error);
-      return null;
+      return [];
     } else {
-      if (result.rows && result.rows.length > 0) {
-
-        return result.rows;
-      }
+      return result.rows;
     }
   } catch (e) {
     console.error('Error al buscar datos:', e);
@@ -628,7 +621,183 @@ document.getElementById('buscar-button-opcion-1').addEventListener('click', asyn
 });
 
 async function buscarDatosOpcion1() {
+  const alumno1 = (document.getElementById('alumno-1-opcion-1') as HTMLInputElement).value;
 
+  const alumno2 = (document.getElementById('alumno-2-opcion-1') as HTMLInputElement).value;
+
+  const estudio = (document.getElementById('parametro-opcion-1') as HTMLSelectElement).value;
+
+  const desde = (document.getElementById('desde-opcion-1') as HTMLInputElement).value;
+
+  const hasta = (document.getElementById('hasta-opcion-1') as HTMLInputElement).value;
+
+  if (!alumno1) {
+    alert('Por favor ingrese el primer alumno');
+    return;
+  } else if (!alumno2) {
+    alert('Por favor ingrese el segundo alumno');
+    return;
+  } else if (!estudio) {
+    alert('Por favor ingrese el parametro de estudio alumno');
+    return;
+  } else if (!desde || desde === 'Invalid Date' || new Date(desde) > new Date(hasta)) {
+    alert('Por favor ingrese una fecha inicial válida');
+    return;
+  } else if (!hasta || hasta === 'Invalid Date' || new Date(hasta) < new Date(desde)) {
+    alert('Por favor ingrese una fecha de finalización válida');
+    return;
+  }
+
+  const query = `SELECT puntuacion, fecha FROM resultados_estudios 
+  WHERE (id_alumno = ${alumno1} OR id_alumno = ${alumno2})
+  AND id_estudio = ${estudio} 
+  AND fecha 
+  BETWEEN TO_DATE('${desde}', 'YYYY-MM-DD') 
+  AND TO_DATE('${hasta}', 'YYYY-MM-DD')`;
+
+  const result = await ejecutarSelect(query);
+
+  if (result.length > 0) {
+    console.log(result)
+  } else {
+    alert('No se encontraron resultados para la búsqueda realizada');
+    return;
+  }
+}
+
+document.getElementById('buscar-button-opcion-2').addEventListener('click', async () => {
+  await buscarDatosOpcion2();
+});
+
+async function buscarDatosOpcion2() {
+  const alumno1 = (document.getElementById('alumno-1-opcion-2') as HTMLInputElement).value;
+
+  const alumno2 = (document.getElementById('alumno-2-opcion-2') as HTMLInputElement).value;
+
+  const estudio = (document.getElementById('parametro-opcion-2') as HTMLSelectElement).value;
+
+  const desde = (document.getElementById('desde-opcion-2') as HTMLInputElement).value;
+
+  const hasta = (document.getElementById('hasta-opcion-2') as HTMLInputElement).value;
+
+  if (!alumno1) {
+    alert('Por favor ingrese el primer alumno');
+    return;
+  } else if (!alumno2) {
+    alert('Por favor ingrese el segundo alumno');
+    return;
+  } else if (!estudio) {
+    alert('Por favor ingrese el parametro de estudio alumno');
+    return;
+  } else if (!desde || desde === 'Invalid Date' || new Date(desde) > new Date(hasta)) {
+    alert('Por favor ingrese una fecha inicial válida');
+    return;
+  } else if (!hasta || hasta === 'Invalid Date' || new Date(hasta) < new Date(desde)) {
+    alert('Por favor ingrese una fecha de finalización válida');
+    return;
+  }
+
+  const query = `SELECT puntuacion, fecha FROM resultados_estudios 
+  WHERE (id_alumno = ${alumno1} OR id_alumno = ${alumno2})
+  AND id_estudio = ${estudio} 
+  AND fecha 
+  BETWEEN TO_DATE('${desde}', 'YYYY-MM-DD') 
+  AND TO_DATE('${hasta}', 'YYYY-MM-DD')`;
+
+  const result = await ejecutarSelect(query);
+
+  if (result.length > 0) {
+    console.log(result)
+  } else {
+    alert('No se encontraron resultados para la búsqueda realizada');
+    return;
+  }
+}
+
+document.getElementById('buscar-button-opcion-3').addEventListener('click', async () => {
+  await buscarDatosOpcion3();
+});
+
+async function buscarDatosOpcion3() {
+  const grado1 = (document.getElementById('grado-1-opcion-3') as HTMLInputElement).value;
+
+  const grado2 = (document.getElementById('grado-2-opcion-3') as HTMLInputElement).value;
+
+  const desde = (document.getElementById('desde-opcion-3') as HTMLInputElement).value;
+
+  const hasta = (document.getElementById('hasta-opcion-3') as HTMLInputElement).value;
+
+  if (!grado1) {
+    alert('Por favor ingrese el primer grado');
+    return;
+  } else if (!grado2) {
+    alert('Por favor ingrese el segundo grado');
+    return;
+  } else if (!desde || desde === 'Invalid Date' || new Date(desde) > new Date(hasta)) {
+    alert('Por favor ingrese una fecha inicial válida');
+    return;
+  } else if (!hasta || hasta === 'Invalid Date' || new Date(hasta) < new Date(desde)) {
+    alert('Por favor ingrese una fecha de finalización válida');
+    return;
+  }
+
+  const query = `SELECT puntuacion, fecha FROM resultados_estudios 
+  WHERE (id_grado = ${grado1} OR id_grado = ${grado2})
+  AND fecha 
+  BETWEEN TO_DATE('${desde}', 'YYYY-MM-DD') 
+  AND TO_DATE('${hasta}', 'YYYY-MM-DD')`;
+
+  const result = await ejecutarSelect(query);
+
+  if (result.length > 0) {
+    console.log(result)
+  } else {
+    alert('No se encontraron resultados para la búsqueda realizada');
+    return;
+  }
+}
+
+document.getElementById('buscar-button-opcion-4').addEventListener('click', async () => {
+  await buscarDatosOpcion4();
+});
+
+async function buscarDatosOpcion4() {
+  const grado1 = (document.getElementById('grado-1-opcion-4') as HTMLInputElement).value;
+
+  const grado2 = (document.getElementById('grado-2-opcion-4') as HTMLInputElement).value;
+
+  const desde = (document.getElementById('desde-opcion-4') as HTMLInputElement).value;
+
+  const hasta = (document.getElementById('hasta-opcion-4') as HTMLInputElement).value;
+
+  if (!grado1) {
+    alert('Por favor ingrese el primer grado');
+    return;
+  } else if (!grado2) {
+    alert('Por favor ingrese el segundo grado');
+    return;
+  } else if (!desde || desde === 'Invalid Date' || new Date(desde) > new Date(hasta)) {
+    alert('Por favor ingrese una fecha inicial válida');
+    return;
+  } else if (!hasta || hasta === 'Invalid Date' || new Date(hasta) < new Date(desde)) {
+    alert('Por favor ingrese una fecha de finalización válida');
+    return;
+  }
+
+  const query = `SELECT puntuacion, fecha FROM resultados_estudios 
+  WHERE (id_grado = ${grado1} OR id_grado = ${grado2})
+  AND fecha 
+  BETWEEN TO_DATE('${desde}', 'YYYY-MM-DD') 
+  AND TO_DATE('${hasta}', 'YYYY-MM-DD')`;
+
+  const result = await ejecutarSelect(query);
+
+  if (result.length > 0) {
+    console.log(result)
+  } else {
+    alert('No se encontraron resultados para la búsqueda realizada');
+    return;
+  }
 }
 
 
