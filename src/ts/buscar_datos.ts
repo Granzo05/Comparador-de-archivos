@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     rellenarSelectGrados(grados);
 
     const estudios = await buscarParametrosDeEstudio();
-    sessionStorage.setItem('estudios', JSON.stringify(estudios));
+    localStorage.setItem('estudios', JSON.stringify(estudios));
     await rellenarSelectEstudios(estudios);
 });
 
@@ -32,7 +32,7 @@ async function buscarEscuelas(): Promise<Escuela[]> {
         escuelas.push(escuela);
     });
 
-    sessionStorage.setItem('escuelas', JSON.stringify(escuelas));
+    localStorage.setItem('escuelas', JSON.stringify(escuelas));
 
     return escuelas;
 }
