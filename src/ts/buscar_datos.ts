@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     rellenarSelectGrados(grados);
 
     const estudios = await buscarParametrosDeEstudio();
+    sessionStorage.setItem('estudios', JSON.stringify(estudios));
     await rellenarSelectEstudios(estudios);
 });
 
@@ -30,6 +31,8 @@ async function buscarEscuelas(): Promise<Escuela[]> {
 
         escuelas.push(escuela);
     });
+
+    sessionStorage.setItem('escuelas', JSON.stringify(escuelas));
 
     return escuelas;
 }
@@ -267,7 +270,11 @@ async function buscarParametrosEstudio() {
 
     const result = await ejecutarSelect(query);
 
-    localStorage.setItem('escuela', JSON.stringify((document.getElementById('escuelas') as HTMLSelectElement)[0].textContent));
+    const escuelaNew: Escuela = new Escuela();
+    escuelaNew.id = parseInt((document.getElementById('escuelas') as HTMLSelectElement).selectedOptions[0].value);
+    escuelaNew.nombre = (document.getElementById('escuelas') as HTMLSelectElement).selectedOptions[0].textContent;
+
+    localStorage.setItem('escuela', JSON.stringify(escuelaNew));
     localStorage.setItem('fechaDesde', JSON.stringify(desde));
     localStorage.setItem('fechaHasta', JSON.stringify(hasta));
 

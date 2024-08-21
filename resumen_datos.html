@@ -102,39 +102,42 @@
 
   <div id="modal-carga" class="modal">
     <div class="modal-content">
+
+
       <div class="nav-buttons">
         <span class="volver-button" id="volver-button">&larr;</span>
         <span class="close-button" id="cerrar-button">&times;</span>
       </div>
+
+
       <div class="paso-1" id="paso-1">
         <p>¿Que tipo de comparativa buscas?</p>
         <select name="tipo-comparativa" class="select-modal" id="tipo-comparativa">
-          <option value="1">Elegir el tipo de comparativa</option>
-          <option value="2">Entre alumnos de una misma escuela</option>
+          <option value="1" selected disabled>Elegir el tipo de comparativa</option>
+          <option value="2">Entre alumnos de la escuela elegida</option>
           <option value="3">Entre alumnos de distintas escuelas</option>
-          <option value="5">Entre cursos de una misma escuela</option>
-          <option value="4">Entre cursos de distintas escuela</option>
+          <option value="4">Entre cursos de la escuela elegida</option>
+          <option value="5">Entre cursos de distintas escuelas</option>
         </select>
         <button class="button-black" id="siguiente-button"
           style="margin-top: 50px; margin-bottom: 25px;">Siguiente</button>
       </div>
 
+
       <div class="form-login-1" id="paso-2" hidden>
         <p>Opción 1</p>
         <div>
-          <p>Nombre o número de la escuela (obligatorio)</p>
-          <input type="text" class="modal-input" name="escuela" id="escuela"
-            placeholder="Ingresar el dato de la escuela">
+          <p id="escuela-buscada-paso-2"></p>
         </div>
         <div>
           <p>Grado del alumno 1</p>
-          <select class="select-modal" name="grados" id="grado-alumno1-paso2">
-          </select>
+          <select class="select-modal" name="grados" id="grado-alumno1-paso2"> </select>
         </div>
         <div>
           <p>Nombre del alumno 1</p>
-          <input type="text" name="docente" class="modal-input" id="docente"
+          <input type="text" name="docente" class="modal-input" id="alumno1-paso-2"
             placeholder="Ingresar el nombre del primer alumno">
+          <div class="results-container" id="results-alumno-1-paso-2"></div>
         </div>
         <div class="line"></div>
         <div>
@@ -144,13 +147,14 @@
         </div>
         <div>
           <p>Nombre del alumno 2</p>
-          <input type="text" name="alumno1" class="modal-input" id="alumno1"
+          <input type="text" name="alumno1" class="modal-input" id="alumno2-paso-2"
             placeholder="Ingresar el nombre del segundo alumno">
+          <div class="results-container" id="results-alumno-2-paso-2"></div>
         </div>
         <div class="line"></div>
         <div>
           <p>Parámetro de estudio</p>
-          <select class="select-modal" name="parametro" id="parametro">
+          <select class="select-modal" name="parametro" id="parametro-paso-2">
             <option value="">Seleccionar el parámetro</option>
           </select>
         </div>
@@ -170,25 +174,22 @@
       <div class="form-login-1" id="paso-3" hidden>
         <p>Opción 2</p>
         <div>
-          <p>Nombre o número de la escuela 1 (obligatorio)</p>
-          <input type="text" class="modal-input" name="escuela" id="escuela-1-paso-3"
-            placeholder="Ingresar el dato de la escuela">
+          <p id="escuela-buscada-paso-3"></p>
         </div>
         <div>
           <p>Grado del alumno 1</p>
-          <select class="select-modal" name="grados" id="grado-alumno1-paso3">
-          </select>
+          <select class="select-modal" name="grados" id="grado-alumno1-paso3"></select>
         </div>
         <div>
           <p>Nombre del alumno 1</p>
-          <input type="text" class="modal-input" name="docente" id="docente"
+          <input type="text" class="modal-input" name="docente" id="alumno1-paso-3"
             placeholder="Ingresar el nombre del primer alumno">
+          <div class="results-container" id="results-alumno-1-paso-3"></div>
         </div>
         <div class="line"></div>
         <div>
-          <p>Nombre o número de la escuela 2 (obligatorio)</p>
-          <input type="text" class="modal-input" name="escuela2" id="escuela-2-paso-3"
-            placeholder="Ingresar el dato de la escuela">
+          <p>Nombre la escuela 2 (obligatorio)</p>
+          <select name="escuelas" id="escuela-2-paso-3"></select>
         </div>
         <div>
           <p>Grado del alumno 2</p>
@@ -197,13 +198,14 @@
         </div>
         <div>
           <p>Nombre del alumno 2</p>
-          <input type="text" class="modal-input" name="alumno1" id="alumno1"
+          <input type="text" class="modal-input" name="alumno1" id="alumno2-paso-3"
             placeholder="Ingresar el nombre del segundo alumno">
+          <div class="results-container" id="results-alumno-2-paso-3"></div>
         </div>
         <div class="line"></div>
         <div>
           <p>Parámetro de estudio</p>
-          <select class="select-modal" name="parametro" id="parametro">
+          <select class="select-modal" name="parametro" id="parametro-paso-3">
             <option value="">Seleccionar el parámetro</option>
           </select>
         </div>
@@ -219,27 +221,20 @@
           style="margin-top: 50px; margin-bottom: 25px;">Buscar</button>
       </div>
 
-
       <div class="form-login-1" id="paso-4" hidden>
-        <p>Opción 4</p>
+        <p>Opción 3</p>
         <div>
-          <p>Nombre o número de la escuela 1 (obligatorio)</p>
-          <input type="text" class="modal-input" name="escuela" id="escuela-1-paso-4"
-            placeholder="Ingresar el dato de la escuela">
+          <p id="escuela-buscada-paso-4"></p>
         </div>
+        <div class="line"></div>
         <div>
-          <p>Grado del curso</p>
+          <p>Grado del curso 1</p>
           <select class="select-modal" name="grados" id="grado-curso1-paso4">
           </select>
         </div>
         <div class="line"></div>
         <div>
-          <p>Nombre o número de la escuela 2 (obligatorio)</p>
-          <input type="text" class="modal-input" name="escuela2" id="escuela-2-paso-4"
-            placeholder="Ingresar el dato de la escuela">
-        </div>
-        <div>
-          <p>Grado del curso</p>
+          <p>Grado del curso 2</p>
           <select class="select-modal" name="grados" id="grado-curso2-paso4">
           </select>
         </div>
@@ -258,21 +253,22 @@
 
 
       <div class="form-login-1" id="paso-5" hidden>
-        <p>Opción 3</p>
+        <p>Opción 4</p>
         <div>
-          <p>Nombre o número de la escuela (obligatorio)</p>
-          <input type="text" class="modal-input" name="escuela" id="escuela-1-paso-5"
-            placeholder="Ingresar el dato de la escuela">
+          <p id="escuela-buscada-paso-5"></p>
         </div>
-        <div class="line"></div>
         <div>
-          <p>Grado del curso 1</p>
+          <p>Grado del curso</p>
           <select class="select-modal" name="grados" id="grado-curso1-paso5">
           </select>
         </div>
         <div class="line"></div>
         <div>
-          <p>Grado del curso 2</p>
+          <p>Nombre de la escuela 2 (obligatorio)</p>
+          <select name="escuelas" id="escuela-2-paso-5"></select>
+        </div>
+        <div>
+          <p>Grado del curso</p>
           <select class="select-modal" name="grados" id="grado-curso2-paso5">
           </select>
         </div>
@@ -288,6 +284,7 @@
         <button class="button-black" id="buscar-button-paso-5"
           style="margin-top: 50px; margin-bottom: 25px;">Buscar</button>
       </div>
+
     </div>
   </div>
 
