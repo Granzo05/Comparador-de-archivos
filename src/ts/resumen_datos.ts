@@ -1,7 +1,8 @@
 import Chart, { ChartTypeRegistry } from 'chart.js/auto';
 import { Escuela } from '../types/Escuela';
 import { Grado } from '../types/Grado';
-import { Estudio } from 'src/types/Estudio';
+import { Estudio } from '../types/Estudio';
+import { formatearFechaDDMMYYYY, formatearFechaMMDDYYYY } from '../utils/fucntions';
 
 let resultados: any = JSON.parse(localStorage.getItem('resultados'));
 let colorCasillas: string;
@@ -58,17 +59,13 @@ function asignarGrados() {
   }
 }
 
-document.getElementById('grado-main-resumen').addEventListener('change', async () => {
-  filtrarGradoTabla((document.getElementById('grado-main-resumen') as HTMLSelectElement).selectedOptions[0].textContent);
-});
-
 function llenarTabla() {
   const tabla = document.getElementById('tabla-resultado') as HTMLTableElement;
 
   resultados.forEach((resultado: any) => {
     const tr = document.createElement('tr');
 
-    const fecha = formatearFecha(resultado.FECHA.toString().split('T')[0]);
+    const fecha = formatearFechaDDMMYYYY(resultado.FECHA.toString().split('T')[0]);
     const nombreAlumno = resultado.NOMBRE_ALUMNO;
     const gradoAlumno = resultado.DIVISION_GRADO;
     const parametroEstudio = resultado.DESCRIPCION_ESTUDIO;
@@ -104,10 +101,9 @@ function llenarTabla() {
   });
 }
 
-function formatearFecha(fecha: string) {
-  const [año, mes, dia] = fecha.split('-');
-  return `${dia}/${mes}/${año}`;
-}
+document.getElementById('grado-main-resumen').addEventListener('change', async () => {
+  filtrarGradoTabla((document.getElementById('grado-main-resumen') as HTMLSelectElement).selectedOptions[0].textContent);
+});
 
 function filtrarGradoTabla(division: string) {
   if (division === 'Mostrar todos') {
@@ -125,92 +121,6 @@ function filtrarGradoTabla(division: string) {
   }
 }
 
-
-let chart: any;
-
-function crearGraficoDesdeTabla(tableId: string) {
-  const table = document.getElementById(tableId) as HTMLTableElement;
-  const labels = [];
-  const datasets: any = [];
-  const rows = table.rows;
-  const selectedColumns = [];
-
-  for (let i = 0; i < rows[0].cells.length; i++) {
-    if (rows[0].cells[i].classList.contains(colorCasillas)) {
-      selectedColumns.push(i);
-    }
-  }
-
-  for (let i = 1; i < rows.length; i++) {
-    labels.push(rows[i].cells[0].textContent);
-    selectedColumns.forEach((colIndex, j) => {
-      if (!datasets[j]) {
-        datasets[j] = {
-          label: rows[0].cells[colIndex].textContent,
-          data: [],
-          backgroundColor: generarColores(rows.length - 1),
-          borderColor: `rgba(1, 1, 1, 1)`,
-          borderWidth: 1,
-          fill: false
-        };
-      }
-      datasets[j].data.push(parseFloat(rows[i].cells[colIndex].textContent));
-    });
-  }
-
-  if (chart) {
-    chart.destroy();
-  }
-
-  dibujarGrafico(labels, datasets);
-}
-
-function getRandomColor(): string {
-  const r = Math.floor(Math.random() * 255);
-  const g = Math.floor(Math.random() * 255);
-  const b = Math.floor(Math.random() * 255);
-  return `rgba(${r}, ${g}, ${b}, 0.7)`;
-}
-
-function generarColores(cantidad: number): string[] {
-  const colores = [];
-  for (let i = 0; i < cantidad; i++) {
-    colores.push(getRandomColor());
-  }
-  return colores;
-}
-
-function dibujarGrafico(labels: any, datasets: any) {
-  const ctx = (document.getElementById('chart-canvas') as HTMLCanvasElement).getContext('2d');
-  chart = new Chart(ctx, {
-    type: tipoGrafico,
-    data: {
-      labels: labels,
-      datasets: datasets
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: {
-          position: 'top',
-        },
-        title: {
-          display: true,
-          text: 'Gráfico de Datos'
-        }
-      },
-      scales: {
-        x: {
-          beginAtZero: true
-        },
-        y: {
-          beginAtZero: true
-        }
-      }
-    }
-  });
-}
-
 let pasoActual = '1';
 
 document.getElementById('tipo-comparativa').addEventListener('change', () => {
@@ -221,9 +131,20 @@ document.getElementById('cerrar-button').addEventListener('click', () => {
   cerrarModal();
 });
 
+function cerrarModal() {
+  const modal = document.getElementById('modal-carga');
+  modal.style.display = 'none';
+  pasoActual = '1';
+}
+
 document.getElementById('comparar-button').addEventListener('click', () => {
   abrirModal();
 });
+
+function abrirModal() {
+  const modal = document.getElementById('modal-carga');
+  modal.style.display = 'flex';
+}
 
 document.getElementById('siguiente-button').addEventListener('click', () => {
   if (pasoActual === '1') {
@@ -240,141 +161,28 @@ document.getElementById('volver-button').addEventListener('click', () => {
   cambiarPaso();
 });
 
-function abrirModal() {
-  const modal = document.getElementById('modal-carga');
-  modal.style.display = 'flex';
-}
-
-function cerrarModal() {
-  const modal = document.getElementById('modal-carga');
-  modal.style.display = 'none';
-  pasoActual = '1';
-}
-
 async function cambiarPaso() {
   if (!escuelas || escuelas.length === 0) {
     //escuelas = await buscarEscuelas();
   }
 
-  let gradosEscuelas: HTMLSelectElement[] = [];
-
   switch (pasoActual) {
     case '1':
-      document.getElementById('volver-button').style.color = 'white';
-      document.getElementById('volver-button').style.cursor = 'default';
-      document.getElementById('paso-1').style.display = 'block';
-      document.getElementById('paso-2').style.display = 'none';
-      document.getElementById('paso-3').style.display = 'none';
-      document.getElementById('paso-4').style.display = 'none';
-      document.getElementById('paso-5').style.display = 'none';
+      cambiarAlPaso1();
       break;
     case '2':
-      document.getElementById('volver-button').style.color = 'black';
-      document.getElementById('volver-button').style.cursor = 'pointer';
-      document.getElementById('paso-1').style.display = 'none';
-      document.getElementById('paso-2').style.display = 'block';
-      document.getElementById('paso-3').style.display = 'none';
-      document.getElementById('paso-4').style.display = 'none';
-      document.getElementById('paso-5').style.display = 'none';
-
-      document.getElementById('escuela-buscada-paso-2').innerHTML = `<strong>${escuelaElegida.nombre}</strong>`;
-
-      gradosEscuelas.push(document.getElementById('grado-alumno1-paso2') as HTMLSelectElement);
-
-      gradosEscuelas.push(document.getElementById('grado-alumno2-paso2') as HTMLSelectElement);
-
-      if (gradosEscuelaElegida.length === 0) {
-        gradosEscuelaElegida = await buscarGrados(escuelaElegida.id.toString());
-      }
-
-      rellenarSelectGrados(gradosEscuelaElegida, gradosEscuelas);
-
-      const selectEstudio = document.getElementById('parametro-paso-2') as HTMLSelectElement;
-
-      rellenarSelectEstudios(selectEstudio);
-
+      cambiarAlPaso2();
       break;
     case '3':
-      document.getElementById('volver-button').style.color = 'black';
-      document.getElementById('volver-button').style.cursor = 'pointer';
-      document.getElementById('paso-1').style.display = 'none';
-      document.getElementById('paso-2').style.display = 'none';
-      document.getElementById('paso-3').style.display = 'block';
-      document.getElementById('paso-4').style.display = 'none';
-      document.getElementById('paso-5').style.display = 'none';
-
-      document.getElementById('escuela-buscada-paso-3').innerHTML = `<strong>${escuelaElegida.nombre}</strong>`;
-
-      gradosEscuelas.push(document.getElementById('grado-alumno1-paso3') as HTMLSelectElement);
-
-      if (gradosEscuelaElegida.length === 0) {
-        gradosEscuelaElegida = await buscarGrados(escuelaElegida.id.toString());
-      }
-
-      rellenarSelectGrados(gradosEscuelaElegida, gradosEscuelas);
-
-      gradosEscuelas = [];
-
-      const selectEscuela2 = document.getElementById('escuela-2-paso-3') as HTMLSelectElement;
-
-      gradosEscuelas.push(document.getElementById('grado-alumno2-paso3') as HTMLSelectElement);
-
-      await rellenarSelectEscuelas(selectEscuela2, gradosEscuelas);
-
-      const selectEstudioPaso3 = document.getElementById('parametro-paso-3') as HTMLSelectElement;
-
-      rellenarSelectEstudios(selectEstudioPaso3);
-
+      cambiarAlPaso3();
       break;
     case '4':
-      document.getElementById('volver-button').style.color = 'black';
-      document.getElementById('volver-button').style.cursor = 'pointer';
-      document.getElementById('paso-1').style.display = 'none';
-      document.getElementById('paso-2').style.display = 'none';
-      document.getElementById('paso-3').style.display = 'none';
-      document.getElementById('paso-4').style.display = 'block';
-      document.getElementById('paso-5').style.display = 'none';
-
-      document.getElementById('escuela-buscada-paso-4').innerHTML = `<strong>${escuelaElegida.nombre}</strong>`;
-
-      if (gradosEscuelaElegida.length === 0) {
-        gradosEscuelaElegida = await buscarGrados(escuelaElegida.id.toString());
-      }
-      const gradosSelects = [document.getElementById('grado-curso1-paso4') as HTMLSelectElement, document.getElementById('grado-curso2-paso4') as HTMLSelectElement];
-
-      rellenarSelectGrados(gradosEscuelaElegida, gradosSelects);
-
+      cambiarAlPaso4();
       break;
     case '5':
-      document.getElementById('volver-button').style.color = 'black';
-      document.getElementById('volver-button').style.cursor = 'pointer';
-      document.getElementById('paso-1').style.display = 'none';
-      document.getElementById('paso-2').style.display = 'none';
-      document.getElementById('paso-3').style.display = 'none';
-      document.getElementById('paso-4').style.display = 'none';
-      document.getElementById('paso-5').style.display = 'block';
-
-      document.getElementById('escuela-buscada-paso-5').innerHTML = `<strong>${escuelaElegida.nombre}</strong>`;
-
-      gradosEscuelas.push(document.getElementById('grado-curso1-paso5') as HTMLSelectElement);
-
-      if (gradosEscuelaElegida.length === 0) {
-        gradosEscuelaElegida = await buscarGrados(escuelaElegida.id.toString());
-      }
-
-      rellenarSelectGrados(gradosEscuelaElegida, gradosEscuelas);
-
-      const selectEscuela2Paso5 = document.getElementById('escuela-2-paso-5') as HTMLSelectElement;
-
-      gradosEscuelas.push(document.getElementById('grado-curso2-paso5') as HTMLSelectElement);
-
-      await rellenarSelectEscuelas(selectEscuela2Paso5, gradosEscuelas);
-
-
-
+      cambiarAlPaso5();
       break;
   }
-
 }
 
 async function buscarEscuelas(): Promise<Escuela[]> {
@@ -394,17 +202,142 @@ async function buscarEscuelas(): Promise<Escuela[]> {
   return escuelas;
 }
 
+function cambiarAlPaso1() {
+  document.getElementById('volver-button').style.color = 'white';
+  document.getElementById('volver-button').style.cursor = 'default';
+  document.getElementById('paso-1').style.display = 'block';
+  document.getElementById('paso-2').style.display = 'none';
+  document.getElementById('paso-3').style.display = 'none';
+  document.getElementById('paso-4').style.display = 'none';
+  document.getElementById('paso-5').style.display = 'none';
+}
+
+async function cambiarAlPaso2() {
+  const gradosEscuelas = [];
+
+  document.getElementById('volver-button').style.color = 'black';
+  document.getElementById('volver-button').style.cursor = 'pointer';
+  document.getElementById('paso-1').style.display = 'none';
+  document.getElementById('paso-2').style.display = 'block';
+  document.getElementById('paso-3').style.display = 'none';
+  document.getElementById('paso-4').style.display = 'none';
+  document.getElementById('paso-5').style.display = 'none';
+
+  document.getElementById('escuela-buscada-paso-2').innerHTML = `<strong>${escuelaElegida.nombre}</strong>`;
+
+  gradosEscuelas.push(document.getElementById('grado-alumno1-paso2') as HTMLSelectElement);
+  gradosEscuelas.push(document.getElementById('grado-alumno2-paso2') as HTMLSelectElement);
+
+  if (gradosEscuelaElegida.length === 0) {
+    gradosEscuelaElegida = await buscarGrados(escuelaElegida.id.toString());
+  }
+
+  rellenarSelectGrados(gradosEscuelaElegida, gradosEscuelas);
+
+  const selectEstudio = document.getElementById('parametro-paso-2') as HTMLSelectElement;
+
+  rellenarSelectEstudios(selectEstudio);
+}
+
+async function cambiarAlPaso3() {
+  let gradosEscuelas = [];
+
+  document.getElementById('volver-button').style.color = 'black';
+  document.getElementById('volver-button').style.cursor = 'pointer';
+  document.getElementById('paso-1').style.display = 'none';
+  document.getElementById('paso-2').style.display = 'none';
+  document.getElementById('paso-3').style.display = 'block';
+  document.getElementById('paso-4').style.display = 'none';
+  document.getElementById('paso-5').style.display = 'none';
+
+  document.getElementById('escuela-buscada-paso-3').innerHTML = `<strong>${escuelaElegida.nombre}</strong>`;
+
+  gradosEscuelas.push(document.getElementById('grado-alumno1-paso3') as HTMLSelectElement);
+
+  if (gradosEscuelaElegida.length === 0) {
+    gradosEscuelaElegida = await buscarGrados(escuelaElegida.id.toString());
+  }
+
+  rellenarSelectGrados(gradosEscuelaElegida, gradosEscuelas);
+
+  gradosEscuelas = [];
+
+  const selectEscuela2 = document.getElementById('escuela-2-paso-3') as HTMLSelectElement;
+
+  gradosEscuelas.push(document.getElementById('grado-alumno2-paso3') as HTMLSelectElement);
+
+  await rellenarSelectEscuelas(selectEscuela2, gradosEscuelas);
+
+  const selectEstudioPaso3 = document.getElementById('parametro-paso-3') as HTMLSelectElement;
+
+  rellenarSelectEstudios(selectEstudioPaso3);
+}
+
+async function cambiarAlPaso4() {
+  document.getElementById('volver-button').style.color = 'black';
+  document.getElementById('volver-button').style.cursor = 'pointer';
+  document.getElementById('paso-1').style.display = 'none';
+  document.getElementById('paso-2').style.display = 'none';
+  document.getElementById('paso-3').style.display = 'none';
+  document.getElementById('paso-4').style.display = 'block';
+  document.getElementById('paso-5').style.display = 'none';
+
+  document.getElementById('escuela-buscada-paso-4').innerHTML = `<strong>${escuelaElegida.nombre}</strong>`;
+
+  if (gradosEscuelaElegida.length === 0) {
+    gradosEscuelaElegida = await buscarGrados(escuelaElegida.id.toString());
+  }
+  const gradosSelects = [document.getElementById('grado-curso1-paso4') as HTMLSelectElement, document.getElementById('grado-curso2-paso4') as HTMLSelectElement];
+
+  rellenarSelectGrados(gradosEscuelaElegida, gradosSelects);
+}
+
+async function cambiarAlPaso5() {
+  let gradosEscuelas = [];
+  document.getElementById('volver-button').style.color = 'black';
+  document.getElementById('volver-button').style.cursor = 'pointer';
+  document.getElementById('paso-1').style.display = 'none';
+  document.getElementById('paso-2').style.display = 'none';
+  document.getElementById('paso-3').style.display = 'none';
+  document.getElementById('paso-4').style.display = 'none';
+  document.getElementById('paso-5').style.display = 'block';
+
+  document.getElementById('escuela-buscada-paso-5').innerHTML = `<strong>${escuelaElegida.nombre}</strong>`;
+
+  gradosEscuelas.push(document.getElementById('grado-curso1-paso5') as HTMLSelectElement);
+
+  if (gradosEscuelaElegida.length === 0) {
+    gradosEscuelaElegida = await buscarGrados(escuelaElegida.id.toString());
+  }
+
+  rellenarSelectGrados(gradosEscuelaElegida, gradosEscuelas);
+
+  const selectEscuela2Paso5 = document.getElementById('escuela-2-paso-5') as HTMLSelectElement;
+
+  gradosEscuelas.push(document.getElementById('grado-curso2-paso5') as HTMLSelectElement);
+
+  await rellenarSelectEscuelas(selectEscuela2Paso5, gradosEscuelas);
+}
+
 document.getElementById('button-activar-filtros').addEventListener('click', () => {
+  mostrarFiltros();
+});
+
+function mostrarFiltros() {
   document.getElementById('inputs-filter').style.display = 'flex';
   document.getElementById('button-activar-filtros').style.display = 'none';
   document.getElementById('button-desactivar-filtros').style.display = 'flex';
-});
+}
 
 document.getElementById('button-desactivar-filtros').addEventListener('click', () => {
+  ocultarFiltros();
+});
+
+function ocultarFiltros() {
   document.getElementById('inputs-filter').style.display = 'none';
   document.getElementById('button-activar-filtros').style.display = 'flex';
   document.getElementById('button-desactivar-filtros').style.display = 'none';
-});
+}
 
 document.getElementById('filtro-fecha-desde').addEventListener('input', (e) => {
   filtrarFechaTabla();
@@ -458,7 +391,6 @@ document.getElementById('alumno2-paso-3').addEventListener('input', async functi
   await getRecomendacionesAlumnos(this, parseInt(escuela.value), parseInt(grado.value));
 });
 
-
 async function getRecomendacionesAlumnos(input: HTMLElement, idEscuela: number, idGrado: number) {
   const inputValue = (input as HTMLInputElement).value.trim();
 
@@ -476,6 +408,10 @@ async function getRecomendacionesAlumnos(input: HTMLElement, idEscuela: number, 
 
   query += ` ORDER BY dni FETCH FIRST 25 ROWS ONLY`;
 
+  await buscarAlumnos(query, input);
+}
+
+async function buscarAlumnos(query: string, input?: HTMLElement) {
   try {
     const alumnos: any = await ejecutarSelect(query);
 
@@ -519,7 +455,7 @@ function filtrarFechaTabla() {
 
   if (fechaDesde && fechaHasta.toString() === 'Invalid Date') {
     for (let i = 0; i < rows.length; i++) {
-      if (new Date(parsearFecha(rows[i].cells[0].textContent)) >= fechaDesde) {
+      if (new Date(formatearFechaMMDDYYYY(rows[i].cells[0].textContent)) >= fechaDesde) {
         rows[i].hidden = false;
       } else {
         rows[i].hidden = true;
@@ -527,7 +463,7 @@ function filtrarFechaTabla() {
     }
   } else if (fechaDesde.toString() === 'Invalid Date' && fechaHasta) {
     for (let i = 0; i < rows.length; i++) {
-      if (new Date(parsearFecha(rows[i].cells[0].textContent)) <= fechaHasta) {
+      if (new Date(formatearFechaMMDDYYYY(rows[i].cells[0].textContent)) <= fechaHasta) {
         rows[i].hidden = false;
       } else {
         rows[i].hidden = true;
@@ -535,18 +471,13 @@ function filtrarFechaTabla() {
     }
   } else {
     for (let i = 0; i < rows.length; i++) {
-      if (new Date(parsearFecha(rows[i].cells[0].textContent)) >= fechaDesde && new Date(parsearFecha(rows[i].cells[0].textContent)) <= fechaHasta) {
+      if (new Date(formatearFechaMMDDYYYY(rows[i].cells[0].textContent)) >= fechaDesde && new Date(formatearFechaMMDDYYYY(rows[i].cells[0].textContent)) <= fechaHasta) {
         rows[i].hidden = false;
       } else {
         rows[i].hidden = true;
       }
     }
   }
-}
-
-function parsearFecha(fecha: string) {
-  const [dia, mes, año] = fecha.split('/');
-  return `${mes}/${dia}/${año}`;
 }
 
 function filtrarDatoTabla(columna: number, filtro: string) {
@@ -691,4 +622,93 @@ async function ejecutarSelect(query: string): Promise<any[]> {
     console.error('Error al buscar datos:', e);
     return [];
   }
+}
+
+
+
+
+
+let chart: any;
+
+function crearGraficoDesdeTabla(tableId: string) {
+  const table = document.getElementById(tableId) as HTMLTableElement;
+  const labels = [];
+  const datasets: any = [];
+  const rows = table.rows;
+  const selectedColumns = [];
+
+  for (let i = 0; i < rows[0].cells.length; i++) {
+    if (rows[0].cells[i].classList.contains(colorCasillas)) {
+      selectedColumns.push(i);
+    }
+  }
+
+  for (let i = 1; i < rows.length; i++) {
+    labels.push(rows[i].cells[0].textContent);
+    selectedColumns.forEach((colIndex, j) => {
+      if (!datasets[j]) {
+        datasets[j] = {
+          label: rows[0].cells[colIndex].textContent,
+          data: [],
+          backgroundColor: generarColores(rows.length - 1),
+          borderColor: `rgba(1, 1, 1, 1)`,
+          borderWidth: 1,
+          fill: false
+        };
+      }
+      datasets[j].data.push(parseFloat(rows[i].cells[colIndex].textContent));
+    });
+  }
+
+  if (chart) {
+    chart.destroy();
+  }
+
+  dibujarGrafico(labels, datasets);
+}
+
+function getRandomColor(): string {
+  const r = Math.floor(Math.random() * 255);
+  const g = Math.floor(Math.random() * 255);
+  const b = Math.floor(Math.random() * 255);
+  return `rgba(${r}, ${g}, ${b}, 0.7)`;
+}
+
+function generarColores(cantidad: number): string[] {
+  const colores = [];
+  for (let i = 0; i < cantidad; i++) {
+    colores.push(getRandomColor());
+  }
+  return colores;
+}
+
+function dibujarGrafico(labels: any, datasets: any) {
+  const ctx = (document.getElementById('chart-canvas') as HTMLCanvasElement).getContext('2d');
+  chart = new Chart(ctx, {
+    type: tipoGrafico,
+    data: {
+      labels: labels,
+      datasets: datasets
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'top',
+        },
+        title: {
+          display: true,
+          text: 'Gráfico de Datos'
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true
+        },
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
 }
