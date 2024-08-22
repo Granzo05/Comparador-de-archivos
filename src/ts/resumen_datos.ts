@@ -1,12 +1,11 @@
-import Chart, { ChartTypeRegistry } from 'chart.js/auto';
+import Chart from 'chart.js/auto';
 import { Escuela } from '../types/Escuela';
 import { Grado } from '../types/Grado';
 import { Estudio } from '../types/Estudio';
-import { formatearFechaDDMMYYYY, formatearFechaMMDDYYYY, formatearFechaYYYYMMDD } from '../utils/functions';
+import { formatearFechaDDMMYYYY, formatearFechaMMDDYYYY } from '../utils/functions';
+import { Alumno } from '../types/Alumno';
 
 let resultados: any = JSON.parse(localStorage.getItem('resultados'));
-let colorCasillas: string;
-let tipoGrafico: keyof ChartTypeRegistry;
 
 const tabla = document.getElementById('tabla-resultado') as HTMLTableElement;
 const rows = tabla.rows;
@@ -26,7 +25,11 @@ async function cargarElementos() {
 
   asignarGrados();
 
-  llenarTabla();
+  llenarTabla(resultados);
+
+  crearGrafico(resultados)
+  document.getElementById('contenedor-grafico').style.display = 'flex';
+
 }
 
 function asignarEscuela() {
@@ -59,13 +62,19 @@ function asignarGrados() {
   }
 }
 
-function llenarTabla() {
+function llenarTabla(resultados?: any) {
   const tabla = document.getElementById('tabla-resultado') as HTMLTableElement;
-
+  tabla.innerHTML = '';
   resultados.forEach((resultado: any) => {
     const tr = document.createElement('tr');
 
-    const fecha = formatearFechaDDMMYYYY(resultado.FECHA.toString().split('T')[0]);
+    let fecha = '';
+    if (resultado.FECHA.length <= 10) {
+      fecha = resultado.FECHA;
+    } else {
+      fecha = formatearFechaDDMMYYYY(resultado.FECHA.toString().split('T')[0]);
+    }
+
     const tdFecha = document.createElement('td');
     tdFecha.textContent = fecha;
 
@@ -311,6 +320,8 @@ async function cambiarOpcion4() {
 
   rellenarSelectGrados(gradosEscuelaElegida, gradosEscuelas);
 
+  gradosEscuelas = [];
+
   const selectEscuela2opcion5 = document.getElementById('escuela-2-opcion-4') as HTMLSelectElement;
 
   gradosEscuelas.push(document.getElementById('grado-2-opcion-4') as HTMLSelectElement);
@@ -540,11 +551,11 @@ async function rellenarSelectEscuelas(escuelaSelect: HTMLSelectElement, gradosSe
   escuelaSelect.innerHTML = '<option value="0" disabled selected>Seleccionar escuela</option>';
 
   escuelas.forEach((escuela: Escuela) => {
-    if(escuela.nombre !== escuelaElegida.nombre) {
+    if (escuela.nombre !== escuelaElegida.nombre) {
       const option = document.createElement('option');
       option.value = escuela.id.toString();
       option.textContent = escuela.nombre;
-  
+
       escuelaSelect.appendChild(option);
     }
   });
@@ -647,18 +658,32 @@ async function buscarDatosOpcion1() {
     alert('Por favor ingrese una fecha de finalización válida');
     return;
   }
-
-  const query = `SELECT puntuacion, fecha FROM resultados_estudios 
-  WHERE (id_alumno = ${alumno1} OR id_alumno = ${alumno2})
-  AND id_estudio = ${estudio} 
-  AND fecha 
-  BETWEEN TO_DATE('${desde}', 'YYYY-MM-DD') 
-  AND TO_DATE('${hasta}', 'YYYY-MM-DD')`;
+  
+  const query = `
+  SELECT 
+  re.*, 
+  a.nombre AS nombre_alumno, 
+  a.dni AS dni_alumno, 
+  l.nombre AS nombre_libro, 
+  e.descripcion AS descripcion_estudio,
+  g.division AS division_grado
+  FROM resultados_estudios re
+  JOIN grados g ON re.id_grado = g.id_grado
+  JOIN alumnos a ON re.id_alumno = a.id_alumno
+  JOIN libros l ON re.id_libro = l.id_libro
+  JOIN estudios e ON re.id_estudio = e.id_estudio
+  WHERE re.fecha BETWEEN TO_DATE('${desde}', 'YYYY-MM-DD') AND TO_DATE('${hasta}', 'YYYY-MM-DD') 
+  AND (re.id_alumno = ${alumno1} OR re.id_alumno = ${alumno2})
+  AND re.id_estudio = ${estudio}
+  ORDER BY re.puntuacion DESC`;
 
   const result = await ejecutarSelect(query);
 
   if (result.length > 0) {
-    console.log(result)
+    await llenarTabla(result);
+    await crearGrafico(result);
+    document.getElementById('contenedor-grafico').style.display = 'flex';
+    cerrarModal();
   } else {
     alert('No se encontraron resultados para la búsqueda realizada');
     return;
@@ -697,17 +722,29 @@ async function buscarDatosOpcion2() {
     return;
   }
 
-  const query = `SELECT puntuacion, fecha FROM resultados_estudios 
-  WHERE (id_alumno = ${alumno1} OR id_alumno = ${alumno2})
-  AND id_estudio = ${estudio} 
-  AND fecha 
-  BETWEEN TO_DATE('${desde}', 'YYYY-MM-DD') 
-  AND TO_DATE('${hasta}', 'YYYY-MM-DD')`;
+  const query = `
+  SELECT 
+  re.*, 
+  a.nombre AS nombre_alumno, 
+  a.dni AS dni_alumno, 
+  l.nombre AS nombre_libro, 
+  e.descripcion AS descripcion_estudio,
+  g.division AS division_grado
+  FROM resultados_estudios re
+  JOIN grados g ON re.id_grado = g.id_grado
+  JOIN alumnos a ON re.id_alumno = a.id_alumno
+  JOIN libros l ON re.id_libro = l.id_libro
+  JOIN estudios e ON re.id_estudio = e.id_estudio
+  WHERE re.fecha BETWEEN TO_DATE('${desde}', 'YYYY-MM-DD') AND TO_DATE('${hasta}', 'YYYY-MM-DD') AND (re.id_alumno = ${alumno1} OR re.id_alumno = ${alumno2})
+  ORDER BY re.puntuacion DESC`;
 
   const result = await ejecutarSelect(query);
 
   if (result.length > 0) {
-    console.log(result)
+    await llenarTabla(result);
+    await crearGrafico(result);
+    document.getElementById('contenedor-grafico').style.display = 'flex';
+    cerrarModal();
   } else {
     alert('No se encontraron resultados para la búsqueda realizada');
     return;
@@ -741,16 +778,29 @@ async function buscarDatosOpcion3() {
     return;
   }
 
-  const query = `SELECT puntuacion, fecha FROM resultados_estudios 
-  WHERE (id_grado = ${grado1} OR id_grado = ${grado2})
-  AND fecha 
-  BETWEEN TO_DATE('${desde}', 'YYYY-MM-DD') 
-  AND TO_DATE('${hasta}', 'YYYY-MM-DD')`;
+  const query = `
+  SELECT 
+  re.*, 
+  a.nombre AS nombre_alumno, 
+  a.dni AS dni_alumno, 
+  l.nombre AS nombre_libro, 
+  e.descripcion AS descripcion_estudio,
+  g.division AS division_grado
+  FROM resultados_estudios re
+  JOIN grados g ON re.id_grado = g.id_grado
+  JOIN alumnos a ON re.id_alumno = a.id_alumno
+  JOIN libros l ON re.id_libro = l.id_libro
+  JOIN estudios e ON re.id_estudio = e.id_estudio
+  WHERE re.fecha BETWEEN TO_DATE('${desde}', 'YYYY-MM-DD') AND TO_DATE('${hasta}', 'YYYY-MM-DD') AND (re.id_grado = ${grado1} OR re.id_grado = ${grado2})
+  ORDER BY re.puntuacion DESC`;
 
   const result = await ejecutarSelect(query);
 
   if (result.length > 0) {
-    console.log(result)
+    await llenarTabla(result);
+    await crearGrafico(result);
+    document.getElementById('contenedor-grafico').style.display = 'flex';
+    cerrarModal();
   } else {
     alert('No se encontraron resultados para la búsqueda realizada');
     return;
@@ -784,56 +834,95 @@ async function buscarDatosOpcion4() {
     return;
   }
 
-  const query = `SELECT puntuacion, fecha FROM resultados_estudios 
-  WHERE (id_grado = ${grado1} OR id_grado = ${grado2})
-  AND fecha 
-  BETWEEN TO_DATE('${desde}', 'YYYY-MM-DD') 
-  AND TO_DATE('${hasta}', 'YYYY-MM-DD')`;
+  const query = `
+  SELECT 
+  re.*, 
+  a.nombre AS nombre_alumno, 
+  a.dni AS dni_alumno, 
+  l.nombre AS nombre_libro, 
+  e.descripcion AS descripcion_estudio,
+  g.division AS division_grado
+  FROM resultados_estudios re
+  JOIN grados g ON re.id_grado = g.id_grado
+  JOIN alumnos a ON re.id_alumno = a.id_alumno
+  JOIN libros l ON re.id_libro = l.id_libro
+  JOIN estudios e ON re.id_estudio = e.id_estudio
+  WHERE re.fecha BETWEEN TO_DATE('${desde}', 'YYYY-MM-DD') AND TO_DATE('${hasta}', 'YYYY-MM-DD') AND (re.id_grado = ${grado1} OR re.id_grado = ${grado2})
+  ORDER BY re.puntuacion DESC`;
 
   const result = await ejecutarSelect(query);
 
+  result.forEach(resultados => {
+    const day = String(resultados.FECHA.getDate()).padStart(2, '0');
+    const month = String(resultados.FECHA.getMonth() + 1).padStart(2, '0');
+    const year = resultados.FECHA.getFullYear();
+
+    resultados.FECHA = `${day}/${month}/${year}`;
+  });
+
   if (result.length > 0) {
-    console.log(result)
+    await llenarTabla(result);
+    await crearGrafico(result);
+    document.getElementById('contenedor-grafico').style.display = 'flex';
+    cerrarModal();
   } else {
     alert('No se encontraron resultados para la búsqueda realizada');
     return;
   }
 }
 
-
-
 let chart: any;
 
-function crearGraficoDesdeTabla(tableId: string) {
-  const table = document.getElementById(tableId) as HTMLTableElement;
-  const labels = [];
-  const datasets: any = [];
-  const rows = table.rows;
-  const selectedColumns = [];
+async function crearGrafico(result: any) {
+  const labels: string[] = [];
+  const datasets: any[] = [];
+  const alumnos = new Set<Alumno>();
+  const grados = new Set<string>();
 
-  for (let i = 0; i < rows[0].cells.length; i++) {
-    if (rows[0].cells[i].classList.contains(colorCasillas)) {
-      selectedColumns.push(i);
-    }
-  }
+  result.forEach((resultado: any) => {
+    const alumno: Alumno = new Alumno();    
+    alumno.grado.division = resultado.DIVISION_GRADO;
+    alumno.nombre = resultado.NOMBRE_ALUMNO;
+    alumnos.add(alumno);
 
-  for (let i = 1; i < rows.length; i++) {
-    labels.push(rows[i].cells[0].textContent);
-    selectedColumns.forEach((colIndex, j) => {
-      if (!datasets[j]) {
-        datasets[j] = {
-          label: rows[0].cells[colIndex].textContent,
-          data: [],
-          backgroundColor: generarColores(rows.length - 1),
-          borderColor: `rgba(1, 1, 1, 1)`,
-          borderWidth: 1,
-          fill: false
-        };
+    grados.add(resultado.DIVISION_GRADO);
+  });
+
+  const [grado1, grado2] = Array.from(grados);
+  const color1 = getRandomColor();
+  const color2 = getRandomColor();
+
+  alumnos.forEach((alumno: Alumno) => {
+    const data: number[] = [];
+    const fechas: string[] = [];
+
+    result.forEach((resultado: any) => {
+      if (resultado.NOMBRE_ALUMNO === alumno.nombre) {
+        let fecha = '';
+        if (resultado.FECHA.length <= 10) {
+          fecha = resultado.FECHA;
+        } else {
+          fecha = formatearFechaDDMMYYYY(resultado.FECHA.toString().split('T')[0]);
+        }
+        fechas.push(fecha);
+        data.push(parseFloat(resultado.PUNTUACION));
       }
-      datasets[j].data.push(parseFloat(rows[i].cells[colIndex].textContent));
     });
-  }
 
+    const backgroundColor = alumno.grado.division === grado1 ? color1 : color2;
+
+    datasets.push({
+      label: alumno.nombre + `(${alumno.grado.division})`,
+      data: data,
+      backgroundColor: backgroundColor,
+      borderColor: 'rgba(1, 1, 1, 1)',
+      borderWidth: 1,
+    });
+
+    if (!labels.length) {
+      labels.push(...fechas);
+    }
+  });
   if (chart) {
     chart.destroy();
   }
@@ -841,48 +930,37 @@ function crearGraficoDesdeTabla(tableId: string) {
   dibujarGrafico(labels, datasets);
 }
 
-function getRandomColor(): string {
-  const r = Math.floor(Math.random() * 255);
-  const g = Math.floor(Math.random() * 255);
-  const b = Math.floor(Math.random() * 255);
-  return `rgba(${r}, ${g}, ${b}, 0.7)`;
-}
-
-function generarColores(cantidad: number): string[] {
-  const colores = [];
-  for (let i = 0; i < cantidad; i++) {
-    colores.push(getRandomColor());
-  }
-  return colores;
-}
-
 function dibujarGrafico(labels: any, datasets: any) {
-  const ctx = (document.getElementById('chart-canvas') as HTMLCanvasElement).getContext('2d');
+  const ctx = document.getElementById('chart-canvas') as HTMLCanvasElement;
   chart = new Chart(ctx, {
-    type: tipoGrafico,
+    type: 'bar',
     data: {
       labels: labels,
-      datasets: datasets
+      datasets: datasets,
     },
     options: {
-      responsive: true,
-      plugins: {
-        legend: {
-          position: 'top',
-        },
-        title: {
-          display: true,
-          text: 'Gráfico de Datos'
-        }
-      },
       scales: {
         x: {
-          beginAtZero: true
+          title: {
+            display: true,
+            text: 'Fechas'
+          }
         },
         y: {
+          title: {
+            display: true,
+            text: 'Puntuación'
+          },
           beginAtZero: true
         }
       }
     }
   });
+}
+
+function getRandomColor(): string {
+  const r = Math.floor(Math.random() * 255);
+  const g = Math.floor(Math.random() * 255);
+  const b = Math.floor(Math.random() * 255);
+  return `rgba(${r}, ${g}, ${b}, 0.7)`;
 }
