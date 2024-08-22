@@ -27,7 +27,7 @@ async function cargarElementos() {
 
   llenarTabla(resultados);
 
-  crearGrafico(resultados)
+  crearGraficoBarra(resultados)
   document.getElementById('contenedor-grafico').style.display = 'flex';
 
 }
@@ -658,7 +658,7 @@ async function buscarDatosOpcion1() {
     alert('Por favor ingrese una fecha de finalización válida');
     return;
   }
-  
+
   const query = `
   SELECT 
   re.*, 
@@ -679,9 +679,11 @@ async function buscarDatosOpcion1() {
 
   const result = await ejecutarSelect(query);
 
+  localStorage.setItem('resultadosComparativa', JSON.stringify(result));
+
   if (result.length > 0) {
     await llenarTabla(result);
-    await crearGrafico(result);
+    await crearGraficoBarra(result);
     document.getElementById('contenedor-grafico').style.display = 'flex';
     cerrarModal();
   } else {
@@ -740,9 +742,11 @@ async function buscarDatosOpcion2() {
 
   const result = await ejecutarSelect(query);
 
+  localStorage.setItem('resultadosComparativa', JSON.stringify(result));
+
   if (result.length > 0) {
     await llenarTabla(result);
-    await crearGrafico(result);
+    await crearGraficoBarra(result);
     document.getElementById('contenedor-grafico').style.display = 'flex';
     cerrarModal();
   } else {
@@ -796,9 +800,11 @@ async function buscarDatosOpcion3() {
 
   const result = await ejecutarSelect(query);
 
+  localStorage.setItem('resultadosComparativa', JSON.stringify(result));
+
   if (result.length > 0) {
     await llenarTabla(result);
-    await crearGrafico(result);
+    await crearGraficoBarra(result);
     document.getElementById('contenedor-grafico').style.display = 'flex';
     cerrarModal();
   } else {
@@ -852,6 +858,8 @@ async function buscarDatosOpcion4() {
 
   const result = await ejecutarSelect(query);
 
+  localStorage.setItem('resultadosComparativa', JSON.stringify(result));
+
   result.forEach(resultados => {
     const day = String(resultados.FECHA.getDate()).padStart(2, '0');
     const month = String(resultados.FECHA.getMonth() + 1).padStart(2, '0');
@@ -862,7 +870,7 @@ async function buscarDatosOpcion4() {
 
   if (result.length > 0) {
     await llenarTabla(result);
-    await crearGrafico(result);
+    await crearGraficoBarra(result);
     document.getElementById('contenedor-grafico').style.display = 'flex';
     cerrarModal();
   } else {
@@ -873,14 +881,14 @@ async function buscarDatosOpcion4() {
 
 let chart: any;
 
-async function crearGrafico(result: any) {
+async function crearGraficoBarra(result: any) {
   const labels: string[] = [];
   const datasets: any[] = [];
   const alumnos = new Set<Alumno>();
   const grados = new Set<string>();
 
   result.forEach((resultado: any) => {
-    const alumno: Alumno = new Alumno();    
+    const alumno: Alumno = new Alumno();
     alumno.grado.division = resultado.DIVISION_GRADO;
     alumno.nombre = resultado.NOMBRE_ALUMNO;
     alumnos.add(alumno);
@@ -930,6 +938,13 @@ async function crearGrafico(result: any) {
   dibujarGrafico(labels, datasets);
 }
 
+function getRandomColor(): string {
+  const r = Math.floor(Math.random() * 255);
+  const g = Math.floor(Math.random() * 255);
+  const b = Math.floor(Math.random() * 255);
+  return `rgba(${r}, ${g}, ${b}, 0.7)`;
+}
+
 function dibujarGrafico(labels: any, datasets: any) {
   const ctx = document.getElementById('chart-canvas') as HTMLCanvasElement;
   chart = new Chart(ctx, {
@@ -958,9 +973,88 @@ function dibujarGrafico(labels: any, datasets: any) {
   });
 }
 
-function getRandomColor(): string {
-  const r = Math.floor(Math.random() * 255);
-  const g = Math.floor(Math.random() * 255);
-  const b = Math.floor(Math.random() * 255);
-  return `rgba(${r}, ${g}, ${b}, 0.7)`;
+
+
+async function crearGraficoTorta(result: any) {
+  const puntuaciones = result.map((resultado: any) => parseFloat(resultado.PUNTUACION));
+  const categorias = clasificarPuntuaciones(puntuaciones);
+  const { labels, data, backgroundColors } = prepararDatosTorta(categorias);
+
+  if (chart) {
+    chart.destroy();
+  }
+
+  dibujarGraficoTorta(labels, data, backgroundColors);
 }
+
+function clasificarPuntuaciones(puntuaciones: number[]) {
+  const categorias = {
+    'Bajo (0-14)': 0,
+    'Medio (15-34)': 0,
+    'Normal (35-50)': 0,
+    'Superior (>50)': 0
+  };
+
+  puntuaciones.forEach((puntuacion) => {
+    if (puntuacion < 15) {
+      categorias['Bajo (0-14)']++;
+    } else if (puntuacion >= 15 && puntuacion < 35) {
+      categorias['Medio (15-34)']++;
+    } else if (puntuacion >= 35 && puntuacion < 50) {
+      categorias['Normal (35-50)']++;
+    } else {
+      categorias['Superior (>50)']++;
+    }
+  });
+
+  return categorias;
+}
+
+function prepararDatosTorta(categorias: { [key: string]: number }) {
+  const labels = Object.keys(categorias);
+  const data = Object.values(categorias);
+  const backgroundColors = labels.map(() => getRandomColor());
+
+  return { labels, data, backgroundColors };
+}
+
+function dibujarGraficoTorta(labels: string[], data: number[], backgroundColors: string[]) {
+  const ctx = document.getElementById('chart-canvas') as HTMLCanvasElement;
+  chart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: backgroundColors,
+        borderColor: 'rgba(1, 1, 1, 1)',
+        borderWidth: 1,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'top',
+        },
+        title: {
+          display: true,
+          text: 'Distribución de Puntuaciones'
+        }
+      }
+    }
+  });
+}
+
+document.getElementById('tipo-grafico').addEventListener('change', () => {
+  let result = JSON.parse(localStorage.getItem('resultadosComparativa'));
+
+  if (!result)
+    result = resultados;
+
+  if ((document.getElementById('tipo-grafico') as HTMLSelectElement).selectedOptions[0].value === 'pie') {
+    crearGraficoTorta(result);
+  } else {
+    crearGraficoBarra(result);
+  }
+});
