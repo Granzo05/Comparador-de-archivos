@@ -29,7 +29,7 @@ async function cargarElementos() {
 
   crearGraficoBarra(resultados)
   document.getElementById('contenedor-grafico').style.display = 'flex';
-
+  document.getElementById('tipo-grafico').style.display = 'flex';
 }
 
 function asignarEscuela() {
@@ -806,6 +806,7 @@ async function buscarDatosOpcion3() {
     await llenarTabla(result);
     await crearGraficoBarra(result);
     document.getElementById('contenedor-grafico').style.display = 'flex';
+    document.getElementById('tipo-grafico').style.display = 'flex';
     cerrarModal();
   } else {
     alert('No se encontraron resultados para la búsqueda realizada');
@@ -872,6 +873,7 @@ async function buscarDatosOpcion4() {
     await llenarTabla(result);
     await crearGraficoBarra(result);
     document.getElementById('contenedor-grafico').style.display = 'flex';
+    document.getElementById('tipo-grafico').style.display = 'flex';
     cerrarModal();
   } else {
     alert('No se encontraron resultados para la búsqueda realizada');
@@ -972,8 +974,6 @@ function dibujarGrafico(labels: any, datasets: any) {
     }
   });
 }
-
-
 
 async function crearGraficoTorta(result: any) {
   const puntuaciones = result.map((resultado: any) => parseFloat(resultado.PUNTUACION));
