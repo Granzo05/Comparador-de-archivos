@@ -6,6 +6,9 @@ import { formatearFechaDDMMYYYY, formatearFechaMMDDYYYY } from '../utils/functio
 import { Alumno } from '../types/Alumno';
 
 let resultados: any = JSON.parse(localStorage.getItem('resultados'));
+let resultadosFiltrados: any = [];
+
+let gradoSeleccionadoSelectMain = '';
 
 const tabla = document.getElementById('tabla-resultado') as HTMLTableElement;
 const rows = tabla.rows;
@@ -70,7 +73,7 @@ function llenarTabla(resultados?: any) {
 
     let fecha = '';
     if (resultado.FECHA.length <= 10) {
-      fecha = resultado.FECHA;
+      fecha = resultadosFiltrados.FECHA;
     } else {
       fecha = formatearFechaDDMMYYYY(resultado.FECHA.toString().split('T')[0]);
     }
@@ -110,24 +113,72 @@ function llenarTabla(resultados?: any) {
 }
 
 document.getElementById('grado-main-resumen').addEventListener('change', async () => {
-  filtrarGradoTabla((document.getElementById('grado-main-resumen') as HTMLSelectElement).selectedOptions[0].textContent);
+  gradoSeleccionadoSelectMain = (document.getElementById('grado-main-resumen') as HTMLSelectElement).selectedOptions[0].textContent;
+  filtrarGradoTabla();
+
+  const fechaDesde = (document.getElementById('filtro-fecha-desde') as HTMLInputElement).value;
+  const fechaHasta = (document.getElementById('filtro-fecha-hasta') as HTMLInputElement).value;
+  const nombre = (document.getElementById('filtro-nombre') as HTMLInputElement).value;
+  const estudio = (document.getElementById('filtro-parametro') as HTMLInputElement).value;
+  const libro = (document.getElementById('filtro-libro') as HTMLInputElement).value;
+  const puntuacion = (document.getElementById('filtro-puntuacion') as HTMLInputElement).value;
+
+  if (fechaDesde.length > 0 || fechaHasta.length > 0) {
+    filtrarFechaTabla();
+  } else if (nombre.length > 0) {
+    filtrarDatoTabla(1, nombre);
+  } else if (estudio.length > 0) {
+    filtrarDatoTabla(3, estudio);
+  } else if (libro.length > 0) {
+    filtrarDatoTabla(4, libro);
+  } else if (puntuacion.length > 0) {
+    filtrarPuntuacion();
+  }
 });
 
-function filtrarGradoTabla(division: string) {
-  if (division === 'Mostrar todos') {
+function filtrarGradoTabla() {
+  const resultadosFiltrados = [];
+  if (gradoSeleccionadoSelectMain === 'Mostrar todos') {
     for (let i = 0; i < rows.length; i++) {
       rows[i].hidden = false;
+
+      const resultadoFiltrado = {
+        FECHA: rows[i].cells[0].textContent,
+        NOMBRE_ALUMNO: rows[i].cells[1].textContent,
+        DIVISION_GRADO: rows[i].cells[2].textContent,
+        DESCRIPCION_ESTUDIO: rows[i].cells[3].textContent,
+        NOMBRE_LIBRO: rows[i].cells[4].textContent,
+        PUNTUACION: rows[i].cells[5].textContent
+      };
+      resultadosFiltrados.push(resultadoFiltrado);
     }
   } else {
     for (let i = 0; i < rows.length; i++) {
-      if (rows[i].cells[2].textContent !== division) {
+      if (rows[i].cells[2].textContent !== gradoSeleccionadoSelectMain) {
         rows[i].hidden = true;
       } else {
         rows[i].hidden = false;
+
+        const resultadoFiltrado = {
+          FECHA: rows[i].cells[0].textContent,
+          NOMBRE_ALUMNO: rows[i].cells[1].textContent,
+          DIVISION_GRADO: rows[i].cells[2].textContent,
+          DESCRIPCION_ESTUDIO: rows[i].cells[3].textContent,
+          NOMBRE_LIBRO: rows[i].cells[4].textContent,
+          PUNTUACION: rows[i].cells[5].textContent
+        };
+        resultadosFiltrados.push(resultadoFiltrado);
       }
     }
   }
+
+  if ((document.getElementById('tipo-grafico') as HTMLSelectElement).selectedOptions[0].value === 'pie') {
+    crearGraficoTorta(resultadosFiltrados);
+  } else {
+    crearGraficoBarra(resultadosFiltrados);
+  }
 }
+
 
 let opcionActual = '0';
 
@@ -460,7 +511,12 @@ function filtrarFechaTabla() {
   if (fechaDesde && fechaHasta.toString() === 'Invalid Date') {
     for (let i = 0; i < rows.length; i++) {
       if (new Date(formatearFechaMMDDYYYY(rows[i].cells[0].textContent)) >= fechaDesde) {
-        rows[i].hidden = false;
+        if (gradoSeleccionadoSelectMain !== 'Mostrar todos' || gradoSeleccionadoSelectMain.length === 0) {
+          if (rows[i].cells[2].textContent === gradoSeleccionadoSelectMain)
+            rows[i].hidden = false;
+        } else {
+          rows[i].hidden = false;
+        }
       } else {
         rows[i].hidden = true;
       }
@@ -468,7 +524,12 @@ function filtrarFechaTabla() {
   } else if (fechaDesde.toString() === 'Invalid Date' && fechaHasta) {
     for (let i = 0; i < rows.length; i++) {
       if (new Date(formatearFechaMMDDYYYY(rows[i].cells[0].textContent)) <= fechaHasta) {
-        rows[i].hidden = false;
+        if (gradoSeleccionadoSelectMain !== 'Mostrar todos' || gradoSeleccionadoSelectMain.length === 0) {
+          if (rows[i].cells[2].textContent === gradoSeleccionadoSelectMain)
+            rows[i].hidden = false;
+        } else {
+          rows[i].hidden = false;
+        }
       } else {
         rows[i].hidden = true;
       }
@@ -476,7 +537,12 @@ function filtrarFechaTabla() {
   } else {
     for (let i = 0; i < rows.length; i++) {
       if (new Date(formatearFechaMMDDYYYY(rows[i].cells[0].textContent)) >= fechaDesde && new Date(formatearFechaMMDDYYYY(rows[i].cells[0].textContent)) <= fechaHasta) {
-        rows[i].hidden = false;
+        if (gradoSeleccionadoSelectMain !== 'Mostrar todos' || gradoSeleccionadoSelectMain.length === 0) {
+          if (rows[i].cells[2].textContent === gradoSeleccionadoSelectMain)
+            rows[i].hidden = false;
+        } else {
+          rows[i].hidden = false;
+        }
       } else {
         rows[i].hidden = true;
       }
@@ -488,7 +554,12 @@ function filtrarDatoTabla(columna: number, filtro: string) {
   if (filtro.length > 0) {
     for (let i = 0; i < rows.length; i++) {
       if (rows[i].cells[columna].textContent.includes(filtro)) {
-        rows[i].hidden = false;
+        if (gradoSeleccionadoSelectMain !== 'Mostrar todos' || gradoSeleccionadoSelectMain.length === 0) {
+          if (rows[i].cells[2].textContent === gradoSeleccionadoSelectMain)
+            rows[i].hidden = false;
+        } else {
+          rows[i].hidden = false;
+        }
       } else {
         rows[i].hidden = true;
       }
@@ -507,7 +578,12 @@ function filtrarPuntuacion() {
   if (signo === '>') {
     for (let i = 0; i < rows.length; i++) {
       if (parseFloat(rows[i].cells[5].textContent) > parseFloat(puntuacion)) {
-        rows[i].hidden = false;
+        if (gradoSeleccionadoSelectMain !== 'Mostrar todos' && gradoSeleccionadoSelectMain.length > 0) {
+          if (rows[i].cells[2].textContent === gradoSeleccionadoSelectMain)
+            rows[i].hidden = false;
+        } else {
+          rows[i].hidden = false;
+        }
       } else {
         rows[i].hidden = true;
       }
@@ -515,7 +591,12 @@ function filtrarPuntuacion() {
   } else if (signo === '<') {
     for (let i = 0; i < rows.length; i++) {
       if (parseFloat(rows[i].cells[5].textContent) < parseFloat(puntuacion)) {
-        rows[i].hidden = false;
+        if (gradoSeleccionadoSelectMain !== 'Mostrar todos' && gradoSeleccionadoSelectMain.length > 0) {
+          if (rows[i].cells[2].textContent === gradoSeleccionadoSelectMain)
+            rows[i].hidden = false;
+        } else {
+          rows[i].hidden = false;
+        }
       } else {
         rows[i].hidden = true;
       }
@@ -523,7 +604,12 @@ function filtrarPuntuacion() {
   } else if (signo === '>=') {
     for (let i = 0; i < rows.length; i++) {
       if (parseFloat(rows[i].cells[5].textContent) >= parseFloat(puntuacion)) {
-        rows[i].hidden = false;
+        if (gradoSeleccionadoSelectMain !== 'Mostrar todos' && gradoSeleccionadoSelectMain.length > 0) {
+          if (rows[i].cells[2].textContent === gradoSeleccionadoSelectMain)
+            rows[i].hidden = false;
+        } else {
+          rows[i].hidden = false;
+        }
       } else {
         rows[i].hidden = true;
       }
@@ -531,7 +617,12 @@ function filtrarPuntuacion() {
   } else if (signo === '<=') {
     for (let i = 0; i < rows.length; i++) {
       if (parseFloat(rows[i].cells[5].textContent) <= parseFloat(puntuacion)) {
-        rows[i].hidden = false;
+        if (gradoSeleccionadoSelectMain !== 'Mostrar todos' && gradoSeleccionadoSelectMain.length > 0) {
+          if (rows[i].cells[2].textContent === gradoSeleccionadoSelectMain)
+            rows[i].hidden = false;
+        } else {
+          rows[i].hidden = false;
+        }
       } else {
         rows[i].hidden = true;
       }
@@ -539,7 +630,12 @@ function filtrarPuntuacion() {
   } else {
     for (let i = 0; i < rows.length; i++) {
       if (parseFloat(rows[i].cells[5].textContent) === parseFloat(puntuacion)) {
-        rows[i].hidden = false;
+        if (gradoSeleccionadoSelectMain !== 'Mostrar todos' && gradoSeleccionadoSelectMain.length > 0) {
+          if (rows[i].cells[2].textContent === gradoSeleccionadoSelectMain)
+            rows[i].hidden = false;
+        } else {
+          rows[i].hidden = false;
+        }
       } else {
         rows[i].hidden = true;
       }
@@ -888,6 +984,7 @@ async function crearGraficoBarra(result: any) {
   const datasets: any[] = [];
   const alumnos = new Set<Alumno>();
   const grados = new Set<string>();
+  document.getElementById('contenedor-grafico').style.height = '100%';
 
   result.forEach((resultado: any) => {
     const alumno: Alumno = new Alumno();
@@ -979,6 +1076,8 @@ async function crearGraficoTorta(result: any) {
   const puntuaciones = result.map((resultado: any) => parseFloat(resultado.PUNTUACION));
   const categorias = clasificarPuntuaciones(puntuaciones);
   const { labels, data, backgroundColors } = prepararDatosTorta(categorias);
+  document.getElementById('contenedor-grafico').style.height = '40vh';
+  document.getElementById('contenedor-grafico').style.width = '80vw';
 
   if (chart) {
     chart.destroy();
@@ -1049,8 +1148,9 @@ function dibujarGraficoTorta(labels: string[], data: number[], backgroundColors:
 document.getElementById('tipo-grafico').addEventListener('change', () => {
   let result = JSON.parse(localStorage.getItem('resultadosComparativa'));
 
-  if (!result)
+  if (!result) {
     result = resultados;
+  }
 
   if ((document.getElementById('tipo-grafico') as HTMLSelectElement).selectedOptions[0].value === 'pie') {
     crearGraficoTorta(result);
