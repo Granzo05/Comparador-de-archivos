@@ -505,7 +505,7 @@ document.getElementById('button-guardar-datos').addEventListener('click', () => 
 
   const escuelas: Set<Escuela> = new Set();
 
-  buscarDatos()
+  buscarDatos();
 
   async function buscarDatos() {
     for (let i = 0; i < archivosEnHTML.length; i++) {
@@ -563,7 +563,7 @@ document.getElementById('button-guardar-datos').addEventListener('click', () => 
     let cargaExitosa: boolean = false;
 
     cargaExitosa = await guardarDatos();
-
+    console.log(cargaExitosa);
     if (cargaExitosa) {
       mostrarCargaExitosa();
     } else {
