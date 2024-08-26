@@ -563,7 +563,7 @@ document.getElementById('button-guardar-datos').addEventListener('click', () => 
     let cargaExitosa: boolean = false;
 
     cargaExitosa = await guardarDatos();
-    console.log(cargaExitosa);
+    
     if (cargaExitosa) {
       mostrarCargaExitosa();
     } else {

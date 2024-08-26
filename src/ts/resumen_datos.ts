@@ -70,11 +70,9 @@ function llenarTabla(resultados?: any) {
   tabla.innerHTML = '';
   resultados.forEach((resultado: any) => {
     const tr = document.createElement('tr');
+    let fecha = resultado.FECHA;
 
-    let fecha = '';
-    if (resultado.FECHA.length <= 10) {
-      fecha = resultadosFiltrados.FECHA;
-    } else {
+    if (resultado.FECHA.length > 11) {
       fecha = formatearFechaDDMMYYYY(resultado.FECHA.toString().split('T')[0]);
     }
 
@@ -137,20 +135,9 @@ document.getElementById('grado-main-resumen').addEventListener('change', async (
 });
 
 function filtrarGradoTabla() {
-  const resultadosFiltrados = [];
   if (gradoSeleccionadoSelectMain === 'Mostrar todos') {
     for (let i = 0; i < rows.length; i++) {
       rows[i].hidden = false;
-
-      const resultadoFiltrado = {
-        FECHA: rows[i].cells[0].textContent,
-        NOMBRE_ALUMNO: rows[i].cells[1].textContent,
-        DIVISION_GRADO: rows[i].cells[2].textContent,
-        DESCRIPCION_ESTUDIO: rows[i].cells[3].textContent,
-        NOMBRE_LIBRO: rows[i].cells[4].textContent,
-        PUNTUACION: rows[i].cells[5].textContent
-      };
-      resultadosFiltrados.push(resultadoFiltrado);
     }
   } else {
     for (let i = 0; i < rows.length; i++) {
@@ -158,25 +145,11 @@ function filtrarGradoTabla() {
         rows[i].hidden = true;
       } else {
         rows[i].hidden = false;
-
-        const resultadoFiltrado = {
-          FECHA: rows[i].cells[0].textContent,
-          NOMBRE_ALUMNO: rows[i].cells[1].textContent,
-          DIVISION_GRADO: rows[i].cells[2].textContent,
-          DESCRIPCION_ESTUDIO: rows[i].cells[3].textContent,
-          NOMBRE_LIBRO: rows[i].cells[4].textContent,
-          PUNTUACION: rows[i].cells[5].textContent
-        };
-        resultadosFiltrados.push(resultadoFiltrado);
       }
     }
   }
 
-  if ((document.getElementById('tipo-grafico') as HTMLSelectElement).selectedOptions[0].value === 'pie') {
-    crearGraficoTorta(resultadosFiltrados);
-  } else {
-    crearGraficoBarra(resultadosFiltrados);
-  }
+  actualizarGrafico(rows);
 }
 
 
@@ -194,6 +167,11 @@ function cerrarModal() {
   const modal = document.getElementById('modal-carga');
   modal.style.display = 'none';
   opcionActual = '0';
+
+  const inputs = modal.querySelectorAll('input');
+  inputs.forEach(input => {
+    input.value = '';
+  });
 }
 
 document.getElementById('comparar-button').addEventListener('click', () => {
@@ -491,8 +469,7 @@ function rellenarDivResultados(alumnos: any, input: HTMLInputElement) {
     div.style.cursor = 'pointer';
 
     div.addEventListener('click', () => {
-      input.value = alumno.ID_ALUMNO;
-      input.textContent = alumno.DNI;
+      input.value = `${alumno.DNI} - ${alumno.NOMBRE} - ${alumno.ID_ALUMNO}`;
       divConDatos.innerHTML = '';
       divConDatos.style.display = 'none';
     });
@@ -548,6 +525,8 @@ function filtrarFechaTabla() {
       }
     }
   }
+
+  actualizarGrafico(rows);
 }
 
 function filtrarDatoTabla(columna: number, filtro: string) {
@@ -569,6 +548,7 @@ function filtrarDatoTabla(columna: number, filtro: string) {
       rows[i].hidden = false;
     }
   }
+  actualizarGrafico(rows);
 }
 
 function filtrarPuntuacion() {
@@ -640,6 +620,31 @@ function filtrarPuntuacion() {
         rows[i].hidden = true;
       }
     }
+  }
+  actualizarGrafico(rows);
+}
+
+function actualizarGrafico(rows: any) {
+  const resultadosFiltrados = [];
+
+  for (let i = 0; i < rows.length; i++) {
+    if (!rows[i].hidden) {
+      const resultadoFiltrado = {
+        FECHA: rows[i].cells[0].textContent,
+        NOMBRE_ALUMNO: rows[i].cells[1].textContent,
+        DIVISION_GRADO: rows[i].cells[2].textContent,
+        DESCRIPCION_ESTUDIO: rows[i].cells[3].textContent,
+        NOMBRE_LIBRO: rows[i].cells[4].textContent,
+        PUNTUACION: rows[i].cells[5].textContent
+      };
+      resultadosFiltrados.push(resultadoFiltrado);
+    }
+  }
+
+  if ((document.getElementById('tipo-grafico') as HTMLSelectElement).selectedOptions[0].value === 'pie') {
+    crearGraficoTorta(resultadosFiltrados);
+  } else {
+    crearGraficoBarra(resultadosFiltrados);
   }
 }
 
@@ -728,9 +733,9 @@ document.getElementById('buscar-button-opcion-1').addEventListener('click', asyn
 });
 
 async function buscarDatosOpcion1() {
-  const alumno1 = (document.getElementById('alumno-1-opcion-1') as HTMLInputElement).value;
+  const alumno1 = (document.getElementById('alumno-1-opcion-1') as HTMLInputElement).value.split('-')[2].trim();
 
-  const alumno2 = (document.getElementById('alumno-2-opcion-1') as HTMLInputElement).value;
+  const alumno2 = (document.getElementById('alumno-2-opcion-1') as HTMLInputElement).value.split('-')[2].trim();
 
   const estudio = (document.getElementById('parametro-opcion-1') as HTMLSelectElement).value;
 
@@ -774,6 +779,14 @@ async function buscarDatosOpcion1() {
   ORDER BY re.puntuacion DESC`;
 
   const result = await ejecutarSelect(query);
+
+  result.forEach(resultados => {
+    const day = String(resultados.FECHA.getDate()).padStart(2, '0');
+    const month = String(resultados.FECHA.getMonth() + 1).padStart(2, '0');
+    const year = resultados.FECHA.getFullYear();
+
+    resultados.FECHA = `${day}/${month}/${year}`;
+  });
 
   localStorage.setItem('resultadosComparativa', JSON.stringify(result));
 
@@ -838,6 +851,14 @@ async function buscarDatosOpcion2() {
 
   const result = await ejecutarSelect(query);
 
+  result.forEach(resultados => {
+    const day = String(resultados.FECHA.getDate()).padStart(2, '0');
+    const month = String(resultados.FECHA.getMonth() + 1).padStart(2, '0');
+    const year = resultados.FECHA.getFullYear();
+
+    resultados.FECHA = `${day}/${month}/${year}`;
+  });
+
   localStorage.setItem('resultadosComparativa', JSON.stringify(result));
 
   if (result.length > 0) {
@@ -895,6 +916,14 @@ async function buscarDatosOpcion3() {
   ORDER BY re.puntuacion DESC`;
 
   const result = await ejecutarSelect(query);
+
+  result.forEach(resultados => {
+    const day = String(resultados.FECHA.getDate()).padStart(2, '0');
+    const month = String(resultados.FECHA.getMonth() + 1).padStart(2, '0');
+    const year = resultados.FECHA.getFullYear();
+
+    resultados.FECHA = `${day}/${month}/${year}`;
+  });
 
   localStorage.setItem('resultadosComparativa', JSON.stringify(result));
 
@@ -985,6 +1014,7 @@ async function crearGraficoBarra(result: any) {
   const alumnos = new Set<Alumno>();
   const grados = new Set<string>();
   document.getElementById('contenedor-grafico').style.height = '100%';
+  document.getElementById('contenedor-grafico').style.width = '60vw';
 
   result.forEach((resultado: any) => {
     const alumno: Alumno = new Alumno();

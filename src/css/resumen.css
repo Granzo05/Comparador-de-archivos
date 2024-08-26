@@ -180,3 +180,28 @@ tbody tr:hover {
 #success-icon {
   display: none;
 }
+
+
+.results-container {
+  width: 109%;
+  border: 1px solid #ccc; 
+  border-radius: 4px; 
+  max-height: 200px;
+  overflow-y: auto;
+  background-color: #f9f9f9;
+}
+
+.results-container div {
+  padding: 10px;
+  cursor: pointer; 
+  background-color: #f0f0f0; 
+  transition: background-color 0.2s ease;
+}
+
+.results-container div:nth-child(odd) {
+  background-color: #e0e0e0;
+}
+
+.results-container div:hover {
+  background-color: #b0b0b0;
+}
