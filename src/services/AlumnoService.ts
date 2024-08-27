@@ -34,11 +34,14 @@ export const AlumnoService = {
                 return resultSelect.rows[0].ID_ALUMNO;
             } else {
                 const queryInsert = `INSERT INTO alumnos (dni, nombre) VALUES (:dni, :nombre)`;
+
                 const params = {
                     dni: alumno.dni,
                     nombre: alumno.nombre
                 };
+                
                 const result: any = await window.electronAPI.insertDatabase(queryInsert, params, 'id_alumno');
+
                 return result.id;
             }
         } catch (e) {

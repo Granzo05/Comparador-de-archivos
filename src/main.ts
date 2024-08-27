@@ -92,7 +92,7 @@ async function executeQuery(query: string, params: any) {
       }
 
       const result = await connection.execute(query, params, { outFormat: oracledb.OUT_FORMAT_OBJECT });
-      
+
       if (result.rows && result.rows.length > 0) {
         const processedRows = await Promise.all(result.rows.map(async (row: any) => {
           for (const key in row) {
@@ -110,12 +110,10 @@ async function executeQuery(query: string, params: any) {
           } catch (e) {
             console.error('Error procesando fila:', e);
           }
-          console.log(row)
           return row;
         }));
         return { rows: processedRows };
       } else {
-        console.error('No se encontró ningún resultado.');
         return { rows: [] };
       }
     } catch (err) {
@@ -145,6 +143,7 @@ const lobToString = (lob: any) => {
 };
 
 async function executeInsert(query: string, params: any, nombreColumnaId: string) {
+
   if (connection) {
     try {
       if (nombreColumnaId.length > 0) {
@@ -155,18 +154,20 @@ async function executeInsert(query: string, params: any, nombreColumnaId: string
         for (let key in params) {
           if (key === 'contraseña') {
             params[key] = await argon2.hash(params[key].toString());
-          } else if (key === 'nombre' || key === 'dni' || key === 'cuil' || key === 'rol' || key === 'usuario') {
+          } else if (['nombre', 'dni', 'cuil', 'rol', 'usuario'].includes(key)) {
             params[key] = encriptarDatos(params[key].toString());
           }
         }
+
         const result = await connection.execute(queryWithReturning, params, { autoCommit: true });
+
         return { id: result.outBinds.id[0] };
       } else {
 
         for (let key in params) {
           if (key === 'contraseña') {
             params[key] = await argon2.hash(params[key].toString());
-          } else if (key === 'nombre' || key === 'dni' || key === 'cuil' || key === 'rol' || key === 'usuario') {
+          } else if (['nombre', 'dni', 'cuil', 'rol', 'usuario'].includes(key)) {
             params[key] = encriptarDatos(params[key].toString());
           }
         }
@@ -188,7 +189,7 @@ function encriptarDatos(texto: string) {
     mode: CryptoJS.mode.ECB,
     padding: CryptoJS.pad.Pkcs7
   });
-  return encrypted.toString(); 
+  return encrypted.toString();
 }
 
 function desencriptarDatos(ciphertext: string) {
@@ -197,7 +198,7 @@ function desencriptarDatos(ciphertext: string) {
       mode: CryptoJS.mode.ECB,
       padding: CryptoJS.pad.Pkcs7
     });
-    
+
     return decryptedBytes.toString(CryptoJS.enc.Utf8);
   } catch (e) {
     console.error("Error durante el descifrado:", e);

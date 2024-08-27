@@ -666,6 +666,7 @@ function mostrarCargaErronea() {
   document.getElementById('button-modal').style.display = 'block';
   document.getElementById('success-icon').style.display = 'none';
   document.getElementById('error-icon').style.display = 'block';
+  modificarMensajeModal('Carga errónea', 'Ocurrió un error al guardar los datos, por favor intente nuevamente');
 }
 
 document.getElementById('button-modal').addEventListener('click', () => {

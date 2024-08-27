@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function buscarPalabrasClavesAlmacenadasEnDB() {
   try {
     const query = 'SELECT * FROM model ORDER BY ID DESC FETCH FIRST 1 ROWS ONLY';
-    const result: any = await window.electronAPI.selectDatabase(query);
+    const result: any = await window.electronAPI.selectDatabase(query, []);
 
     if (result.error) {
       console.error('Error en la consulta:', result.error);
