@@ -158,10 +158,10 @@ document.getElementById('tipo-comparativa').addEventListener('change', () => {
 });
 
 document.getElementById('cerrar-button').addEventListener('click', () => {
-  cerrarModal();
+  cerrarModalComparativa();
 });
 
-function cerrarModal() {
+function cerrarModalComparativa() {
   const modal = document.getElementById('modal-carga');
   modal.style.display = 'none';
   opcionActual = '0';
@@ -173,17 +173,18 @@ function cerrarModal() {
 }
 
 document.getElementById('comparar-button').addEventListener('click', () => {
-  abrirModal();
+  abrirModalComparativa();
 });
 
-function abrirModal() {
+function abrirModalComparativa() {
   const modal = document.getElementById('modal-carga');
   modal.style.display = 'flex';
 }
 
 document.getElementById('siguiente-button').addEventListener('click', () => {
   if (opcionActual === '0') {
-    alert('Seleccione un tipo de comparativa');
+    modificarMensajeModal('Error al ingresar el dato', 'Por favor, Seleccione un tipo de comparativa');
+    (document.getElementById('tipo-comparativa') as HTMLSelectElement).focus();
     return;
   }
   cambiarOpcion();
@@ -198,7 +199,7 @@ document.getElementById('volver-button').addEventListener('click', () => {
 
 async function cambiarOpcion() {
   if (!escuelas || escuelas.length === 0) {
-    //escuelas = await buscarEscuelas();
+    escuelas = await buscarEscuelas();
   }
 
   switch (opcionActual) {
@@ -374,6 +375,7 @@ function ocultarFiltros() {
   document.getElementById('inputs-filter').style.display = 'none';
   document.getElementById('button-activar-filtros').style.display = 'flex';
   document.getElementById('button-desactivar-filtros').style.display = 'none';
+  document.getElementById('button-reiniciar-tabla').style.display = 'flex';
 }
 
 document.getElementById('filtro-fecha-desde').addEventListener('input', (e) => {
@@ -731,30 +733,35 @@ document.getElementById('buscar-button-opcion-1').addEventListener('click', asyn
 });
 
 async function buscarDatosOpcion1() {
-  const alumno1 = (document.getElementById('alumno-1-opcion-1') as HTMLInputElement).value.split('-')[2].trim();
+  const alumno1 = (document.getElementById('alumno-1-opcion-1') as HTMLInputElement);
 
-  const alumno2 = (document.getElementById('alumno-2-opcion-1') as HTMLInputElement).value.split('-')[2].trim();
+  const alumno2 = (document.getElementById('alumno-2-opcion-1') as HTMLInputElement);
 
-  const estudio = (document.getElementById('parametro-opcion-1') as HTMLSelectElement).value;
+  const estudio = (document.getElementById('parametro-opcion-1') as HTMLSelectElement);
 
-  const desde = (document.getElementById('desde-opcion-1') as HTMLInputElement).value;
+  const desde = (document.getElementById('desde-opcion-1') as HTMLInputElement);
 
-  const hasta = (document.getElementById('hasta-opcion-1') as HTMLInputElement).value;
+  const hasta = (document.getElementById('hasta-opcion-1') as HTMLInputElement);
 
-  if (!alumno1) {
-    alert('Por favor ingrese el primer alumno');
+  if (alumno1.value.length === 0) {
+    modificarMensajeModal('Error al ingresar el primer alumno', 'Por favor ingrese el primer alumno');
+    alumno1.focus();
     return;
-  } else if (!alumno2) {
-    alert('Por favor ingrese el segundo alumno');
+  } else if (alumno2.value.length === 0) {
+    modificarMensajeModal('Error al ingresar el segundo alumno', 'Por favor ingrese el segundo alumno');
+    alumno2.focus();
     return;
-  } else if (!estudio) {
-    alert('Por favor ingrese el parametro de estudio alumno');
+  } else if (!estudio.value) {
+    modificarMensajeModal('Error al ingresar el parametro de estudio', 'Por favor ingrese el parametro de estudio');
+    estudio.focus();
     return;
-  } else if (!desde || desde === 'Invalid Date' || new Date(desde) > new Date(hasta)) {
-    alert('Por favor ingrese una fecha inicial válida');
+  } else if (!desde.value || desde.value === 'Invalid Date' || new Date(desde.value) > new Date(hasta.value)) {
+    modificarMensajeModal('Error al ingresar la fecha desde', 'Por favor ingrese una fecha inicial válida');
+    desde.focus();
     return;
-  } else if (!hasta || hasta === 'Invalid Date' || new Date(hasta) < new Date(desde)) {
-    alert('Por favor ingrese una fecha de finalización válida');
+  } else if (!hasta.value || hasta.value === 'Invalid Date' || new Date(hasta.value) < new Date(desde.value)) {
+    modificarMensajeModal('Error al ingresar la fecha hasta', 'Por favor ingrese una fecha final válida');
+    hasta.focus();
     return;
   }
 
@@ -771,9 +778,9 @@ async function buscarDatosOpcion1() {
   JOIN alumnos a ON re.id_alumno = a.id_alumno
   JOIN libros l ON re.id_libro = l.id_libro
   JOIN estudios e ON re.id_estudio = e.id_estudio
-  WHERE re.fecha BETWEEN TO_DATE('${desde}', 'YYYY-MM-DD') AND TO_DATE('${hasta}', 'YYYY-MM-DD') 
-  AND (re.id_alumno = ${alumno1} OR re.id_alumno = ${alumno2})
-  AND re.id_estudio = ${estudio}
+  WHERE re.fecha BETWEEN TO_DATE('${desde.value}', 'YYYY-MM-DD') AND TO_DATE('${hasta.value}', 'YYYY-MM-DD') 
+  AND (re.id_alumno = ${alumno1.value.split('-')[2].trim()} OR re.id_alumno = ${alumno2.value.split('-')[2].trim()})
+  AND re.id_estudio = ${estudio.value}
   ORDER BY re.puntuacion DESC`;
 
   const result = await ejecutarSelect(query);
@@ -792,9 +799,10 @@ async function buscarDatosOpcion1() {
     await llenarTabla(result);
     await crearGraficoBarra(result);
     document.getElementById('contenedor-grafico').style.display = 'flex';
-    cerrarModal();
+    document.getElementById('button-reiniciar-tabla').style.display = 'flex';
+    cerrarModalComparativa();
   } else {
-    alert('No se encontraron resultados para la búsqueda realizada');
+    modificarMensajeModal('Error al buscar resultados', 'No se encontraron resultados para la búsqueda realizada');
     return;
   }
 }
@@ -804,30 +812,35 @@ document.getElementById('buscar-button-opcion-2').addEventListener('click', asyn
 });
 
 async function buscarDatosOpcion2() {
-  const alumno1 = (document.getElementById('alumno-1-opcion-2') as HTMLInputElement).value;
+  const alumno1 = (document.getElementById('alumno-1-opcion-2') as HTMLInputElement);
 
-  const alumno2 = (document.getElementById('alumno-2-opcion-2') as HTMLInputElement).value;
+  const alumno2 = (document.getElementById('alumno-2-opcion-2') as HTMLInputElement);
 
-  const estudio = (document.getElementById('parametro-opcion-2') as HTMLSelectElement).value;
+  const estudio = (document.getElementById('parametro-opcion-2') as HTMLSelectElement);
 
-  const desde = (document.getElementById('desde-opcion-2') as HTMLInputElement).value;
+  const desde = (document.getElementById('desde-opcion-2') as HTMLInputElement);
 
-  const hasta = (document.getElementById('hasta-opcion-2') as HTMLInputElement).value;
+  const hasta = (document.getElementById('hasta-opcion-2') as HTMLInputElement);
 
-  if (!alumno1) {
-    alert('Por favor ingrese el primer alumno');
+  if (alumno1.value.length === 0) {
+    modificarMensajeModal('Error al ingresar el primer alumno', 'Por favor ingrese el primer alumno');
+    alumno1.focus();
     return;
-  } else if (!alumno2) {
-    alert('Por favor ingrese el segundo alumno');
+  } else if (alumno2.value.length === 0) {
+    modificarMensajeModal('Error al ingresar el segundo alumno', 'Por favor ingrese el segundo alumno');
+    alumno2.focus();
     return;
-  } else if (!estudio) {
-    alert('Por favor ingrese el parametro de estudio alumno');
+  } else if (!estudio.value) {
+    modificarMensajeModal('Error al ingresar el parametro de estudio', 'Por favor ingrese el parametro de estudio');
+    estudio.focus();
     return;
-  } else if (!desde || desde === 'Invalid Date' || new Date(desde) > new Date(hasta)) {
-    alert('Por favor ingrese una fecha inicial válida');
+  } else if (!desde.value || desde.value === 'Invalid Date' || new Date(desde.value) > new Date(hasta.value)) {
+    modificarMensajeModal('Error al ingresar la fecha desde', 'Por favor ingrese una fecha inicial válida');
+    desde.focus();
     return;
-  } else if (!hasta || hasta === 'Invalid Date' || new Date(hasta) < new Date(desde)) {
-    alert('Por favor ingrese una fecha de finalización válida');
+  } else if (!hasta.value || hasta.value === 'Invalid Date' || new Date(hasta.value) < new Date(desde.value)) {
+    modificarMensajeModal('Error al ingresar la fecha hasta', 'Por favor ingrese una fecha final válida');
+    hasta.focus();
     return;
   }
 
@@ -844,7 +857,7 @@ async function buscarDatosOpcion2() {
   JOIN alumnos a ON re.id_alumno = a.id_alumno
   JOIN libros l ON re.id_libro = l.id_libro
   JOIN estudios e ON re.id_estudio = e.id_estudio
-  WHERE re.fecha BETWEEN TO_DATE('${desde}', 'YYYY-MM-DD') AND TO_DATE('${hasta}', 'YYYY-MM-DD') AND (re.id_alumno = ${alumno1} OR re.id_alumno = ${alumno2})
+  WHERE re.fecha BETWEEN TO_DATE('${desde.value}', 'YYYY-MM-DD') AND TO_DATE('${hasta.value}', 'YYYY-MM-DD') AND (re.id_alumno = ${alumno1.value} OR re.id_alumno = ${alumno2.value})
   ORDER BY re.puntuacion DESC`;
 
   const result = await ejecutarSelect(query);
@@ -863,9 +876,10 @@ async function buscarDatosOpcion2() {
     await llenarTabla(result);
     await crearGraficoBarra(result);
     document.getElementById('contenedor-grafico').style.display = 'flex';
-    cerrarModal();
+    document.getElementById('button-reiniciar-tabla').style.display = 'flex';
+    cerrarModalComparativa();
   } else {
-    alert('No se encontraron resultados para la búsqueda realizada');
+    modificarMensajeModal('Error al buscar resultados', 'No se encontraron resultados para la búsqueda realizada');
     return;
   }
 }
@@ -875,25 +889,29 @@ document.getElementById('buscar-button-opcion-3').addEventListener('click', asyn
 });
 
 async function buscarDatosOpcion3() {
-  const grado1 = (document.getElementById('grado-1-opcion-3') as HTMLInputElement).value;
+  const grado1 = (document.getElementById('grado-1-opcion-3') as HTMLInputElement);
 
-  const grado2 = (document.getElementById('grado-2-opcion-3') as HTMLInputElement).value;
+  const grado2 = (document.getElementById('grado-2-opcion-3') as HTMLInputElement);
 
-  const desde = (document.getElementById('desde-opcion-3') as HTMLInputElement).value;
+  const desde = (document.getElementById('desde-opcion-3') as HTMLInputElement);
 
-  const hasta = (document.getElementById('hasta-opcion-3') as HTMLInputElement).value;
+  const hasta = (document.getElementById('hasta-opcion-3') as HTMLInputElement);
 
-  if (!grado1) {
-    alert('Por favor ingrese el primer grado');
+  if (grado1.value.length === 0) {
+    modificarMensajeModal('Error al ingresar el primer grado', 'Por favor ingrese el primer grado para comparar');
+    grado1.focus();
     return;
-  } else if (!grado2) {
-    alert('Por favor ingrese el segundo grado');
+  } else if (grado2.value.length === 0) {
+    modificarMensajeModal('Error al ingresar el primer grado', 'Por favor ingrese el primer grado para comparar');
+    grado2.focus();
     return;
-  } else if (!desde || desde === 'Invalid Date' || new Date(desde) > new Date(hasta)) {
-    alert('Por favor ingrese una fecha inicial válida');
+  } else if (!desde.value || desde.value === 'Invalid Date' || new Date(desde.value) > new Date(hasta.value)) {
+    modificarMensajeModal('Error al ingresar la fecha desde', 'Por favor ingrese una fecha inicial válida');
+    desde.focus();
     return;
-  } else if (!hasta || hasta === 'Invalid Date' || new Date(hasta) < new Date(desde)) {
-    alert('Por favor ingrese una fecha de finalización válida');
+  } else if (!hasta.value || hasta.value === 'Invalid Date' || new Date(hasta.value) < new Date(desde.value)) {
+    modificarMensajeModal('Error al ingresar la fecha hasta', 'Por favor ingrese una fecha final válida');
+    hasta.focus();
     return;
   }
 
@@ -910,7 +928,7 @@ async function buscarDatosOpcion3() {
   JOIN alumnos a ON re.id_alumno = a.id_alumno
   JOIN libros l ON re.id_libro = l.id_libro
   JOIN estudios e ON re.id_estudio = e.id_estudio
-  WHERE re.fecha BETWEEN TO_DATE('${desde}', 'YYYY-MM-DD') AND TO_DATE('${hasta}', 'YYYY-MM-DD') AND (re.id_grado = ${grado1} OR re.id_grado = ${grado2})
+  WHERE re.fecha BETWEEN TO_DATE('${desde.value}', 'YYYY-MM-DD') AND TO_DATE('${hasta.value}', 'YYYY-MM-DD') AND (re.id_grado = ${grado1.value} OR re.id_grado = ${grado2.value})
   ORDER BY re.puntuacion DESC`;
 
   const result = await ejecutarSelect(query);
@@ -930,9 +948,10 @@ async function buscarDatosOpcion3() {
     await crearGraficoBarra(result);
     document.getElementById('contenedor-grafico').style.display = 'flex';
     document.getElementById('tipo-grafico').style.display = 'flex';
-    cerrarModal();
+    document.getElementById('button-reiniciar-tabla').style.display = 'flex';
+    cerrarModalComparativa();
   } else {
-    alert('No se encontraron resultados para la búsqueda realizada');
+    modificarMensajeModal('Error al buscar resultados', 'No se encontraron resultados para la búsqueda realizada');
     return;
   }
 }
@@ -942,25 +961,29 @@ document.getElementById('buscar-button-opcion-4').addEventListener('click', asyn
 });
 
 async function buscarDatosOpcion4() {
-  const grado1 = (document.getElementById('grado-1-opcion-4') as HTMLInputElement).value;
+  const grado1 = (document.getElementById('grado-1-opcion-4') as HTMLInputElement);
 
-  const grado2 = (document.getElementById('grado-2-opcion-4') as HTMLInputElement).value;
+  const grado2 = (document.getElementById('grado-2-opcion-4') as HTMLInputElement);
 
-  const desde = (document.getElementById('desde-opcion-4') as HTMLInputElement).value;
+  const desde = (document.getElementById('desde-opcion-4') as HTMLInputElement);
 
-  const hasta = (document.getElementById('hasta-opcion-4') as HTMLInputElement).value;
+  const hasta = (document.getElementById('hasta-opcion-4') as HTMLInputElement);
 
-  if (!grado1) {
-    alert('Por favor ingrese el primer grado');
+  if (grado1.value.length === 0) {
+    modificarMensajeModal('Error al ingresar el primer grado', 'Por favor ingrese el primer grado para comparar');
+    grado1.focus();
     return;
-  } else if (!grado2) {
-    alert('Por favor ingrese el segundo grado');
+  } else if (grado2.value.length === 0) {
+    modificarMensajeModal('Error al ingresar el primer grado', 'Por favor ingrese el primer grado para comparar');
+    grado2.focus();
     return;
-  } else if (!desde || desde === 'Invalid Date' || new Date(desde) > new Date(hasta)) {
-    alert('Por favor ingrese una fecha inicial válida');
+  } else if (!desde.value || desde.value === 'Invalid Date' || new Date(desde.value) > new Date(hasta.value)) {
+    modificarMensajeModal('Error al ingresar la fecha desde', 'Por favor ingrese una fecha inicial válida');
+    desde.focus();
     return;
-  } else if (!hasta || hasta === 'Invalid Date' || new Date(hasta) < new Date(desde)) {
-    alert('Por favor ingrese una fecha de finalización válida');
+  } else if (!hasta.value || hasta.value === 'Invalid Date' || new Date(hasta.value) < new Date(desde.value)) {
+    modificarMensajeModal('Error al ingresar la fecha hasta', 'Por favor ingrese una fecha final válida');
+    hasta.focus();
     return;
   }
 
@@ -977,7 +1000,7 @@ async function buscarDatosOpcion4() {
   JOIN alumnos a ON re.id_alumno = a.id_alumno
   JOIN libros l ON re.id_libro = l.id_libro
   JOIN estudios e ON re.id_estudio = e.id_estudio
-  WHERE re.fecha BETWEEN TO_DATE('${desde}', 'YYYY-MM-DD') AND TO_DATE('${hasta}', 'YYYY-MM-DD') AND (re.id_grado = ${grado1} OR re.id_grado = ${grado2})
+  WHERE re.fecha BETWEEN TO_DATE('${desde.value}', 'YYYY-MM-DD') AND TO_DATE('${hasta.value}', 'YYYY-MM-DD') AND (re.id_grado = ${grado1.value} OR re.id_grado = ${grado2.value})
   ORDER BY re.puntuacion DESC`;
 
   const result = await ejecutarSelect(query);
@@ -997,9 +1020,10 @@ async function buscarDatosOpcion4() {
     await crearGraficoBarra(result);
     document.getElementById('contenedor-grafico').style.display = 'flex';
     document.getElementById('tipo-grafico').style.display = 'flex';
-    cerrarModal();
+    document.getElementById('button-reiniciar-tabla').style.display = 'flex';
+    cerrarModalComparativa();
   } else {
-    alert('No se encontraron resultados para la búsqueda realizada');
+    modificarMensajeModal('Error al buscar resultados', 'No se encontraron resultados para la búsqueda realizada');
     return;
   }
 }
@@ -1185,4 +1209,36 @@ document.getElementById('tipo-grafico').addEventListener('change', () => {
   } else {
     crearGraficoBarra(result);
   }
+});
+
+document.getElementById('button-reiniciar-tabla').addEventListener('click', () => {
+  reiniciarTabla();
+});
+
+function reiniciarTabla() {
+  llenarTabla(resultados);
+  document.getElementById('button-reiniciar-tabla').style.display = 'none';
+  actualizarGrafico(rows);
+}
+
+
+function mostrarModalAviso() {
+  document.getElementById('modal-aviso').style.display = 'flex';
+  document.getElementById('button-modal').style.display = 'block';
+  document.getElementById('error-icon').style.display = 'flex';
+}
+
+function modificarMensajeModal(titulo: string, mensaje: string) {
+  document.getElementById('title-modal').textContent = titulo;
+  document.getElementById('mensaje-modal').textContent = mensaje;
+  mostrarModalAviso();
+}
+
+
+function cerrarModalAviso() {
+  document.getElementById('modal-aviso').style.display = 'none';
+}
+
+document.getElementById('button-modal').addEventListener('click', () => {
+  cerrarModalAviso();
 });
