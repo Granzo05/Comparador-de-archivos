@@ -10,11 +10,14 @@ export const GradoService = {
         if (palabraEncontrada)
             return palabraEncontrada;
     },
-    
-    verificarExistenciaOCrearGrado: async (division: string, idEscuela: number) => {     
+
+    verificarExistenciaOCrearGrado: async (division: string, idEscuela: number) => {
         try {
-            const querySelect = `SELECT id_grado FROM grados WHERE division = '${division}' AND id_escuela = ${idEscuela}`;
-            const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
+            const querySelect = `SELECT id_grado FROM grados WHERE division = :division AND id_escuela = :id_escuela`;
+
+            const params = { division: division, id_escuela: idEscuela };
+
+            const resultSelect: any = await window.electronAPI.selectDatabase(querySelect, params);
 
             if (resultSelect.rows.length > 0) {
                 return resultSelect.rows[0].ID_GRADO;

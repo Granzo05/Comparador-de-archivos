@@ -12,8 +12,11 @@ export const EstudioService = {
 
     verificarExistenciaOCrearEstudio: async (descripcionParametro: string) => {
         try {
-            const querySelect = `SELECT id_estudio FROM estudios WHERE descripcion = '${descripcionParametro}'`;
-            const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
+            const querySelect = `SELECT id_estudio FROM estudios WHERE descripcion = :descripcion`;
+
+            const params = { descripcion: descripcionParametro };
+
+            const resultSelect: any = await window.electronAPI.selectDatabase(querySelect, params);
 
             if (resultSelect.rows.length > 0) {
                 return resultSelect.rows[0].ID_ESTUDIO;
@@ -38,9 +41,11 @@ export const EstudioService = {
                 mesesYAñosSet.add(fecha.split('/')[2]);
 
                 try {
-                    const querySelect = `SELECT id_estudio_grado FROM estudio_grado WHERE id_estudio = ${idParametroEstudio} AND id_grado = ${idGrado} AND fecha = '${fecha}'`;
+                    const querySelect = `SELECT id_estudio_grado FROM estudio_grado WHERE id_estudio = :id_estudio AND id_grado = :id_grado AND fecha = :fecha`;
 
-                    const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
+                    const params = { id_estudio: idParametroEstudio, id_grado: idGrado, fecha: fecha };
+
+                    const resultSelect: any = await window.electronAPI.selectDatabase(querySelect, params);
 
                     if (resultSelect.rows.length === 0) {
                         const queryInsert = `INSERT INTO estudio_grado (id_estudio, id_grado, fecha) 

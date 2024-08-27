@@ -17,8 +17,11 @@ export const DocenteService = {
 
     verificarExistenciaOCrearDocente: async (docente: Docente) => {
         try {
-            const querySelect = `SELECT id_docente FROM docentes WHERE cuil = '${docente.cuil}'`;
-            const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
+            const querySelect = `SELECT id_docente FROM docentes WHERE cuil = :cuil`;
+
+            const params = { cuil: docente.cuil };
+
+            const resultSelect: any = await window.electronAPI.selectDatabase(querySelect, params);
 
             if (resultSelect.rows.length > 0) {
                 return resultSelect.rows[0].ID_DOCENTE;
@@ -45,8 +48,11 @@ export const DocenteService = {
                 mesesYAñosSet.add(mesYAño);
 
                 try {
-                    const querySelect = `SELECT id_grado_docente FROM grados_docentes WHERE id_grado = ${idGrado} AND id_docente = ${idDocente} AND mes_y_año = '${mesYAño}'`;
-                    const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
+                    const querySelect = `SELECT id_grado_docente FROM grados_docentes WHERE id_grado = :id_grado AND id_docente = :id_docente AND mes_y_año = :mes_y_año`;
+
+                    const params = { id_grado: idGrado, id_docente: idDocente, mes_y_año: mesYAño };
+
+                    const resultSelect: any = await window.electronAPI.selectDatabase(querySelect, params);
 
                     if (resultSelect.rows.length === 0) {
                         const queryInsert = `INSERT INTO grados_docentes (id_grado, id_docente, mes_y_año) 

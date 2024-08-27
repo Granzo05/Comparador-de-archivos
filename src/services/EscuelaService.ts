@@ -12,8 +12,11 @@ export const EscuelaService = {
 
     verificarExistenciaOCrearEscuela: async (nombreEscuela: string) => {
         try {
-            const querySelect = `SELECT id_escuela FROM escuelas WHERE nombre = '${nombreEscuela}'`;
-            const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
+            const querySelect = `SELECT id_escuela FROM escuelas WHERE nombre = :nombre`;
+
+            const params = { nombre: nombreEscuela };
+
+            const resultSelect: any = await window.electronAPI.selectDatabase(querySelect, params);
 
             if (resultSelect.rows.length > 0) {
                 return resultSelect.rows[0].ID_ESCUELA;

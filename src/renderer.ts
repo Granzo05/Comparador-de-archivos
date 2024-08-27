@@ -12,14 +12,18 @@ if (usuario) {
         document.getElementById('user-name').innerHTML = usuario.usuario;
     } catch (e) { }
 
-    if (usuario.rol != 'admin') {
-        try {
-            document.getElementById('buscar-datos').style.display = 'none';
-        } catch (e) { }
+    check(usuario);
 
-        try {
-            document.getElementById('agregar-user').style.display = 'none';
-        } catch (e) { }
+    async function check(usuario: Usuario) {
+        if (await window.electronAPI.checkRol(usuario.rol)) {
+            try {
+                document.getElementById('buscar-datos').style.display = 'none';
+            } catch (e) { }
+
+            try {
+                document.getElementById('agregar-user').style.display = 'none';
+            } catch (e) { }
+        }
     }
 } else {
     try {

@@ -42,6 +42,7 @@
     "argon2": "^0.40.3",
     "chart.js": "^4.4.3",
     "compromise": "^14.13.0",
+    "crypto-js": "^4.2.0",
     "dotenv": "^16.4.5",
     "electron-squirrel-startup": "^1.0.1",
     "mammoth": "^1.8.0",

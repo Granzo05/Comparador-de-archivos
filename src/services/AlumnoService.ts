@@ -24,8 +24,11 @@ export const AlumnoService = {
 
     verificarExistenciaOCrearAlumnos: async (alumno: Alumno) => {
         try {
-            const querySelect = `SELECT id_alumno FROM alumnos WHERE DNI = '${alumno.dni}'`;
-            const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
+            const querySelect = `SELECT id_alumno FROM alumnos WHERE DNI = :dni`;
+
+            const params = {dni: alumno.dni};
+
+            const resultSelect: any = await window.electronAPI.selectDatabase(querySelect, params);
 
             if (resultSelect.rows.length > 0) {
                 return resultSelect.rows[0].ID_ALUMNO;
@@ -46,8 +49,11 @@ export const AlumnoService = {
 
     relacionarGradoAlumnos: async (idGrado: number, idAlumno: number, año: string) => {
         try {
-            const querySelect = `SELECT id_grado_alumno FROM grados_alumnos WHERE id_grado = ${idGrado} AND id_alumno = ${idAlumno} AND año = '${año}'`;
-            const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
+            const querySelect = `SELECT id_grado_alumno FROM grados_alumnos WHERE id_grado = :id_grado AND id_alumno = :id_alumno AND año = :año`;
+
+            const params = {id_grado: idGrado, id_alumno: idAlumno, año: año};
+
+            const resultSelect: any = await window.electronAPI.selectDatabase(querySelect, params);
 
             if (resultSelect.rows.length === 0) {
                 const queryInsert = `INSERT INTO grados_alumnos (id_grado, id_alumno, año) VALUES (:id_grado, :id_alumno, :año)`;

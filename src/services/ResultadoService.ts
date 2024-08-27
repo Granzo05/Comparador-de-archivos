@@ -23,14 +23,14 @@ export const ResultadoService = {
         try {
             const querySelect = `SELECT id_resultados_estudios 
                                  FROM resultados_estudios 
-                                 WHERE id_alumno = ${resultado.alumno.id} 
-                                 AND id_estudio = ${resultado.estudio.id} 
-                                 AND id_libro = ${resultado.libro.id} 
-                                 AND id_grado = ${resultado.grado.id} 
-                                 AND fecha = TO_DATE('${resultado.fecha.toISOString().substring(0, 10)}', 'YYYY-MM-DD') 
-                                 AND puntuacion = ${resultado.puntuacion}`;
+                                 WHERE id_alumno = :id_alumno AND id_estudio = :id_estudio AND id_libro = :id_libro 
+                                 AND id_grado = :id_grado AND fecha = TO_DATE(:fecha, 'YYYY-MM-DD')`;
 
-            const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
+            const params = { id_alumno: resultado.alumno.id, id_estudio: resultado.estudio.id, 
+                id_libro: resultado.libro.id, id_grado: resultado.grado.id, 
+                fecha: resultado.fecha.toISOString().substring(0, 10), puntuacion: resultado.puntuacion };
+
+            const resultSelect: any = await window.electronAPI.selectDatabase(querySelect, params);
 
             if (resultSelect.rows.length === 0) {
                 const queryInsert = `INSERT INTO resultados_estudios 

@@ -21,8 +21,11 @@ export const LibroService = {
 
     verificarExistenciaOCrearLibro: async (nombreLibro: string) => {
         try {
-            const querySelect = `SELECT id_libro FROM libros WHERE nombre = '${nombreLibro}'`;
-            const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
+            const querySelect = `SELECT id_libro FROM libros WHERE nombre = :nombre`;
+
+            const params = { nombre: nombreLibro };
+
+            const resultSelect: any = await window.electronAPI.selectDatabase(querySelect, params);
 
             if (resultSelect.rows.length > 0) {
                 return resultSelect.rows[0].ID_LIBRO;
@@ -47,10 +50,11 @@ export const LibroService = {
                 mesesYAñosSet.add(fecha);
                 try {
                     const querySelect = `SELECT id_libros_estudios FROM libros_estudios 
-                                         WHERE id_libro = ${idLibro} AND id_estudio = ${idParametroEstudio} 
-                                         AND fecha = '${fecha}'`;
+                                         WHERE id_libro = :id_libro AND id_estudio = :id_estudio AND fecha = :fecha`;
 
-                    const resultSelect: any = await window.electronAPI.selectDatabase(querySelect);
+                    const params = { id_libro: idLibro, id_estudio: idParametroEstudio, fecha: fecha };
+
+                    const resultSelect: any = await window.electronAPI.selectDatabase(querySelect, params);
 
                     if (resultSelect.rows.length === 0) {
                         const queryInsert = `INSERT INTO libros_estudios (id_libro, id_estudio, fecha) 

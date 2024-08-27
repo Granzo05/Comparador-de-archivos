@@ -1,3 +1,5 @@
+import { UsuarioService } from '../services/UsuarioService';
+import { Usuario } from '../types/Usuario';
 import Toastify from 'toastify-js';
 
 document.getElementById('agregar-usuario')?.addEventListener('click', async () => {
@@ -33,44 +35,7 @@ document.getElementById('agregar-usuario')?.addEventListener('click', async () =
     return;
   }
 
-  const query = `SELECT * FROM usuario WHERE usuario = '${user}'`;
+  const usuario: Usuario = { id: 0, usuario: user, contraseña: password, rol: rol };
 
-  try {
-    const result: any = await window.electronAPI.selectDatabase(query);
-
-    if (result.error) {
-      console.error('Error en la consulta:', result.error);
-      showToast(`Error en la consulta: ${result.error}`);
-      return;
-    } else {
-      if (result.rows && result.rows.length > 0) {
-        showToast('Hay un usuario cargado con ese nombre');
-        userElement.focus();
-        return;
-      }
-    }
-  } catch (error) {
-    console.error('Error al realizar la consulta:', error);
-    showToast(`Error al realizar la consulta: ${error}`);
-    return;
-  }
-
-
-  const hashedPassword = await window.argon.hashPassword(password);
-
-  const insertQuery = `INSERT INTO usuario (usuario, contraseña, rol) VALUES ('${user}', '${hashedPassword}', '${rol}')`;
-
-  try {
-    const result: any = await window.electronAPI.insertDatabase(insertQuery);
-    if (result.error) {
-      console.error('Error en la consulta:', result.error);
-      showToast(`Error en la consulta: ${result.error}`);
-    } else {
-      showToast('Usuario cargado con éxito');
-      console.log('Inserción exitosa:', result);
-    }
-  } catch (error) {
-    console.error('Error al realizar la consulta:', error);
-    showToast(`Error al realizar la consulta: ${error}`);
-  }
+  showToast(await UsuarioService.verificarExistenciaOCrearUsuario(usuario));
 });
