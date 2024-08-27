@@ -6,7 +6,6 @@ import { formatearFechaDDMMYYYY, formatearFechaMMDDYYYY } from '../utils/functio
 import { Alumno } from '../types/Alumno';
 
 let resultados: any = JSON.parse(localStorage.getItem('resultados'));
-let resultadosFiltrados: any = [];
 
 let gradoSeleccionadoSelectMain = '';
 
@@ -41,21 +40,20 @@ function asignarEscuela() {
 }
 
 function asignarGrados() {
-  let grados: any = JSON.parse(localStorage.getItem('grados') || '[]');
-
-  if (grados.length > 0) {
+  if (gradosEscuelaElegida.length > 0) {
     const gradosSelect = document.getElementById('grado-main-resumen') as HTMLSelectElement;
 
     gradosSelect.innerHTML = '';
 
-    if (grados.length > 1) {
+    if (gradosEscuelaElegida.length > 1) {
       const option = document.createElement('option');
       option.value = '0';
       option.textContent = 'Mostrar todos';
 
       gradosSelect.appendChild(option);
     }
-    grados.forEach((grado: any) => {
+
+    gradosEscuelaElegida.forEach((grado: any) => {
       const option = document.createElement('option');
       option.value = grado.id;
       option.textContent = grado.division;
@@ -714,7 +712,7 @@ function rellenarSelectEstudios(estudiosSelect: HTMLSelectElement) {
 
 async function ejecutarSelect(query: string): Promise<any[]> {
   try {
-    const result: any = await window.electronAPI.selectDatabase(query);
+    const result: any = await window.electronAPI.selectDatabase(query, []);
 
     if (result.error) {
       console.error('Error en la consulta:', result.error);

@@ -103,7 +103,8 @@ async function executeQuery(query: string, params: any) {
 
           try {
             for (let key in row) {
-              if (['NOMBRE', 'DNI', 'CUIL', 'USUARIO'].includes(key)) {
+              console.log(key)
+              if (['NOMBRE', 'DNI', 'CUIL', 'USUARIO', 'NOMBRE_LIBRO', 'NOMBRE_ALUMNO', 'NOMBRE_DOCENTE', 'DNI_ALUMNO'].includes(key)) {
                 row[key] = desencriptarDatos(row[key].toString());
               }
             }

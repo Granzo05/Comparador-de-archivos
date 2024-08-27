@@ -289,7 +289,7 @@ async function buscarParametrosEstudio() {
 
 async function ejecutarSelect(query: string): Promise<any[]> {
     try {
-        const result: any = await window.electronAPI.selectDatabase(query);
+        const result: any = await window.electronAPI.selectDatabase(query, []);
 
         if (result.error) {
             console.error('Error en la consulta:', result.error);
