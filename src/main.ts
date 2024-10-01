@@ -1,5 +1,3 @@
-import { c } from "vite/dist/node/types.d-aGj9QkWt";
-
 const { app, BrowserWindow, screen: electronScreen, ipcMain } = require('electron');
 const path = require('path');
 export const oracledb = require('oracledb');
